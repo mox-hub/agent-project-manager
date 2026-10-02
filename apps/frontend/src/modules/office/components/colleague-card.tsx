@@ -2,6 +2,7 @@
  * 员工卡 —— 办公室首屏（候选 C）：
  * 「先看得见他」：在干什么（当前执行）、忙不忙（状态点）、压着多少待决、还能接多少活（容量条）。
  */
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, PlayCircle, UserRound } from 'lucide-react';
@@ -12,6 +13,7 @@ import { TrustLevelBadge } from '@/modules/team-member/components/trust-level-ba
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { formatRelativeTime } from '@/shared/runtime/runtime-api';
 import { STATE_DOT, STATE_TEXT } from '@/modules/assistant/components/assistant-status-dot';
+import { AdjustTrustDialog } from './adjust-trust-dialog';
 import type { OfficeColleague, OfficeStatus } from '../api/office-api';
 
 const STATUS_TONE: Record<OfficeStatus, string> = {
@@ -40,6 +42,7 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
   const aiPanelOpen = useAppStore((s) => s.aiPanelOpen);
   const setAiPanelOpen = useAppStore((s) => s.setAiPanelOpen);
   const openAssistantWithDraft = useAppStore((s) => s.openAssistantWithDraft);
+  const [trustOpen, setTrustOpen] = useState(false);
 
   const { capacity } = colleague;
   const saturated = capacity.acceptability === 'saturated';
@@ -75,7 +78,16 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
             <p className="truncate text-sm font-semibold text-content-text">
               {colleague.displayName}
             </p>
-            <TrustLevelBadge level={colleague.trustLevel} />
+            {/* 信任徽标即调整入口（CAP-B-07）：点击开调整对话框 */}
+            <Button
+              variant="ghost"
+              className="h-5 w-auto rounded-full p-0"
+              title={t('office.trust.adjustHint')}
+              onClick={() => setTrustOpen(true)}
+              data-ai-action="office.colleague.trust.click"
+            >
+              <TrustLevelBadge level={colleague.trustLevel} />
+            </Button>
           </div>
           <p className="flex items-center gap-1.5 truncate text-2xs text-content-text-muted">
             <span className={cn('inline-block size-1.5 rounded-full', STATE_DOT[colleague.status])} />
@@ -190,6 +202,16 @@ export function ColleagueCard({ colleague }: { colleague: OfficeColleague }) {
           </Button>
         </div>
       </div>
+
+      {trustOpen ? (
+        <AdjustTrustDialog
+          memberId={colleague.memberId}
+          memberName={colleague.displayName}
+          currentLevel={colleague.trustLevel ?? null}
+          open
+          onOpenChange={setTrustOpen}
+        />
+      ) : null}
     </div>
   );
 }

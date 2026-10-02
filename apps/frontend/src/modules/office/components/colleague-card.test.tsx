@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ColleagueCard } from './colleague-card';
 import type { OfficeColleague } from '../api/office-api';
 
@@ -13,6 +14,10 @@ vi.mock('react-i18next', () => ({
 const mockNavigate = vi.hoisted(() => vi.fn());
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
+}));
+
+vi.mock('@/infrastructure/api-client', () => ({
+  api: { patch: vi.fn() },
 }));
 
 const mockStore = vi.hoisted(() => ({
@@ -118,5 +123,17 @@ describe('ColleagueCard', () => {
     );
     expect(screen.getByText('office.card.noActiveRun')).toBeTruthy();
     expect(screen.getByText('office.card.neverRun')).toBeTruthy();
+  });
+
+  it('默认不渲染调整信任对话框，点击等级徽标后打开', () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <ColleagueCard colleague={colleague()} />
+      </QueryClientProvider>,
+    );
+    expect(screen.queryByText('trust.adjustTitle:{"name":"小码"}')).toBeNull();
+    fireEvent.click(screen.getByTitle('office.trust.adjustHint'));
+    expect(screen.getByText('trust.adjustTitle:{"name":"小码"}')).toBeTruthy();
   });
 });

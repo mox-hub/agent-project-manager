@@ -6,23 +6,33 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Bot, DoorOpen } from 'lucide-react';
+import { Bot, DoorOpen, ShieldCheck } from 'lucide-react';
 import { PageHeader, nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { PageShell } from '@/components/semantic/page-shell';
 import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
+import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { SelectField } from '@/components/ui/select-field';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { projectApi } from '@/modules/project/api/project-api';
 import { useOfficeSummary } from '../hooks/use-office-summary';
 import { ColleagueCard } from '../components/colleague-card';
 import { CollaborationSection } from '../components/collaboration-section';
+import { TrustTiersPanel } from '../components/trust-tiers-panel';
 
 export function OfficePage() {
   const { t } = useTranslation();
   const [projectId, setProjectId] = useState<string>('');
+  const [trustPanelOpen, setTrustPanelOpen] = useState(false);
 
   const summary = useOfficeSummary(projectId || undefined);
   const projects = useQuery({
@@ -41,6 +51,15 @@ export function OfficePage() {
         favorites={<FavoriteToggle label={nodeToText(t('office.title')).trim()} />}
         icon={DoorOpen}
         iconColor="text-accent-purple"
+        actions={
+          <HeaderActionButton
+            variant="outline"
+            icon={ShieldCheck}
+            label={t('office.trust.entry')}
+            onClick={() => setTrustPanelOpen(true)}
+            data-ai-action="office.trust.entry.click"
+          />
+        }
       />
 
       <div className="flex w-full flex-col gap-4 px-4 py-3.5 sm:px-6 sm:py-4">
@@ -104,6 +123,17 @@ export function OfficePage() {
         {/* 接口协作卡（交接试点）：前后端 AI 工件化协作，人闸口验证 */}
         <CollaborationSection projectId={projectId || undefined} />
       </div>
+
+      {/* 信任等级说明（CAP-B-07，自设置页「AI 执行中心」信任 tab 迁入）；宽面板档承载三列定义卡（§10.8） */}
+      <Dialog open={trustPanelOpen} onOpenChange={setTrustPanelOpen}>
+        <DialogContent size="wide">
+          <DialogHeader>
+            <DialogTitle>{t('office.trust.title')}</DialogTitle>
+            <DialogDescription>{t('office.trust.desc')}</DialogDescription>
+          </DialogHeader>
+          <TrustTiersPanel />
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }

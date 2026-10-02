@@ -228,4 +228,16 @@ describe('Dialog 受控用法与属性透传', () => {
 
     expect(onClick).toHaveBeenCalledTimes(1);
   });
+
+  it('size="wide" 宽面板档落 data-size 标记，且不携带 default 档基线宽（§10.8）', () => {
+    render(
+      <Dialog open>
+        <DialogContent size="wide">
+          <DialogTitle>宽面板</DialogTitle>
+        </DialogContent>
+      </Dialog>,
+    );
+
+    expect(screen.getByRole('dialog').getAttribute('data-size')).toBe('wide');
+  });
 });

@@ -48,11 +48,12 @@ function DialogContent({
   showCloseButton?: boolean
   keepDefaultWidth?: boolean
   /**
-   * 形态档（§19.4 D2：新形态在组件内新增变体轴，不靠消费方 className 覆盖）：
-   * - default：居中呼吸弹窗（基线）
+   * 形态档（§19.4 D2：新形态在组件内新增变体轴，不靠消费方 className 覆盖；宽度档规范见宪法 §10.8）：
+   * - default：居中呼吸弹窗（基线，sm:max-w-md；消费方可 className 覆盖 max-w 微调至 lg/xl/2xl 既有事实档）
+   * - wide：宽面板（多卡并排/大组件承载，sm:max-w-4xl=896）——补 2xl(672) 与 full 之间的宽弹窗缺口档
    * - full：全屏工作面（图表精读/大内容承载）——inset-0 整屏 flex 列
    */
-  size?: "default" | "full"
+  size?: "default" | "wide" | "full"
 }) {
   return (
     <DialogPortal>
@@ -66,6 +67,7 @@ function DialogContent({
             :
           "fixed top-1/2 left-1/2 z-modal grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-xl bg-popover/95 backdrop-blur-xl p-6 text-sm text-popover-foreground border border-border/70 shadow-xs ring-1 ring-border/40 duration-normal outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           keepDefaultWidth && size === "default" && "sm:max-w-md",
+          size === "wide" && "sm:max-w-4xl",
           className
         )}
         {...props}
