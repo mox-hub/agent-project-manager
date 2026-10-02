@@ -5410,6 +5410,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/workspaces/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开工作区名单（CAP-A-26；可配置，默认关闭，仅 id/名称） */
+        get: operations["WorkspaceController_publicList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workspaces/public-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 设置是否向未认证方公开工作区名单（管理员；默认关） */
+        put: operations["WorkspaceController_setPublicList"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/workspaces/{id}/activate": {
         parameters: {
             query?: never;
@@ -13739,6 +13773,24 @@ export interface components {
         WorkspaceCurrentResponseDto: {
             /** @description 当前请求的工作区 ID（x-workspace-id 决定，缺省 default） */
             workspaceId: string;
+        };
+        PublicWorkspaceDto: {
+            /** @description 工作区 ID（default 为内置默认工作区） */
+            id: string;
+            /** @description 工作区名称 */
+            name: string;
+            /** @description 是否默认工作区 */
+            isDefault?: boolean;
+        };
+        PublicWorkspaceListResponseDto: {
+            /** @description 是否向未认证方公开工作区名单（管理员开关，默认关；关闭时 workspaces 为空） */
+            enabled: boolean;
+            /** @description 公开的工作区名单（enabled=false 时为空数组） */
+            workspaces: components["schemas"]["PublicWorkspaceDto"][];
+        };
+        SetPublicWorkspaceListDto: {
+            /** @description 是否向未认证方公开工作区名单 */
+            enabled: boolean;
         };
         CreateWorkspaceDto: {
             /** @description 工作区名称 */
@@ -41313,6 +41365,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkspaceCurrentResponseDto"];
+                };
+            };
+        };
+    };
+    WorkspaceController_publicList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 开关状态与（开启时的）脱敏工作区名单 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicWorkspaceListResponseDto"];
+                };
+            };
+        };
+    };
+    WorkspaceController_setPublicList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPublicWorkspaceListDto"];
+            };
+        };
+        responses: {
+            /** @description 写入后的开关状态与（开启时的）脱敏工作区名单 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicWorkspaceListResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
                 };
             };
         };
