@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 
 export function ScrollArea({
   className,
+  contentClassName,
   children,
   scrollFade = false,
   scrollbarGutter = false,
@@ -19,6 +20,8 @@ export function ScrollArea({
   overscrollContain = false,
   ...props
 }: ScrollAreaPrimitive.Root.Props & {
+  /** 透传到 Content 包裹层的类（如滚动尾部留白 pb-*） */
+  contentClassName?: string
   scrollFade?: boolean
   scrollbarGutter?: boolean
   fill?: boolean
@@ -48,6 +51,7 @@ export function ScrollArea({
             // fill：内容至少撑满视口（min-h-full）且贯通 flex 链——页面占满屏幕、
             // 内容超出时自然撑高滚动；不用 size-full（锁死高度会裁断长内容）。
             fill && "flex min-h-full w-full flex-col",
+            contentClassName,
           )}
           data-slot="scroll-area-content"
           style={clampContentMinWidth ? { minWidth: 0 } : undefined}

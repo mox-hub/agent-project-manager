@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Archive, ArchiveRestore, Plus, Tags, Trash2 } from 'lucide-react';
 import { PageShell } from '@/components/semantic/page-shell';
 import { nodeToText } from '@/components/semantic/page-header';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { AsyncState } from '@/components/semantic/async-state';
@@ -167,18 +168,28 @@ export function TagManager() {
       contentClassName="gap-4"
       aiPage="settings.labels"
       className="bg-background text-foreground"
-      title={t('settings.labels')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.labels')).trim()} />}
-      icon={Tags}
-      iconColor="text-accent-blue"
-      metrics={[{ id: 'total', label: t('settings.labels'), value: filteredTags.length }]}
-      actions={
-        // 标签创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403
-        isAdmin ? (
-          <HeaderActionButton icon={Plus} label={t('settings.addLabel')} onClick={openCreate} />
-        ) : null
-      }
     >
+      {/* 设置页头（语义组件批 2026-10-01）：大标题双态吸顶，替代 PageShell 内嵌 PageHeader */}
+      <SettingsHeader
+        icon={Tags}
+        tone="blue"
+        title={t('settings.labels')}
+        description={t('settings.labelsDesc')}
+        metrics={
+          <span className="text-xs text-content-text-muted tabular-nums">
+            {t('settings.itemCount', { count: filteredTags.length })}
+          </span>
+        }
+        actions={
+          <>
+            <FavoriteToggle label={nodeToText(t('settings.labels')).trim()} />
+            {/* 标签创建是管理员能力（服务端 RolesGuard），普通用户隐藏入口避免必 403 */}
+            {isAdmin ? (
+              <HeaderActionButton icon={Plus} label={t('settings.addLabel')} onClick={openCreate} />
+            ) : null}
+          </>
+        }
+      />
       <div className="flex justify-center">
         <SegmentedControl<TagFilter>
           variant="rect"

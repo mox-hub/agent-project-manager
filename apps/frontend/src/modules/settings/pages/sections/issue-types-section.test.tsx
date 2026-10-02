@@ -5,6 +5,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { IssueTypesSettingsSection } from './issue-types-section';
 import type { IssueTypeMeta } from '@/modules/issue/api/issue-type-api';
 
+vi.mock('@/shared/components/favorite-toggle', () => ({
+  FavoriteToggle: () => null,
+}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, fallbackOrOpts?: unknown, opts?: Record<string, unknown>) => {

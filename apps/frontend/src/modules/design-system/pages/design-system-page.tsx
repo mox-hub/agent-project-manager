@@ -269,6 +269,13 @@ import { SectionCard } from '@/components/semantic/section-card'
 import { Chip } from '@/components/semantic/chip'
 import { NavStatusDot } from '@/components/semantic/nav-status-dot'
 import { ThemeModeCard } from '@/components/semantic/theme-mode-card'
+import { SettingsHeader } from '@/components/semantic/settings-header'
+import { SectionScrubber } from '@/components/semantic/section-scrubber'
+import { SettingsSectionCard } from '@/components/semantic/settings-section-card'
+import { SettingsFieldRow } from '@/components/semantic/settings-field-row'
+import { StickySaveBar } from '@/components/semantic/sticky-save-bar'
+import { DefinitionRow } from '@/components/semantic/definition-row'
+import { StatusDefinitionList } from '@/components/semantic/status-definition-list'
 import { ChartCard } from '@/components/semantic/chart-card'
 import { StatTile } from '@/components/semantic/stat-tile'
 import { MetricRow } from '@/components/semantic/metric-row'
@@ -461,6 +468,21 @@ const SECTIONS = [
   { id: 'workflow-run-timeline', label: 'Workflow Run Timeline', group: 'App Patterns' },
   // G 类批 G0：语义组件分区框架（首批收录随批 G1 Chip 示范组件落地。raw 原语按裁决 G6 不出画廊。）
   { id: 'semantic-components', label: '语义组件', group: 'Semantic' },
+  { id: 'settings-patterns', label: 'Settings Patterns', group: 'App Patterns' },
+]
+
+/** Settings Patterns demo：ChapterScrubber 栏目清单（模块级常量，避免 observer 重建） */
+const SETTINGS_DEMO_SECTIONS = [
+  { id: 'set-demo-theme', label: '主题' },
+  { id: 'set-demo-notify', label: '通知' },
+  { id: 'set-demo-integration', label: '集成' },
+]
+
+/** Settings Patterns demo：StatusDefinitionList 静态只读数据（无回调 = 无新建/编辑/拖拽提交） */
+const SETTINGS_DEMO_STATUSES = [
+  { id: 'st-1', key: 'triage', name: '待分派', group: 'triage', order: 1, description: '新进入需要人工确认的条目' },
+  { id: 'st-2', key: 'started', name: '进行中', group: 'started', order: 2, color: '#3b82f6' },
+  { id: 'st-3', key: 'done', name: '已完成', group: 'completed', order: 3, isFinal: true },
 ]
 
 const WORKFLOW_TIMELINE_STATIC: RunStation[] = [
@@ -5446,6 +5468,121 @@ export function DesignSystemPage() {
                 <QuickCardsToggleDemo />
               </div>
 
+            </div>
+          </SectionAnchor>
+
+          <Separator />
+
+          <SectionAnchor id="settings-patterns">
+            <SectionTitle>Settings Patterns</SectionTitle>
+            <div className="space-y-5">
+              <div>
+                <SubLabel>SettingsHeader + SectionScrubber — 设置页双态吸顶头（在下方盒子内滚动体验：常态大标题无框 → 吸顶毛玻璃卡 + 栏目跳转行）</SubLabel>
+                <div className="h-72 overflow-y-auto rounded-xl border border-border">
+                  <div className="flex flex-col gap-4 p-4">
+                    <SettingsHeader
+                      icon={Palette}
+                      tone="purple"
+                      title="外观"
+                      description="主题外观、字体与语言偏好。滚动下方内容，标题收缩为吸顶卡并出现栏目跳转。"
+                      actions={<HeaderActionButton icon={Plus} label="操作" variant="outline" />}
+                      scrubber={<SectionScrubber sections={SETTINGS_DEMO_SECTIONS} />}
+                    />
+                    <SettingsSectionCard
+                      id="set-demo-theme"
+                      icon={Palette}
+                      tone="purple"
+                      title="主题模式"
+                      description="日间 / 夜间 / 跟随系统。"
+                    >
+                      <p className="text-xs text-content-text-muted">内容区占位：可嵌入表单、行列表等任意内容（§20.6 内容区不放嵌套卡）。</p>
+                    </SettingsSectionCard>
+                    <SettingsSectionCard
+                      id="set-demo-notify"
+                      icon={Bell}
+                      tone="blue"
+                      title="通知偏好"
+                      description="提及、订阅与定向推送的接收策略。"
+                      actions={<Button variant="outline" size="xs">全部免打扰</Button>}
+                    >
+                      <p className="text-xs text-content-text-muted">内容区占位（撑出滚动高度用）。</p>
+                      <p className="mt-2 text-xs text-content-text-muted">滚动体验 scrubber：点击 chips 平滑跳转，滚动时当前栏目自动高亮。</p>
+                    </SettingsSectionCard>
+                    <SettingsSectionCard
+                      id="set-demo-integration"
+                      icon={GitBranch}
+                      tone="green"
+                      title="集成"
+                      description="Git 供应商与外部工具连接。"
+                    >
+                      <p className="text-xs text-content-text-muted">内容区占位。</p>
+                    </SettingsSectionCard>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <SubLabel>SettingsSectionCard · danger — Danger Zone 封闭档（红框红标题，置于页底，破坏性操作配确认弹窗）</SubLabel>
+                <SettingsSectionCard
+                  icon={AlertTriangle}
+                  tone="danger"
+                  title="危险区"
+                  description="删除工作区不可恢复。"
+                  actions={<Button variant="destructive" size="xs">删除工作区</Button>}
+                >
+                  <p className="text-xs text-content-text-muted">破坏性操作占位。</p>
+                </SettingsSectionCard>
+              </div>
+              <div>
+                <SubLabel>StickySaveBar — 脏状态保存栏（dirty 时浮出，置内容流末尾：短页停尾部、长页滚动吸附视口底；此处静态 dirty 态演示）</SubLabel>
+                <div className="rounded-xl border border-border p-4">
+                  <p className="mb-2 text-xs text-content-text-muted">上方表单区占位……</p>
+                  <StickySaveBar
+                    dirty
+                    onSave={() => {}}
+                    onDiscard={() => {}}
+                    hint="Git 配置已修改"
+                  />
+                </div>
+              </div>
+              <div>
+                <SubLabel>SettingsFieldRow — 设置字段行（左说明右控件；立即生效型 Switch / 纯说明行）</SubLabel>
+                <div className="flex flex-col gap-2">
+                  <SettingsFieldRow
+                    title="常驻显示"
+                    description="Dock 栏在应用内常驻可见"
+                    control={<Switch defaultChecked aria-label="常驻显示" />}
+                  />
+                  <SettingsFieldRow title="仅说明行（无控件槽）" description="用于提示性条目" />
+                </div>
+              </div>
+              <div>
+                <SubLabel>DefinitionRow — 定义类管理页行骨架（补登记演示：前导底框图标 / 双行文本 / 尾部槽；拖拽形态须置于 Sortable 内，此处静态形态）</SubLabel>
+                <div className="overflow-hidden rounded-lg border border-border bg-card">
+                  <div className="divide-y divide-border/60">
+                    <DefinitionRow
+                      id="demo-row-1"
+                      sortable={false}
+                      leading={<span className="flex size-8 items-center justify-center rounded-lg bg-accent-blue-light"><CheckSquare className="size-4 text-accent-blue" /></span>}
+                      title={<span className="text-sm font-medium text-foreground">待办</span>}
+                      description="已确认尚未开始"
+                      trailing={<span className="text-xs text-content-text-muted">12</span>}
+                    />
+                    <DefinitionRow
+                      id="demo-row-2"
+                      sortable={false}
+                      singleLine
+                      leading={<span className="flex size-8 items-center justify-center rounded-lg bg-accent-red-light"><Bug className="size-4 text-accent-red" /></span>}
+                      title={<span className="text-sm font-medium text-foreground">阻塞</span>}
+                      description="被外部依赖阻断"
+                      trailing={<Button variant="ghost" size="icon-xs" aria-label="编辑"><Edit2 className="size-3.5" /></Button>}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <SubLabel>StatusDefinitionList — 状态定义分组列表（补登记演示：静态只读形态，无回调 = 无新建/编辑/拖拽提交）</SubLabel>
+                <StatusDefinitionList definitions={SETTINGS_DEMO_STATUSES} />
+              </div>
             </div>
           </SectionAnchor>
 

@@ -16,6 +16,9 @@ function mockT(key: string, opts?: Record<string, unknown>) {
   return MOCK_PLACEHOLDER_TEXTS[key] ?? key;
 }
 
+vi.mock('@/shared/components/favorite-toggle', () => ({
+  FavoriteToggle: () => null,
+}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: mockT }),
 }));

@@ -4,6 +4,9 @@ import { ShortcutsSettingsSection } from './shortcuts-section';
 import { useHotkeyStore } from '@/shared/hotkeys/hotkey-store';
 
 // vitest 环境无 i18next 实例：t() 直通返回 key（插值原样保留 key 名可断言冲突文案存在）
+vi.mock('@/shared/components/favorite-toggle', () => ({
+  FavoriteToggle: () => null,
+}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string, opts?: { action?: string }) => (opts?.action ? `${key}:${opts.action}` : key) }),
 }));

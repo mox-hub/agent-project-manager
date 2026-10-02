@@ -9,9 +9,10 @@
  * - 分层提示词编辑入口导航：项目级在项目设置、任务级在任务详情、
  *   执行者级在成员卡与角色管理。
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  BarChart3,
   Brain,
   FileCode2,
   FolderKanban,
@@ -25,9 +26,11 @@ import {
   UserRound,
 } from 'lucide-react';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
+import { SectionScrubber } from '@/components/semantic/section-scrubber';
+import { SettingsSectionCard } from '@/components/semantic/settings-section-card';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
-import { SectionCard } from '@/components/semantic/section-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -530,12 +533,35 @@ export function PromptsSettingsSection() {
   const update = useUpdatePromptConfig();
   const toggles = config.data?.toggles;
 
+  // scrubber 栏目清单：useMemo 稳定引用，避免重渲染重建 observer
+  const sections = useMemo(
+    () => [
+      { id: 'prompts-toggles', label: t('prompts.toggles.title') },
+      { id: 'prompts-usage', label: t('prompts.usage.title') },
+      { id: 'prompts-system', label: t('prompts.system.title') },
+      { id: 'prompts-templates', label: t('prompts.templates.title') },
+      { id: 'prompts-where', label: t('prompts.where.title') },
+    ],
+    [t],
+  );
+
   return (
-    <PageShell title={t('settings.prompts')}
-          favorites={<FavoriteToggle label={nodeToText(t('settings.prompts')).trim()} />} icon={ScrollText}>
-      <div className="mx-auto w-full max-w-4xl space-y-6 px-6 py-6">
+    <PageShell>
+      <div className="mx-auto w-full max-w-4xl px-6 py-6">
+        <SettingsHeader
+          icon={ScrollText}
+          tone="blue"
+          title={t('settings.prompts')}
+          description={t('settings.promptsDesc')}
+          actions={<FavoriteToggle label={nodeToText(t('settings.prompts')).trim()} />}
+          scrubber={<SectionScrubber sections={sections} />}
+        />
+        <div className="mt-6 space-y-6">
         {/* 注入开关 */}
-        <SectionCard
+        <SettingsSectionCard
+          id="prompts-toggles"
+          icon={ListChecks}
+          tone="blue"
           title={t('prompts.toggles.title')}
           description={t('prompts.toggles.desc')}
         >
@@ -557,40 +583,50 @@ export function PromptsSettingsSection() {
               ))}
             </div>
           )}
-        </SectionCard>
+        </SettingsSectionCard>
 
         {/* 注入率统计（增强 C） */}
-        <SectionCard
+        <SettingsSectionCard
+          id="prompts-usage"
+          icon={BarChart3}
+          tone="green"
           title={t('prompts.usage.title')}
           description={t('prompts.usage.desc')}
         >
           <UsageStatsCard />
-        </SectionCard>
+        </SettingsSectionCard>
 
         {/* 系统提示词（只读） */}
-        <SectionCard
+        <SettingsSectionCard
+          id="prompts-system"
+          icon={ScrollText}
+          tone="purple"
           title={t('prompts.system.title')}
           description={t('prompts.system.desc')}
         >
           <SystemPromptViewer />
-        </SectionCard>
+        </SettingsSectionCard>
 
         {/* 模板库（增强 A） */}
-        <SectionCard
+        <SettingsSectionCard
+          id="prompts-templates"
+          icon={LayoutTemplate}
+          tone="yellow"
           title={t('prompts.templates.title')}
           description={t('prompts.templates.desc')}
         >
           <TemplateLibraryCard />
-        </SectionCard>
+        </SettingsSectionCard>
 
         {/* 分层编辑入口导航 */}
-        <SectionCard title={t('prompts.where.title')} description={t('prompts.where.desc')}>
+        <SettingsSectionCard id="prompts-where" icon={FolderKanban} tone="orange" title={t('prompts.where.title')} description={t('prompts.where.desc')}>
           <div className="space-y-2 px-3 py-1 text-xs text-muted-foreground" data-ai-component="settings.prompts.where">
             <p>· {t('prompts.where.project')}</p>
             <p>· {t('prompts.where.task')}</p>
             <p>· {t('prompts.where.executor')}</p>
           </div>
-        </SectionCard>
+        </SettingsSectionCard>
+        </div>
       </div>
     </PageShell>
   );

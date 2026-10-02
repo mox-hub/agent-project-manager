@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CircleUser, Pencil, Plus, Trash2 } from 'lucide-react';
 import { PageShell } from '@/components/semantic/page-shell';
 import { nodeToText } from '@/components/semantic/page-header';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { AsyncState } from '@/components/semantic/async-state';
@@ -133,12 +134,20 @@ export function RoleManager() {
       contentClassName="gap-4"
       aiPage="settings.roles"
       className="bg-background text-foreground"
-      title={t('settings.roles')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.roles')).trim()} />}
-      icon={CircleUser}
-      iconColor="text-accent-purple"
-      metrics={[{ id: 'total', label: t('settings.roles'), value: displayRoles.length }]}
     >
+      {/* 设置页头（语义组件批 2026-10-01）：大标题双态吸顶，替代 PageShell 内嵌 PageHeader */}
+      <SettingsHeader
+        icon={CircleUser}
+        tone="purple"
+        title={t('settings.roles')}
+        description={t('settings.rolesDesc')}
+        metrics={
+          <span className="text-xs text-content-text-muted tabular-nums">
+            {t('settings.itemCount', { count: displayRoles.length })}
+          </span>
+        }
+        actions={<FavoriteToggle label={nodeToText(t('settings.roles')).trim()} />}
+      />
       <div className="flex justify-center">
         <SegmentedControl<RoleScopeFilter>
           variant="rect"

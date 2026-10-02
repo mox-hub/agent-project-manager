@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { useTranslation } from 'react-i18next';
@@ -59,13 +60,16 @@ export function ChecklistsSettingsSection() {
   return (
     <PageShell
       variant="standard"
-      icon={ClipboardCheck}
-      iconColor="text-accent-blue"
-      title={t('settings.checklists')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.checklists')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
+      <SettingsHeader
+        icon={ClipboardCheck}
+        tone="blue"
+        title={t('settings.checklists')}
+        description={t('settings.checklistsDesc')}
+        actions={<FavoriteToggle label={nodeToText(t('settings.checklists')).trim()} />}
+      />
       <ChecklistsCard />
     </PageShell>
   );

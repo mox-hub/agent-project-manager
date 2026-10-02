@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { DatabaseBackup, HardDriveDownload, Inbox, RefreshCw } from 'lucide-react';
 
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import {
@@ -65,12 +66,15 @@ export function BackupsSection() {
   return (
     <PageShell
       variant="standard"
-      icon={DatabaseBackup}
-      iconColor="text-accent-blue"
-      title={t('workspace.backups.title')}
-      favorites={<FavoriteToggle label={nodeToText(t('workspace.backups.title')).trim()} />}
       contentClassName="space-y-6"
     >
+      <SettingsHeader
+        icon={DatabaseBackup}
+        tone="blue"
+        title={t('workspace.backups.title')}
+        description={t('workspace.backups.desc')}
+        actions={<FavoriteToggle label={nodeToText(t('workspace.backups.title')).trim()} />}
+      />
       <RestoreConfirmDialog
         backup={restoreTarget}
         open={restoreOpen}

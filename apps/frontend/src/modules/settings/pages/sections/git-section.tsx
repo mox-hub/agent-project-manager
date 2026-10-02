@@ -8,13 +8,14 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
+import { StickySaveBar } from '@/components/semantic/sticky-save-bar';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
-import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { Spinner } from '@/components/ui/spinner';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-tool';
-import { GitBranch, RefreshCw, CheckCircle2, XCircle, Save, Settings2 } from 'lucide-react';
+import { GitBranch, RefreshCw, CheckCircle2, XCircle, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/toast';
 
@@ -197,18 +198,24 @@ export function GitSettingsSection() {
   const gitForm = useForm<GitConfigForm>({
     defaultValues: defaultGitConfig,
   });
+  const {
+    formState: { isDirty },
+  } = gitForm;
+
+  // 服务器 config → 表单值映射（effect 回填与「放弃」共用，保证回落到已保存值）
+  const toFormValues = (c: typeof config): GitConfigForm => ({
+    defaultProvider: (c['git.defaultProvider'] as GitConfigForm['defaultProvider']) || 'github',
+    defaultBranch: c['git.defaultBranch'] || 'main',
+    userName: c['git.user.name'] || '',
+    userEmail: c['git.user.email'] || '',
+    sshKeyPath: c['git.sshKeyPath'] || '',
+    autoSync: c['git.autoSync'] ?? true,
+    diffShowWhitespace: c['git.diff.showWhitespace'] ?? false,
+  });
 
   useEffect(() => {
     if (!isLoading && Object.keys(config).length > 0) {
-      gitForm.reset({
-        defaultProvider: config['git.defaultProvider'] || 'github',
-        defaultBranch: config['git.defaultBranch'] || 'main',
-        userName: config['git.user.name'] || '',
-        userEmail: config['git.user.email'] || '',
-        sshKeyPath: config['git.sshKeyPath'] || '',
-        autoSync: config['git.autoSync'] ?? true,
-        diffShowWhitespace: config['git.diff.showWhitespace'] ?? false,
-      });
+      gitForm.reset(toFormValues(config));
     }
   }, [config, gitForm, isLoading]);
 
@@ -235,24 +242,16 @@ export function GitSettingsSection() {
   return (
     <PageShell
       variant="standard"
-      icon={GitBranch}
-      iconColor="text-accent-blue"
-      title={t('settings.git')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.git')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
-      actions={
-        <HeaderActionButton
-          icon={Save}
-          label={isSaving ? t('settings.saving') : t('settings.saveChanges')}
-          pinned
-          onClick={handleSave}
-          disabled={isSaving || isLoading}
-          data-ai-component="settings.global-settings.header.save"
-          data-ai-action="settings.global-settings.header.save.click"
-        />
-      }
     >
+      <SettingsHeader
+        icon={GitBranch}
+        tone="blue"
+        title={t('settings.git')}
+        description={t('settings.gitPageDesc')}
+        actions={<FavoriteToggle label={nodeToText(t('settings.git')).trim()} />}
+      />
       {/* Git 工具状态卡片 */}
       <GitToolStatusCard />
 
@@ -386,6 +385,13 @@ export function GitSettingsSection() {
               </Form>
             </CardContent>
           </Card>
+      {/* 脏状态保存栏（语义组件批二）：原页头 Save 钮迁此 */}
+      <StickySaveBar
+        dirty={isDirty}
+        saving={isSaving}
+        onSave={() => void handleSave()}
+        onDiscard={() => gitForm.reset(toFormValues(config))}
+      />
     </PageShell>
   );
 }

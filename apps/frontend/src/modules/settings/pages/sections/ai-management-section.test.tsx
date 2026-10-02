@@ -10,6 +10,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { createTestQueryClient } from '@/test-utils/providers';
 import { AiManagementSection } from './ai-management-section';
 
+vi.mock('@/shared/components/favorite-toggle', () => ({
+  FavoriteToggle: () => null,
+}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     // 对象插值（t(key, opts)）回键名渲染，避免把 options 对象当 React 子节点

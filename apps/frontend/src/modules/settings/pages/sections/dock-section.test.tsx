@@ -17,6 +17,9 @@ beforeAll(() => {
 });
 
 // i18n mock 仅透传键名，断言直接对着键写
+vi.mock('@/shared/components/favorite-toggle', () => ({
+  FavoriteToggle: () => null,
+}));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -81,18 +84,26 @@ describe('DockSettingsSection —— 顶部实时预览', () => {
 
     const preview = screen.getByTestId('dock-preview');
     expect(preview.getAttribute('data-preview')).toBe('true');
-    expect(screen.getByText('settings.dockPreviewTitle')).toBeTruthy();
+    // 标题文本在 scrubber chip 与卡片头各出现一次，取卡片头（排除 scrubber）
+    expect(
+      screen
+        .getAllByText('settings.dockPreviewTitle')
+        .some((el) => !el.closest('[data-slot="section-scrubber"]')),
+    ).toBe(true);
   });
 
   it('预览卡片位于配置卡片之前（DOM 顺序）', () => {
     render(<DockSettingsSection />);
 
     const preview = screen.getByTestId('dock-preview');
-    const actionsTitle = screen.getByText('settings.dockActionsTitle');
+    // 取卡片头内的标题节点（scrubber chip 同文，须消歧）
+    const actionsTitle = screen
+      .getAllByText('settings.dockActionsTitle')
+      .find((el) => !el.closest('[data-slot="section-scrubber"]'));
 
     // actionsTitle 在 preview 之后
     expect(
-      preview.compareDocumentPosition(actionsTitle) & Node.DOCUMENT_POSITION_FOLLOWING,
+      preview.compareDocumentPosition(actionsTitle!) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 });

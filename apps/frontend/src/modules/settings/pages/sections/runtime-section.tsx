@@ -2,7 +2,7 @@
  * @file 设置页 · 运行时/守护进程管理区块
  * @description 机器列表（守护进程注册，点击进详情）、runtime 侧审批（通过/驳回）、
  *              派发记录与 CLI 接入指引。机器详情见 runtime-machine-detail-section；
- *              执行历史复用「AI 执行中心」（/app/settings/ai/executions），此处不重复建设。
+ *              执行历史在执行记录页（/app/executions），此处不重复建设。
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -24,8 +24,10 @@ import {
 } from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
 import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
-import { useDesktop, ProcessMonitorCard, DesktopLogCard, DesktopPreferencesCard } from '@/modules/desktop';
+import { useDesktop, ProcessMonitorCard, DesktopLogCard } from '@/modules/desktop';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
+import { SettingsSectionCard } from '@/components/semantic/settings-section-card';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SectionCard } from '@/components/semantic/section-card';
@@ -253,18 +255,19 @@ export function RuntimeSettingsSection() {
       variant="standard"
       contentClassName="space-y-6"
       aiPage="settings.runtime"
-      title={t('settings.runtimeTitle')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.runtimeTitle')).trim()} />}
-      icon={Cpu}
-      iconColor="text-accent-blue"
-      metrics={[
-        {
-          id: 'machines',
-          label: t('settings.runtimeMachineCountLabel'),
-          value: machines.length,
-        },
-      ]}
     >
+      <SettingsHeader
+        icon={Cpu}
+        tone="blue"
+        title={t('settings.runtimeTitle')}
+        description={t('settings.runtimeDesc')}
+        metrics={
+          <span className="text-xs text-content-text-muted tabular-nums">
+            {t('settings.itemCount', { count: machines.length })}
+          </span>
+        }
+        actions={<FavoriteToggle label={nodeToText(t('settings.runtimeTitle')).trim()} />}
+      />
       {/* 桌面模式：本机守护进程控制（web 模式内部自渲染 null） */}
       <LocalDaemonCard />
 
@@ -272,12 +275,12 @@ export function RuntimeSettingsSection() {
       <ProcessMonitorCard />
       <DesktopLogCard />
 
-      {/* 桌面模式：桌面偏好（关窗行为/检查更新/诊断导出，web 模式内部自渲染 null） */}
-      <DesktopPreferencesCard />
+      {/* 桌面偏好卡（关窗行为/检查更新/诊断导出）已迁「关于」页（/app/settings/about） */}
 
-      <SectionCard
+      <SettingsSectionCard
+          id="runtime-machines"
           icon={Monitor}
-          iconColor="text-accent-blue"
+          tone="blue"
           title={t('settings.runtimeMachinesTitle')}
           description={t('settings.runtimeMachinesDesc')}
         >
@@ -357,7 +360,7 @@ export function RuntimeSettingsSection() {
               })}
             </div>
           </AsyncState>
-        </SectionCard>
+        </SettingsSectionCard>
 
         <SectionCard
           icon={ShieldCheck}

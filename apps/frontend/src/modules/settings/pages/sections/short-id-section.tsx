@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Spinner } from '@/components/ui/spinner';
@@ -20,13 +21,16 @@ export function ShortIdSettingsSection() {
   return (
     <PageShell
       variant="standard"
-      icon={Hash}
-      iconColor="text-accent-blue"
-      title={t('settings.shortId')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.shortId')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
+      <SettingsHeader
+        icon={Hash}
+        tone="blue"
+        title={t('settings.shortId')}
+        description={t('settings.shortIdDesc')}
+        actions={<FavoriteToggle label={nodeToText(t('settings.shortId')).trim()} />}
+      />
       <ShortIdSettingsCard />
     </PageShell>
   );

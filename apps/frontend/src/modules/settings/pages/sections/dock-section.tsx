@@ -12,10 +12,13 @@
  * 属设备级 UI 偏好，不进后端配置。改动即时生效并落盘，无「保存」按钮。
  */
 import { useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
+import { SectionScrubber } from '@/components/semantic/section-scrubber';
+import { SettingsSectionCard } from '@/components/semantic/settings-section-card';
+import { SettingsFieldRow } from '@/components/semantic/settings-field-row';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { useTranslation } from 'react-i18next';
@@ -62,16 +65,31 @@ const DOCK_ITEM_LABEL_KEYS: Record<DockItemId, string> = {
 export function DockSettingsSection() {
   const { t } = useTranslation();
 
+  // scrubber 栏目清单：useMemo 稳定引用
+  const sections = useMemo(
+    () => [
+      { id: 'dock-preview', label: t('settings.dockPreviewTitle') },
+      { id: 'dock-display', label: t('settings.dockDisplayTitle') },
+      { id: 'dock-actions', label: t('settings.dockActionsTitle') },
+      { id: 'dock-ai', label: t('settings.dockAiTitle') },
+    ],
+    [t],
+  );
+
   return (
     <PageShell
       variant="standard"
-      icon={LayoutList}
-      iconColor="text-accent-blue"
-      title={t('settings.dock')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.dock')).trim()} />}
       className="bg-background text-foreground"
-      contentClassName="space-y-6"
+      contentClassName="gap-4"
     >
+      <SettingsHeader
+        icon={LayoutList}
+        tone="blue"
+        title={t('settings.dock')}
+        description={t('settings.dockDesc')}
+        actions={<FavoriteToggle label={nodeToText(t('settings.dock')).trim()} />}
+        scrubber={<SectionScrubber sections={sections} />}
+      />
       <DockPreviewCard />
       <DockDisplayCard />
       <DockActionsCard />
@@ -89,31 +107,26 @@ function DockDisplayCard() {
   const setDockAlwaysVisible = useAppStore((s) => s.setDockAlwaysVisible);
 
   return (
-    <Card className="border-border shadow-none">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <PanelBottom size={16} className="text-accent-green" />
-          <CardTitle className="text-base">{t('settings.dockDisplayTitle')}</CardTitle>
-        </div>
-        <CardDescription>{t('settings.dockDisplayDesc')}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
-          <div className="min-w-0">
-            <p className="text-sm text-foreground">{t('settings.dockAlwaysVisible')}</p>
-            <p className="text-xs text-muted-foreground">
-              {t('settings.dockAlwaysVisibleDesc')}
-            </p>
-          </div>
+    <SettingsSectionCard
+      id="dock-display"
+      icon={PanelBottom}
+      tone="green"
+      title={t('settings.dockDisplayTitle')}
+      description={t('settings.dockDisplayDesc')}
+    >
+      <SettingsFieldRow
+        title={t('settings.dockAlwaysVisible')}
+        description={t('settings.dockAlwaysVisibleDesc')}
+        control={
           <Switch
             checked={dockAlwaysVisible}
             onCheckedChange={setDockAlwaysVisible}
             aria-label={t('settings.dockAlwaysVisible')}
             data-testid="dock-always-visible"
           />
-        </div>
-      </CardContent>
-    </Card>
+        }
+      />
+    </SettingsSectionCard>
   );
 }
 
@@ -122,20 +135,14 @@ function DockPreviewCard() {
   const { t } = useTranslation();
 
   return (
-    <Card className="border-border shadow-none">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Eye size={16} className="text-accent-purple" />
-          <CardTitle className="text-base">{t('settings.dockPreviewTitle')}</CardTitle>
-        </div>
-        <CardDescription>
-          {t('settings.dockPreviewDesc')}
-          <span className="mt-1 block text-xs text-content-text-muted">
-            {t('settings.dockPreviewAlwaysOn')}
-          </span>
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <SettingsSectionCard
+      id="dock-preview"
+      icon={Eye}
+      tone="purple"
+      title={t('settings.dockPreviewTitle')}
+      description={t('settings.dockPreviewDesc')}
+    >
+      <p className="mb-3 text-xs text-content-text-muted">{t('settings.dockPreviewAlwaysOn')}</p>
         {/*
           内嵌真实 Dock（preview 态仅换定位）：上方留出 pt-14 容纳悬浮指标徽章
           （它以 absolute bottom-full 锚定在 Dock 容器顶部之外）。
@@ -144,8 +151,7 @@ function DockPreviewCard() {
         <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 pb-6 pt-14">
           <BottomDock preview />
         </div>
-      </CardContent>
-    </Card>
+    </SettingsSectionCard>
   );
 }
 
@@ -158,16 +164,14 @@ function DockActionsCard() {
   const resetDockSettings = useAppStore((s) => s.resetDockSettings);
 
   return (
-    <Card className="border-border shadow-none">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <LayoutList size={16} className="text-accent-blue" />
-          <CardTitle className="text-base">{t('settings.dockActionsTitle')}</CardTitle>
-        </div>
-        <CardDescription>{t('settings.dockActionsDesc')}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <ul className="divide-y divide-border rounded-lg border border-border">
+    <SettingsSectionCard
+      id="dock-actions"
+      icon={LayoutList}
+      tone="blue"
+      title={t('settings.dockActionsTitle')}
+      description={t('settings.dockActionsDesc')}
+    >
+      <ul className="divide-y divide-border rounded-lg border border-border">
           {DOCK_ITEM_IDS.map((id) => {
             const Icon = DOCK_ITEM_ICONS[id];
             const visible = dockItems.includes(id);
@@ -225,7 +229,7 @@ function DockActionsCard() {
           })}
         </ul>
 
-        <div className="flex justify-end">
+        <div className="mt-4 flex justify-end">
           <Button
             variant="outline"
             size="sm"
@@ -237,8 +241,7 @@ function DockActionsCard() {
             {t('settings.dockReset')}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+    </SettingsSectionCard>
   );
 }
 
@@ -270,28 +273,26 @@ function DockAiColleaguesCard() {
   };
 
   return (
-    <Card className="border-border shadow-none">
-      <CardHeader>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Users size={16} className="text-accent-purple" />
-            <CardTitle className="text-base">{t('settings.dockAiTitle')}</CardTitle>
-          </div>
-          {hiddenIds.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setHiddenIds([])}
-              data-testid="dock-ai-show-all"
-            >
-              {t('settings.dockAiAll')}
-            </Button>
-          )}
-        </div>
-        <CardDescription>{t('settings.dockAiDesc')}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <SettingsSectionCard
+      id="dock-ai"
+      icon={Users}
+      tone="purple"
+      title={t('settings.dockAiTitle')}
+      description={t('settings.dockAiDesc')}
+      actions={
+        hiddenIds.length > 0 ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => setHiddenIds([])}
+            data-testid="dock-ai-show-all"
+          >
+            {t('settings.dockAiAll')}
+          </Button>
+        ) : undefined
+      }
+    >
         {colleagues.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('settings.dockAiEmpty')}</p>
         ) : (
@@ -357,7 +358,6 @@ function DockAiColleaguesCard() {
             </p>
           </>
         )}
-      </CardContent>
-    </Card>
+    </SettingsSectionCard>
   );
 }

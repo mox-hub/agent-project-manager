@@ -73,7 +73,6 @@ export const PAGE_REGISTRY: Record<string, PageRegistryEntry> = {
   "/app/settings/profile": { icon: UserRound, labelKey: "settings.profile", color: "hsl(var(--accent-blue))" },
   // 设置子路由（AI / 集成迁入设置页后的新路径，供收藏分区解析）
   "/app/settings/ai": { icon: Brain, labelKey: "settings.aiManagement", color: "hsl(var(--accent-yellow))" },
-  "/app/settings/ai/executions": { icon: getEntityIcon("execution").icon, labelKey: "settings.aiExecutions", color: "hsl(var(--accent-blue))" },
   "/app/settings/integrations": { icon: Plug, labelKey: "settings.integrations", color: "hsl(var(--accent-blue))" },
   // 设置其余子页（均有 PageHeader 可收藏，此前未登记会退化为 Star 兜底）
   "/app/settings/appearance": { icon: Palette, labelKey: "settings.appearance", color: "hsl(var(--accent-purple))" },

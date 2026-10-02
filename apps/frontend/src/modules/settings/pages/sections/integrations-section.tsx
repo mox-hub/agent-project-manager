@@ -32,8 +32,9 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { PageShell, PageBody } from '@/components/semantic/page-shell';
-import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
 import { Spinner } from '@/components/ui/spinner';
@@ -617,24 +618,40 @@ export function IntegrationsSettingsSection() {
   ];
 
   return (
-    <PageShell className="overflow-hidden p-0" aiPage={CORE_AI_PAGE_IDS.integrationList}>
-      <div className="flex flex-col h-full overflow-auto bg-background">
-        {/* Header */}
-        <PageHeader
-          title={t('settings.integration.title')}
-          favorites={<FavoriteToggle label={nodeToText(t('settings.integration.title')).trim()} aiId="integration.integration-list.main" />}
-          icon={Plug2}
-          aiId="integration.integration-list.main"
-          metrics={[
-            ...(errorCount > 0
-              ? [{ id: 'errors', label: t('settings.integration.metricErrors'), value: errorCount, tone: 'danger' as const }]
-              : []),
-            { id: 'connected', label: t('settings.integration.metricConnected'), value: connectedCount, tone: 'success' as const },
-          ]}
+    <PageShell
+      className="bg-background text-foreground"
+      variant="standard"
+      contentClassName="gap-4"
+      aiPage={CORE_AI_PAGE_IDS.integrationList}
+    >
+      {/* Header（语义组件批二·验收调整）：转 A 类外滚，header sticky 吸顶 */}
+      <SettingsHeader
+        icon={Plug2}
+            tone="blue"
+            title={t('settings.integration.title')}
+            description={t('settings.integration.subtitle')}
+            metrics={
+              <>
+                {errorCount > 0 ? (
+                  <span className="text-xs font-medium text-accent-red tabular-nums">
+                    {t('settings.integration.metricErrors')} {errorCount}
+                  </span>
+                ) : null}
+                <span className="text-xs font-medium text-accent-green tabular-nums">
+                  {t('settings.integration.metricConnected')} {connectedCount}
+                </span>
+              </>
+            }
+            actions={
+              <FavoriteToggle
+                label={nodeToText(t('settings.integration.title')).trim()}
+                aiId="integration.integration-list.main"
+              />
+          }
         />
 
         {/* Toolbar: 左说明 / 中 rect 分类页签 / 右搜索 */}
-        <div className="grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border px-6 py-2 md:px-7">
+        <div className="grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b border-border py-2">
           <p className="min-w-0 truncate text-xs text-muted-foreground">
             {t('settings.integration.subtitle')}
           </p>
@@ -659,9 +676,8 @@ export function IntegrationsSettingsSection() {
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto">
-          <PageBody variant="standard" className="space-y-8">
+        {/* Content：外层 ScrollArea 统一滚动（验收调整） */}
+        <div className="space-y-8">
             {Object.entries(grouped).map(([cat, items]) => (
               <section key={cat}>
                 {/* Section header */}
@@ -784,9 +800,7 @@ export function IntegrationsSettingsSection() {
                 ))}
               </div>
             </section>
-          </PageBody>
         </div>
-      </div>
 
       <LinearConfigForm
         open={linearFormOpen}

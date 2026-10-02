@@ -15,6 +15,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Button } from '@/components/ui/button';
@@ -119,14 +120,17 @@ export function MemorySection() {
   return (
     <PageShell
       variant="standard"
-      title={t('memory.title')}
-      favorites={<FavoriteToggle label={nodeToText(t('memory.title')).trim()} />}
-      icon={Brain}
-      iconColor="text-accent-yellow"
       aiPage={CORE_AI_PAGE_IDS.settings}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
+      <SettingsHeader
+        icon={Brain}
+        tone="yellow"
+        title={t('memory.title')}
+        description={t('memory.description')}
+        actions={<FavoriteToggle label={nodeToText(t('memory.title')).trim()} />}
+      />
       <Card className="border-border shadow-none">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">

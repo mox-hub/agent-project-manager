@@ -11,6 +11,7 @@ import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { AvatarPickerField } from '@/components/ui/avatar-picker-field';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { toast } from '@/components/ui/toast';
@@ -112,13 +113,16 @@ export function ProfileSettingsSection() {
   return (
     <PageShell
       variant="standard"
-      icon={UserRound}
-      iconColor="text-accent-blue"
-      title={t('settings.profile')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.profile')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
+      <SettingsHeader
+        icon={UserRound}
+        tone="blue"
+        title={t('settings.profile')}
+        description={t('settings.profileDesc')}
+        actions={<FavoriteToggle label={nodeToText(t('settings.profile')).trim()} />}
+      />
       <Card className="border-border shadow-none">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">

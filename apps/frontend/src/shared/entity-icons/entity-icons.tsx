@@ -100,7 +100,7 @@ export interface EntityIconEntry {
  * - milestone=Flag：里程碑计划轴节点语义唯一（CAP-A-16 时间轴 / 创建面板共用）；
  *   PRIORITY_VISUALS.high 用 ArrowUp、 Flame 归 critical/urgent，均不撞车。
  * - workflow=Workflow：shell-layout nav.workflow 已用，流程节点语义。
- * - execution=Play：page-registry settings/ai/executions 已用，「运行」语义。
+ * - execution=Play：executions 列表页/执行域语义（原 settings/ai/executions 已废弃，2026-10-02）。
  * - acceptance=ShieldCheck：acceptance-list-page 已用，门禁语义；
  *   admin 域与人工确认节点的三方重叠已裁决改道（UserCog / UserCheck，见文件头）。
  * - document=FileText：page-registry /app/documents、route-preview、apm-ref doc 多数派；

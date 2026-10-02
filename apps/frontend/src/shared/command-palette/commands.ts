@@ -132,7 +132,6 @@ export const commandEntries: CommandEntry[] = [
   { id: 'cmd-ai-surface', labelKey: 'nav.aiSurface', to: '/app/ai-surface', group: 'collaboration', icon: Sparkles, keywords: ['ai', 'surface', '表面', '同事'] },
   // —— 设置（二级页全量登记，路由与 router.tsx 对齐）——
   { id: 'cmd-ai', labelKey: 'shell.openAiSpace', to: '/app/settings/ai', group: 'settings', icon: Sparkles, keywords: ['ai', 'assistant', 'agent', 'mcp', '助手', '智能体', '模型'] },
-  { id: 'cmd-ai-executions', labelKey: 'settings.aiExecutions', to: '/app/settings/ai/executions', group: 'settings', entity: 'execution', keywords: ['ai', 'execution', '执行中心'] },
   { id: 'cmd-settings-integrations', labelKey: 'settings.integrations', to: '/app/settings/integrations', group: 'settings', icon: Plug, keywords: ['integration', 'github', 'linear', '集成'] },
   { id: 'cmd-settings-runtime', labelKey: 'settings.runtime', to: '/app/settings/runtime', group: 'settings', icon: Server, keywords: ['runtime', 'daemon', '运行时', '守护进程'] },
   { id: 'cmd-settings-memory', labelKey: 'settings.memory', to: '/app/settings/memory', group: 'settings', icon: Brain, keywords: ['memory', '记忆'] },

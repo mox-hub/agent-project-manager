@@ -228,7 +228,7 @@ export function SettingsPage() {
 
       {/* 右侧内容区：子路由子页（PageShell + PageHeader + 卡片内容） */}
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <ScrollArea className="h-full w-full">
+        <ScrollArea className="h-full w-full" contentClassName="pb-14">
           <Outlet />
         </ScrollArea>
       </main>

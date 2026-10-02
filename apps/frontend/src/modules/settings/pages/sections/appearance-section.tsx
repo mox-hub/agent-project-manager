@@ -1,8 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/semantic/page-shell';
 import { nodeToText } from '@/components/semantic/page-header';
+import { SettingsHeader } from '@/components/semantic/settings-header';
+import { SectionScrubber } from '@/components/semantic/section-scrubber';
+import { SettingsSectionCard } from '@/components/semantic/settings-section-card';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { ThemeModeCard } from '@/components/semantic/theme-mode-card';
 import { useTheme } from '@/shared/theme/theme-context';
@@ -14,7 +16,7 @@ import {
   Type,
   ZoomIn,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -133,21 +135,38 @@ function FontPickerField({
   );
 }
 
-/** 外观设置子页：主题模式 / 界面缩放 / 字体 / 字号 / 语言 */
+/** 外观设置子页：主题模式 / 界面缩放 / 字体 / 字号 / 语言（设置页语义组件批试点） */
 export function AppearanceSettingsSection() {
   const { t } = useTranslation();
   const { mode, setTheme, appearance, setAppearance } = useTheme();
 
+  // scrubber 栏目清单：useMemo 稳定引用，避免缩放拖动等重渲染重建 observer
+  const sections = useMemo(
+    () => [
+      { id: 'appearance-zoom', label: t('settings.interfaceZoom') },
+      { id: 'appearance-fonts', label: t('settings.appearanceFonts') },
+      { id: 'appearance-fontsize', label: t('settings.fontSize') },
+      { id: 'appearance-language', label: t('settings.language.title') },
+    ],
+    [t],
+  );
+
   return (
     <PageShell
       variant="standard"
-      icon={Palette}
-      iconColor="text-accent-purple"
-      title={t('settings.appearance')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.appearance')).trim()} />}
       className="bg-background text-foreground"
-      contentClassName="space-y-6"
+      contentClassName="gap-4"
     >
+      {/* 设置页头（语义组件批 2026-10-01）：大标题双态吸顶 + 栏目跳转 */}
+      <SettingsHeader
+        icon={Palette}
+        tone="purple"
+        title={t('settings.appearance')}
+        description={t('settings.appearanceDesc')}
+        actions={<FavoriteToggle label={nodeToText(t('settings.appearance')).trim()} />}
+        scrubber={<SectionScrubber sections={sections} />}
+      />
+
       {/* 主题模式：三档（日间 / 夜间 / 跟随系统），实现收在语义组件层 */}
       <ThemeModeCard
         value={mode}
@@ -161,128 +180,118 @@ export function AppearanceSettingsSection() {
       />
 
           {/* 界面缩放 */}
-          <Card className="border-border shadow-none">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <ZoomIn size={16} className="text-accent-green" />
-                {t('settings.interfaceZoom')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">{t('settings.interfaceZoomDesc')}</p>
-                <span className="font-mono text-sm text-muted-foreground">{appearance.zoom}%</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAppearance({ zoom: Math.max(50, appearance.zoom - 10) })}
-                  disabled={appearance.zoom <= 50}
-                >
-                  <span className="text-lg">−</span>
-                </Button>
-                <input
-                  type="range"
-                  min="50"
-                  max="200"
-                  step="10"
-                  value={appearance.zoom}
-                  onChange={(e) => setAppearance({ zoom: Number(e.target.value) })}
-                  className="flex-1 accent-accent-blue"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAppearance({ zoom: Math.min(200, appearance.zoom + 10) })}
-                  disabled={appearance.zoom >= 200}
-                >
-                  <span className="text-lg">+</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <SettingsSectionCard
+            id="appearance-zoom"
+            icon={ZoomIn}
+            tone="green"
+            title={t('settings.interfaceZoom')}
+            description={t('settings.interfaceZoomDesc')}
+          >
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAppearance({ zoom: Math.max(50, appearance.zoom - 10) })}
+                disabled={appearance.zoom <= 50}
+              >
+                <span className="text-lg">−</span>
+              </Button>
+              <input
+                type="range"
+                min="50"
+                max="200"
+                step="10"
+                value={appearance.zoom}
+                onChange={(e) => setAppearance({ zoom: Number(e.target.value) })}
+                className="flex-1 accent-accent-blue"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAppearance({ zoom: Math.min(200, appearance.zoom + 10) })}
+                disabled={appearance.zoom >= 200}
+              >
+                <span className="text-lg">+</span>
+              </Button>
+              <span className="w-12 text-right font-mono text-sm text-muted-foreground">
+                {appearance.zoom}%
+              </span>
+            </div>
+          </SettingsSectionCard>
 
           {/* 字体选择（批 2.5：--font-user-* 变量，字体只管 family，字号缩放走独立机制） */}
-          <Card className="border-border shadow-none">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Type size={16} className="text-accent-purple" />
-                {t('settings.appearanceFonts')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FontPickerField
-                  label={t('settings.fontUserSans')}
-                  value={appearance.userSansFont}
-                  presets={SANS_FONT_PRESETS}
-                  onChange={(font) => setAppearance({ userSansFont: font })}
-                />
-                <FontPickerField
-                  label={t('settings.fontUserMono')}
-                  value={appearance.userMonoFont}
-                  presets={MONO_FONT_PRESETS}
-                  onChange={(font) => setAppearance({ userMonoFont: font })}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <SettingsSectionCard
+            id="appearance-fonts"
+            icon={Type}
+            tone="purple"
+            title={t('settings.appearanceFonts')}
+            description={t('settings.appearanceFontsDesc')}
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FontPickerField
+                label={t('settings.fontUserSans')}
+                value={appearance.userSansFont}
+                presets={SANS_FONT_PRESETS}
+                onChange={(font) => setAppearance({ userSansFont: font })}
+              />
+              <FontPickerField
+                label={t('settings.fontUserMono')}
+                value={appearance.userMonoFont}
+                presets={MONO_FONT_PRESETS}
+                onChange={(font) => setAppearance({ userMonoFont: font })}
+              />
+            </div>
+          </SettingsSectionCard>
 
           {/* 字号调整 */}
-          <Card className="border-border shadow-none">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <ALargeSmall size={16} className="text-accent-yellow" />
-                {t('settings.fontSize')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between rounded-lg border border-border p-4">
-                <button
-                  type="button"
-                  onClick={() => setAppearance({ fontSize: 'small' })}
-                  className={cn(
-                    'flex-1 text-center',
-                    appearance.fontSize === 'small'
-                      ? 'text-accent-blue font-medium'
-                      : 'text-muted-foreground',
-                  )}
-                >
-                  <p className="text-sm">{t('settings.fontSizeSmall')}</p>
-                </button>
-                <div className={`mx-4 flex-1 text-center ${appearance.fontSize === 'medium' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}>
-                  <p className="text-base">{t('settings.fontSizeMedium')}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setAppearance({ fontSize: 'large' })}
-                  className={cn(
-                    'flex-1 text-center',
-                    appearance.fontSize === 'large'
-                      ? 'text-accent-blue font-medium'
-                      : 'text-muted-foreground',
-                  )}
-                >
-                  <p className="text-lg">{t('settings.fontSizeLarge')}</p>
-                </button>
+          <SettingsSectionCard
+            id="appearance-fontsize"
+            icon={ALargeSmall}
+            tone="yellow"
+            title={t('settings.fontSize')}
+            description={t('settings.fontSizeDesc')}
+          >
+            <div className="flex items-center justify-between rounded-lg border border-border p-4">
+              <button
+                type="button"
+                onClick={() => setAppearance({ fontSize: 'small' })}
+                className={cn(
+                  'flex-1 text-center',
+                  appearance.fontSize === 'small'
+                    ? 'text-accent-blue font-medium'
+                    : 'text-muted-foreground',
+                )}
+              >
+                <p className="text-sm">{t('settings.fontSizeSmall')}</p>
+              </button>
+              <div className={`mx-4 flex-1 text-center ${appearance.fontSize === 'medium' ? 'text-accent-blue font-medium' : 'text-muted-foreground'}`}>
+                <p className="text-base">{t('settings.fontSizeMedium')}</p>
               </div>
-            </CardContent>
-          </Card>
+              <button
+                type="button"
+                onClick={() => setAppearance({ fontSize: 'large' })}
+                className={cn(
+                  'flex-1 text-center',
+                  appearance.fontSize === 'large'
+                    ? 'text-accent-blue font-medium'
+                    : 'text-muted-foreground',
+                )}
+              >
+                <p className="text-lg">{t('settings.fontSizeLarge')}</p>
+              </button>
+            </div>
+          </SettingsSectionCard>
 
           {/* 语言设置 */}
-          <Card className="border-border shadow-none">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Languages size={16} className="text-accent-blue" />
-                {t('settings.language.title')}
-              </CardTitle>
-              <CardDescription>{t('settings.language.description')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <LanguageSwitcher />
-            </CardContent>
-          </Card>
+          <SettingsSectionCard
+            id="appearance-language"
+            icon={Languages}
+            tone="blue"
+            title={t('settings.language.title')}
+            description={t('settings.language.description')}
+          >
+            <LanguageSwitcher />
+          </SettingsSectionCard>
     </PageShell>
   );
 }

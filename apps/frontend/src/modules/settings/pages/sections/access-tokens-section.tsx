@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { KeyRound, Plus, Copy, Check, Trash2, Terminal } from 'lucide-react';
 import { api } from '@/infrastructure/api-client';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/semantic/header-action-button';
@@ -129,22 +130,27 @@ export function AccessTokensSettingsSection() {
       variant="standard"
       contentClassName="space-y-6"
       aiPage="settings.tokens"
-      title={t('settings.tokensTitle')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.tokensTitle')).trim()} />}
-      icon={KeyRound}
-      iconColor="text-accent-yellow"
-      actions={
-        <HeaderActionButton
-          icon={Plus}
-          label={t('settings.tokenCreate')}
-          onClick={() => {
-            setName('');
-            setExpiry('0');
-            setCreateOpen(true);
-          }}
-        />
-      }
     >
+      <SettingsHeader
+        icon={KeyRound}
+        tone="yellow"
+        title={t('settings.tokensTitle')}
+        description={t('settings.tokensDesc')}
+        actions={
+          <>
+            <FavoriteToggle label={nodeToText(t('settings.tokensTitle')).trim()} />
+            <HeaderActionButton
+              icon={Plus}
+              label={t('settings.tokenCreate')}
+              onClick={() => {
+                setName('');
+                setExpiry('0');
+                setCreateOpen(true);
+              }}
+            />
+          </>
+        }
+      />
       <SectionCard
           icon={KeyRound}
           iconColor="text-accent-yellow"

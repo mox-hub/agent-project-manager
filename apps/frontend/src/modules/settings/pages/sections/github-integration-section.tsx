@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { useIntegrations } from '@/modules/integration/hooks/use-integrations';
@@ -28,18 +29,22 @@ export function GithubIntegrationSection() {
   const [connectOpen, setConnectOpen] = useState(false);
 
   return (
-    <PageShell
-      variant="standard"
-      title={t('settings.integration.githubIntegration.title')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.integration.githubIntegration.title')).trim()} />}
-      icon={Github}
-      actions={
-        <Button size="sm" className="h-7" onClick={() => setConnectOpen(true)}>
-          <Github className="mr-1 h-3.5 w-3.5" />
-          {t('settings.integration.githubIntegration.connect')}
-        </Button>
-      }
-    >
+    <PageShell variant="standard" contentClassName="gap-4">
+      <SettingsHeader
+        icon={Github}
+        tone="gray"
+        title={t('settings.integration.githubIntegration.title')}
+        description={t('settings.integration.githubIntegration.desc')}
+        actions={
+          <>
+            <FavoriteToggle label={nodeToText(t('settings.integration.githubIntegration.title')).trim()} />
+            <Button size="sm" className="h-7" onClick={() => setConnectOpen(true)}>
+              <Github className="mr-1 h-3.5 w-3.5" />
+              {t('settings.integration.githubIntegration.connect')}
+            </Button>
+          </>
+        }
+      />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-4">
           {githubInts.length === 0 ? (

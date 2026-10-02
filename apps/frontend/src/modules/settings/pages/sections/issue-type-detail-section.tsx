@@ -15,7 +15,10 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { PageShell } from '@/components/semantic/page-shell';
-import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { nodeToText } from '@/components/semantic/page-header';
+import { SettingsHeader } from '@/components/semantic/settings-header';
+import { StickySaveBar } from '@/components/semantic/sticky-save-bar';
+import { SettingsFieldRow } from '@/components/semantic/settings-field-row';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { ToolbarRow } from '@/components/semantic/toolbar-row';
 import { Button } from '@/components/ui/button';
@@ -73,12 +76,21 @@ export function IssueTypeDetailSection() {
   const type = useMemo(() => types.find((ty) => ty.key === typeKey), [types, typeKey]);
 
   return (
-    <PageShell className="overflow-hidden bg-background text-foreground">
-      <PageHeader
+    <PageShell
+      variant="standard"
+      contentClassName="gap-4"
+      className="bg-background text-foreground"
+    >
+      {/* 设置页头（语义组件批二·验收调整）：转 A 类外滚，header sticky 吸顶 */}
+      <SettingsHeader
         icon={Shapes}
-        iconColor="text-accent-blue"
+        tone="blue"
         title={type ? type.name : t('settings.issueTypeDetail', '任务类型详情')}
-        favorites={<FavoriteToggle label={nodeToText(type ? type.name : t('settings.issueTypeDetail', '任务类型详情')).trim()} />}
+        actions={
+          <FavoriteToggle
+            label={nodeToText(type ? type.name : t('settings.issueTypeDetail', '任务类型详情')).trim()}
+          />
+        }
       />
       <AsyncState
         isLoading={isLoading}
@@ -101,9 +113,11 @@ function IssueTypeDetailBody({ type }: { type: IssueTypeMeta }) {
   const statusCount = (statusesQuery.data ?? []).filter((s) => !s.projectId).length;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      {/* 纯样式切换页：不传 views（视图管理整体隐藏），仅居中页签 */}
+    <div>
+      {/* 纯样式切换页：不传 views（视图管理整体隐藏），仅居中页签。
+          A 类外滚流中转 static（内置 sticky top-10 为旧 40px 页头双层设计） */}
       <ToolbarRow
+        className="static px-0 md:px-0"
         aiId="settings.issue-type-detail"
         viewStyle={{
           layout: 'centered',
@@ -126,7 +140,7 @@ function IssueTypeDetailBody({ type }: { type: IssueTypeMeta }) {
         downloadMenu={false}
       />
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4 md:px-7">
+      <div className="space-y-4">
         <div className="flex items-center gap-3">
           <IssueTypeIcon meta={type} className="size-8" />
           <div className="min-w-0 flex-1">
@@ -162,13 +176,22 @@ function IssueTypeDetailBody({ type }: { type: IssueTypeMeta }) {
 function BasicsTab({ type, isDefault }: { type: IssueTypeMeta; isDefault: boolean }) {
   const { t } = useTranslation();
   const updateType = useUpdateIssueType();
-  const [draft, setDraft] = useState({
-    name: type.name,
-    description: type.description ?? '',
-    icon: type.icon,
-    color: type.color,
-    enabled: type.enabled,
-  });
+  // 脏状态基线（语义组件批二）：draft 与服务器值分离，放弃回落基线
+  const initialDraft = useMemo(
+    () => ({
+      name: type.name,
+      description: type.description ?? '',
+      icon: type.icon,
+      color: type.color,
+      enabled: type.enabled,
+    }),
+    [type],
+  );
+  const [draft, setDraft] = useState(initialDraft);
+  const isDirty = useMemo(
+    () => JSON.stringify(draft) !== JSON.stringify(initialDraft),
+    [draft, initialDraft],
+  );
 
   const save = async () => {
     try {
@@ -240,26 +263,28 @@ function BasicsTab({ type, isDefault }: { type: IssueTypeMeta; isDefault: boolea
           className="h-9 w-20 cursor-pointer p-1"
         />
       </div>
-      <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
-        <div>
-          <div className="text-sm text-foreground">{t('settings.enabled', '启用')}</div>
-          <div className="text-xs text-content-text-secondary">
-            {isDefault
-              ? t('settings.defaultTypeAlwaysOn', '默认类型不可停用')
-              : t('settings.enabledHint', '停用后新工单不再可选此类型，既有工单不受影响')}
-          </div>
-        </div>
-        <Switch
-          checked={draft.enabled}
-          disabled={isDefault}
-          onCheckedChange={(checked) => setDraft({ ...draft, enabled: checked })}
-        />
-      </div>
-      <div className="flex justify-end">
-        <Button size="sm" onClick={() => void save()} disabled={updateType.isPending}>
-          {t('common.save')}
-        </Button>
-      </div>
+      <SettingsFieldRow
+        title={t('settings.enabled', '启用')}
+        description={
+          isDefault
+            ? t('settings.defaultTypeAlwaysOn', '默认类型不可停用')
+            : t('settings.enabledHint', '停用后新工单不再可选此类型，既有工单不受影响')
+        }
+        control={
+          <Switch
+            checked={draft.enabled}
+            disabled={isDefault}
+            onCheckedChange={(checked) => setDraft({ ...draft, enabled: checked })}
+          />
+        }
+      />
+      {/* 脏状态保存栏（语义组件批二）：原卡底保存钮迁此 */}
+      <StickySaveBar
+        dirty={isDirty}
+        saving={updateType.isPending}
+        onSave={() => void save()}
+        onDiscard={() => setDraft(initialDraft)}
+      />
     </div>
   );
 }

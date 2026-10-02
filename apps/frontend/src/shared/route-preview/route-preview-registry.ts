@@ -40,7 +40,6 @@ const DYNAMIC_RULES: Array<{ prefix: string; type: RoutePreviewType }> = [
   { prefix: '/app/teams/', type: 'team' },
   { prefix: '/app/acceptance/', type: 'acceptance' },
   { prefix: '/app/executions/', type: 'execution' },
-  { prefix: '/app/settings/ai/executions/', type: 'execution' },
   { prefix: '/app/releases/', type: 'release' },
   { prefix: '/app/workflows/', type: 'workflow' },
 ];

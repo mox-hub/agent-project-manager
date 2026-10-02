@@ -201,11 +201,32 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   // 逐字重复骨架（PageShell+SubPageToolbar+主栏自滚动居中宽档+RightSidebar），侧栏二态
   // 内聚受控/非受控双模，主栏宽度走 page-shell 的 L1 总表分发（§20.2）。
   { name: 'detail-page-frame', file: 'semantic/detail-page-frame.tsx', section: 'Layout & Shells', status: 'canonical' },
+  // 设置页语义组件批（2026-10-01，用户四裁决：scrubber 嵌吸顶卡第二行 / 新件先行 /
+  // 毛玻璃卡+text-2xl / 三件+试点页）：settings-header 双态吸顶头（替代 PageHeader 在
+  // 设置域的角色）、section-scrubber 栏目跳转（与 modules/document 的 chapter-scrubber
+  // 刻度轨为不同组件，撞名裁决改名见组件头）、settings-section-card 栏目卡（与旧
+  // section-card 并存，旧件另批评估归并——存量 24 消费文件不一次改写）。
+  { name: 'settings-header', file: 'semantic/settings-header.tsx', section: 'Semantic', status: 'canonical' },
+  { name: 'section-scrubber', file: 'semantic/section-scrubber.tsx', section: 'Semantic', status: 'canonical' },
+  { name: 'settings-section-card', file: 'semantic/settings-section-card.tsx', section: 'Semantic', status: 'canonical' },
+  // 补登记（2026-10-01 还债）：管理面统一批 3e46c283 三件漏登记（registry 对账当时只扫
+  // ui 目录，semantic 层无「文件→必须注册」机查）；消费方 = 设置管理面各页，实测非 0。
+  // status-definition-dialog 为受控表单弹窗（候选/回调由消费方注入），画廊以
+  // StatusDefinitionList demo 间接覆盖，故豁免独立 demo。
+  { name: 'definition-row', file: 'semantic/definition-row.tsx', section: 'Semantic', status: 'canonical' },
+  { name: 'status-definition-list', file: 'semantic/status-definition-list.tsx', section: 'Semantic', status: 'canonical' },
+  { name: 'status-definition-dialog', file: 'semantic/status-definition-dialog.tsx', section: 'Semantic', status: 'canonical', galleryExempt: '受控表单弹窗（候选/回调由消费方注入），画廊以 status-definition-list demo 间接覆盖' },
+  // 设置页语义组件批二（2026-10-01）：sticky-save-bar 脏状态保存栏（收编设置域三种
+  // 保存落点并存——页头 Save 钮/控件旁/卡底钮，GitHub/Vercel 惯例 sticky bottom 毛玻璃条）；
+  // settings-field-row 左说明右控件字段行（收编 settings 域 10+ 处同构散写）。
+  { name: 'sticky-save-bar', file: 'semantic/sticky-save-bar.tsx', section: 'Semantic', status: 'canonical' },
+  { name: 'settings-field-row', file: 'semantic/settings-field-row.tsx', section: 'Semantic', status: 'canonical' },
 
   // ── 跨模块业务组件：src/shared/components/ ───────────────────────────────
   { name: 'board-view', file: 'shared/components/board-view/board-view.tsx', section: 'App Components', status: 'canonical' },
   { name: 'bottom-dock', file: 'shared/components/bottom-dock/bottom-dock.tsx', section: 'App Components', status: 'canonical' },
   { name: 'dock-metric-badge', file: 'shared/components/bottom-dock/dock-metric-badge.tsx', section: 'App Components', status: 'canonical' },
+  { name: 'dock-prompt-bar', file: 'shared/components/bottom-dock/dock-prompt-bar.tsx', section: 'App Components', status: 'canonical' },
   { name: 'dock-user-popover', file: 'shared/components/bottom-dock/dock-user-popover.tsx', section: 'App Components', status: 'canonical' },
   { name: 'cell-select', file: 'shared/components/cell-select.tsx', section: 'App Components', status: 'canonical' },
   { name: 'connection-banner', file: 'shared/components/connection-banner.tsx', section: 'App Components', status: 'canonical' },
@@ -250,20 +271,19 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'decision-queue-panel', file: 'modules/ai-surface/components/decision-queue-panel.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'omni-dock', file: 'modules/ai-surface/components/omni-dock.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'pipeline-lane-strip', file: 'modules/ai-surface/components/pipeline-lane-strip.tsx', section: 'AI Execution', status: 'canonical' },
-  { name: 'radial-watch-deck', file: 'modules/ai-surface/components/radial-watch-deck.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'sample-tag', file: 'modules/ai-surface/components/sample-tag.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'screenplay-controls', file: 'modules/ai-surface/components/screenplay-controls.tsx', section: 'AI Execution', status: 'canonical' },
+  { name: 'station-card', file: 'modules/ai-surface/components/station-card.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'surface-liveness', file: 'modules/ai-surface/components/surface-liveness.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'surface-narration-bar', file: 'modules/ai-surface/components/surface-narration-bar.tsx', section: 'AI Execution', status: 'canonical' },
+  { name: 'watch-deck', file: 'modules/ai-surface/components/watch-deck.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'anchor-qa-thread', file: 'modules/assistant/components/anchor-qa-thread.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'assistant-colleague-slot', file: 'modules/assistant/components/assistant-colleague-slot.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'assistant-context-chip', file: 'modules/assistant/components/assistant-context-chip.tsx', section: 'AI Execution', status: 'canonical' },
-  { name: 'assistant-decision-strip', file: 'modules/assistant/components/assistant-decision-strip.tsx', section: 'AI Execution', status: 'canonical' },
+  { name: 'assistant-decision-tab', file: 'modules/assistant/components/assistant-decision-tab.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'assistant-fab', file: 'modules/assistant/components/assistant-fab.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'assistant-history-menu', file: 'modules/assistant/components/assistant-history-menu.tsx', section: 'AI Execution', status: 'canonical' },
-  { name: 'assistant-message-input', file: 'modules/assistant/components/assistant-message-input.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'assistant-message-list', file: 'modules/assistant/components/assistant-message-list.tsx', section: 'AI Execution', status: 'canonical' },
-  { name: 'assistant-model-picker', file: 'modules/assistant/components/assistant-model-picker.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'assistant-opening-report', file: 'modules/assistant/components/assistant-opening-report.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'assistant-panel', file: 'modules/assistant/components/assistant-panel.tsx', section: 'AI Execution', status: 'canonical' },
   { name: 'assistant-quick-prompts', file: 'modules/assistant/components/assistant-quick-prompts.tsx', section: 'AI Execution', status: 'canonical' },
@@ -288,7 +308,7 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'status-manager', file: 'modules/core-config/components/status-manager.tsx', section: 'App Components', status: 'canonical' },
   { name: 'tag-manager', file: 'modules/core-config/components/tag-manager.tsx', section: 'App Components', status: 'canonical' },
   { name: 'template-manager', file: 'modules/core-config/components/template-manager.tsx', section: 'App Components', status: 'canonical' },
-  { name: 'decision-review-modal', file: 'modules/decision/components/decision-review-modal.tsx', section: 'App Components', status: 'canonical' },
+  { name: 'decision-review-modal', file: 'shared/decision-card/decision-review-modal.tsx', section: 'App Components', status: 'canonical' },
   { name: 'decomposition-review-panel', file: 'modules/decision/components/decomposition-review-panel.tsx', section: 'App Components', status: 'canonical' },
   { name: 'BackendStatusBadge', file: 'modules/desktop/components/BackendStatusBadge.tsx', section: 'App Components', status: 'canonical' },
   { name: 'desktop-gate', file: 'modules/desktop/components/desktop-gate.tsx', section: 'App Components', status: 'canonical' },

@@ -10,7 +10,8 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PageShell, PageBody } from '@/components/semantic/page-shell';
-import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { nodeToText } from '@/components/semantic/page-header';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { useConfirm } from '@/shared/confirm/use-confirm';
 import { useTranslation } from 'react-i18next';
@@ -214,13 +215,21 @@ export function TemplateManager() {
 
   return (
     <PageShell aiPage="settings.templates" className="bg-background text-foreground">
-      <PageHeader
-        aiId="settings.templates"
-        title={t('settings.templates')}
-        favorites={<FavoriteToggle label={nodeToText(t('settings.templates')).trim()} aiId="settings.templates" />}
-        icon={LayoutTemplate}
-        iconColor="text-accent-blue"
-      />
+      {/* 设置页头（语义组件批二）：大标题双态吸顶；全宽工具条布局，头包同款 padding 对齐 */}
+      <div className="px-6 pt-4 md:px-7">
+        <SettingsHeader
+          icon={LayoutTemplate}
+          tone="blue"
+          title={t('settings.templates')}
+          description={t('settings.templatesDesc')}
+          actions={
+            <FavoriteToggle
+              label={nodeToText(t('settings.templates')).trim()}
+              aiId="settings.templates"
+            />
+          }
+        />
+      </div>
 
       {/* 工具栏：全部 / 项目 / 任务 居中页签 */}
       <div className="grid w-full shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 px-6 py-2 md:px-7">

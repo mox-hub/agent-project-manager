@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/semantic/header-action-button';
@@ -58,16 +59,21 @@ export function IssueTypesSettingsSection() {
   return (
     <PageShell
       variant="standard"
-      icon={Shapes}
-      iconColor="text-accent-blue"
-      title={t('settings.issueTypesTitle', '任务类型 & 状态')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.issueTypesTitle', '任务类型 & 状态')).trim()} />}
-      actions={
-        <HeaderActionButton icon={Plus} label={t('settings.addIssueType', '添加任务类型')} />
-      }
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
+      <SettingsHeader
+        icon={Shapes}
+        tone="blue"
+        title={t('settings.issueTypesTitle', '任务类型 & 状态')}
+        description={t('settings.issueTypesDesc')}
+        actions={
+          <>
+            <FavoriteToggle label={nodeToText(t('settings.issueTypesTitle', '任务类型 & 状态')).trim()} />
+            <HeaderActionButton icon={Plus} label={t('settings.addIssueType', '添加任务类型')} />
+          </>
+        }
+      />
       <TypesListCard />
       <RecommendedTypesCard />
     </PageShell>

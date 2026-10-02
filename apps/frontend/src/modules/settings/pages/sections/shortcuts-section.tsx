@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Kbd, KbdGroup } from '@/components/ui/kbd';
@@ -185,13 +186,16 @@ export function ShortcutsSettingsSection() {
   return (
     <PageShell
       variant="standard"
-      icon={Keyboard}
-      iconColor="text-accent-blue"
-      title={t('settings.shortcuts')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.shortcuts')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
     >
+      <SettingsHeader
+        icon={Keyboard}
+        tone="blue"
+        title={t('settings.shortcuts')}
+        description={t('settings.shortcutsDesc')}
+        actions={<FavoriteToggle label={nodeToText(t('settings.shortcuts')).trim()} />}
+      />
       <Card className="border-border shadow-none">
         <CardHeader className="flex-row items-center gap-2">
           <Keyboard className="size-4 text-muted-foreground" />

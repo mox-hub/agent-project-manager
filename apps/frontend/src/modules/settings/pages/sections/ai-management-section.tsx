@@ -10,8 +10,9 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Brain, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from '@/components/ui/toast';
-import { PageShell, PageBody } from '@/components/semantic/page-shell';
-import { PageHeader, nodeToText } from '@/components/semantic/page-header';
+import { PageShell } from '@/components/semantic/page-shell';
+import { nodeToText } from '@/components/semantic/page-header';
+import { SettingsHeader } from '@/components/semantic/settings-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { ToolbarRow } from '@/components/semantic/toolbar-row';
@@ -59,12 +60,30 @@ export function AiManagementSection() {
   };
 
   return (
-    <PageShell aiPage="ai-hub.ai-management" className="overflow-hidden">
-      <PageHeader aiId="ai-hub.ai-management" title={t('aiHub.title')}
-        favorites={<FavoriteToggle label={nodeToText(t('aiHub.title')).trim()} aiId="ai-hub.ai-management" />} icon={Brain} iconColor="text-accent-purple" />
+    <PageShell
+      aiPage="ai-hub.ai-management"
+      variant="standard"
+      contentClassName="gap-4"
+      className="bg-background text-foreground"
+    >
+      {/* 设置页头（语义组件批二·验收调整）：转 A 类外滚，header sticky 吸顶 */}
+      <SettingsHeader
+          icon={Brain}
+          tone="purple"
+          title={t('aiHub.title')}
+          description={t('aiHub.description')}
+          actions={
+            <FavoriteToggle
+              label={nodeToText(t('aiHub.title')).trim()}
+              aiId="ai-hub.ai-management"
+            />
+          }
+        />
 
-      {/* 纯样式切换页：不传 views（视图管理整体隐藏），仅居中页签切换 */}
+      {/* 纯样式切换页：不传 views（视图管理整体隐藏），仅居中页签切换。
+          A 类外滚流中转 static（内置 sticky top-10 为旧 40px 页头双层设计） */}
       <ToolbarRow
+        className="static px-0 md:px-0"
         aiId="ai-hub.ai-management"
         viewStyle={{
           layout: 'centered',
@@ -88,10 +107,8 @@ export function AiManagementSection() {
         }
       />
 
-      {/* 内容区：内部滚动 + standard 居中列 */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <PageBody variant="standard">
-          <Tabs value={activeTab} onValueChange={(val) => changeTab(val as AiManagementTab)} className="w-full" data-ai-component="ai-hub.ai-management.tab" data-ai-tab={activeTab}>
+      {/* 内容区：外层 ScrollArea 统一滚动（验收调整，与 A 类页同构） */}
+      <Tabs value={activeTab} onValueChange={(val) => changeTab(val as AiManagementTab)} className="w-full" data-ai-component="ai-hub.ai-management.tab" data-ai-tab={activeTab}>
             <TabsContent value="models">
               <ModelsTab />
             </TabsContent>
@@ -107,9 +124,7 @@ export function AiManagementSection() {
             <TabsContent value="skills">
               <SkillsTab />
             </TabsContent>
-          </Tabs>
-        </PageBody>
-      </div>
+      </Tabs>
     </PageShell>
   );
 }

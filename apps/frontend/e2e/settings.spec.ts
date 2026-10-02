@@ -128,16 +128,19 @@ test('ST10 存储设置页渲染', async ({ page }) => {
   await expect(page.locator('body')).toContainText(/存储|文档|配置/, { timeout: 60_000 })
 })
 
-test('ST11 模板/终端/AI 执行中心页渲染', async ({ page }) => {
+test('ST11 模板/终端页渲染 + 旧 AI 执行中心路径重定向', async ({ page }) => {
   // 任务模板
   await page.goto('/app/settings/templates')
   await expect(page.locator('body')).toContainText(/模板|Template/i, { timeout: 60_000 })
   // 终端设置
   await page.goto('/app/settings/terminal')
   await expect(page.locator('body')).toContainText(/终端|Shell|shell/i, { timeout: 60_000 })
-  // AI 执行中心（只读 run 列表）
+  // 旧「AI 执行中心」已废弃（2026-10-02 UI 收口）：旧路径重定向执行记录页；?tab=trust 落办公室页
   await page.goto('/app/settings/ai/executions')
+  await page.waitForURL(/\/app\/executions/, { timeout: 60_000 })
   await expect(page.locator('body')).toContainText(/执行|运行|Run/i, { timeout: 60_000 })
+  await page.goto('/app/settings/ai/executions?tab=trust')
+  await page.waitForURL(/\/app\/office/, { timeout: 60_000 })
 })
 
 function uniq(label: string): string {

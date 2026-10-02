@@ -7,13 +7,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Form, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { SelectField, SelectFieldOption } from '@/components/ui/select-field';
 import { PageShell } from '@/components/semantic/page-shell';
+import { SettingsHeader } from '@/components/semantic/settings-header';
+import { StickySaveBar } from '@/components/semantic/sticky-save-bar';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Spinner } from '@/components/ui/spinner';
-import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useTerminalStatus, useTestShell } from '@/modules/runtime/hooks/use-terminal-status';
-import { Terminal, RefreshCw, CheckCircle2, XCircle, Save, Settings2 } from 'lucide-react';
+import { Terminal, RefreshCw, CheckCircle2, XCircle, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from '@/components/ui/toast';
 
@@ -192,17 +193,23 @@ export function TerminalSettingsSection() {
   const terminalForm = useForm<TerminalConfigForm>({
     defaultValues: defaultTerminalConfig,
   });
+  const {
+    formState: { isDirty },
+  } = terminalForm;
+
+  // 服务器 config → 表单值映射（effect 回填与「放弃」共用）
+  const toFormValues = (c: typeof config): TerminalConfigForm => ({
+    defaultShell: (c['terminal.defaultShell'] as TerminalConfigForm['defaultShell']) || 'pwsh',
+    defaultCwd: c['terminal.defaultCwd'] || '',
+    theme: (c['terminal.theme'] as TerminalConfigForm['theme']) || 'default',
+    historySize: Number(c['terminal.historySize']) || 1000,
+    autoSaveOutput: c['terminal.autoSaveOutput'] ?? false,
+    aiDiagnostics: c['terminal.aiDiagnostics'] ?? true,
+  });
 
   useEffect(() => {
     if (!isLoading && Object.keys(config).length > 0) {
-      terminalForm.reset({
-        defaultShell: config['terminal.defaultShell'] || 'pwsh',
-        defaultCwd: config['terminal.defaultCwd'] || '',
-        theme: config['terminal.theme'] || 'default',
-        historySize: config['terminal.historySize'] || 1000,
-        autoSaveOutput: config['terminal.autoSaveOutput'] ?? false,
-        aiDiagnostics: config['terminal.aiDiagnostics'] ?? true,
-      });
+      terminalForm.reset(toFormValues(config));
     }
   }, [config, isLoading, terminalForm]);
 
@@ -228,24 +235,16 @@ export function TerminalSettingsSection() {
   return (
     <PageShell
       variant="standard"
-      icon={Terminal}
-      iconColor="text-accent-purple"
-      title={t('settings.terminal')}
-      favorites={<FavoriteToggle label={nodeToText(t('settings.terminal')).trim()} />}
       className="bg-background text-foreground"
       contentClassName="space-y-6"
-      actions={
-        <HeaderActionButton
-          icon={Save}
-          label={isSaving ? t('settings.saving') : t('settings.saveChanges')}
-          pinned
-          onClick={handleSave}
-          disabled={isSaving || isLoading}
-          data-ai-component="settings.global-settings.header.save"
-          data-ai-action="settings.global-settings.header.save.click"
-        />
-      }
     >
+      <SettingsHeader
+        icon={Terminal}
+        tone="purple"
+        title={t('settings.terminal')}
+        description={t('settings.terminalPageDesc')}
+        actions={<FavoriteToggle label={nodeToText(t('settings.terminal')).trim()} />}
+      />
       {/* 终端工具状态卡片 */}
       <TerminalToolStatusCard />
 
@@ -370,6 +369,13 @@ export function TerminalSettingsSection() {
               </Form>
             </CardContent>
           </Card>
+      {/* 脏状态保存栏（语义组件批二）：原页头 Save 钮迁此 */}
+      <StickySaveBar
+        dirty={isDirty}
+        saving={isSaving}
+        onSave={() => void handleSave()}
+        onDiscard={() => terminalForm.reset(toFormValues(config))}
+      />
     </PageShell>
   );
 }
