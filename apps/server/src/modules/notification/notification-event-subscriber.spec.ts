@@ -22,6 +22,7 @@ describe('NotificationEventSubscriber', () => {
     execution: { findUnique: vi.fn() },
     subscription: { findMany: vi.fn().mockResolvedValue([]) },
     decisionProposal: { findUnique: vi.fn() },
+    release: { findUnique: vi.fn() },
   };
 
   beforeEach(async () => {
@@ -77,9 +78,55 @@ describe('NotificationEventSubscriber', () => {
       'tag.created',
       'tag.deleted',
       'decision.proposal.created',
+      'release.created',
     ]) {
       expect(handlers.has(event)).toBe(true);
     }
+  });
+
+  it('release.created 通知项目全员（发布广播补最后一跳，CAP-K-03 批三）', async () => {
+    prismaMock.release.findUnique.mockResolvedValue({
+      id: 'r1',
+      version: '1.0.0',
+      name: '首个发版',
+      projectId: 'p1',
+      project: {
+        name: '示例项目',
+        members: [{ userId: 'u1' }, { userId: 'u2' }, { userId: null }],
+      },
+    });
+    await handlers.get('release.created')!({ releaseId: 'r1' });
+    expect(createFromEvent).toHaveBeenCalledTimes(1);
+    expect(createFromEvent).toHaveBeenCalledWith(
+      'release.created',
+      expect.objectContaining({
+        releaseId: 'r1',
+        version: '1.0.0',
+        projectId: 'p1',
+        projectName: '示例项目',
+      }),
+      ['u1', 'u2'],
+    );
+  });
+
+  it('release.created 缺项目/无成员诚实降级不发', async () => {
+    prismaMock.release.findUnique.mockResolvedValue({
+      id: 'r2',
+      version: '0.9.0',
+      projectId: 'p2',
+      project: null,
+    });
+    await handlers.get('release.created')!({ releaseId: 'r2' });
+    expect(createFromEvent).not.toHaveBeenCalled();
+
+    prismaMock.release.findUnique.mockResolvedValue({
+      id: 'r3',
+      version: '0.8.0',
+      projectId: 'p3',
+      project: { name: '空项目', members: [] },
+    });
+    await handlers.get('release.created')!({ releaseId: 'r3' });
+    expect(createFromEvent).not.toHaveBeenCalled();
   });
 
   it('死订阅已删除：ci.build.* / ai.workflow.completed 全库无发布方（P0-12）', () => {

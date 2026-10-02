@@ -454,6 +454,12 @@ export class NotificationService {
         title: '有人提到了你',
         body: p.text ? String(p.text).slice(0, 100) : null,
       }),
+      'release.created': (p) => ({
+        title: `项目「${p.projectName || '未知项目'}」发布 v${p.version || '?'}`,
+        body: p.releaseName
+          ? `v${p.version}「${p.releaseName}」已发布，查看发版说明与交付清单`
+          : `v${p.version} 已发布，查看发版说明与交付清单`,
+      }),
     };
 
     const template = templates[eventType];
