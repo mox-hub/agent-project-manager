@@ -164,6 +164,14 @@ export class LoggingInterceptor implements NestInterceptor {
   }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    // APP_INTERCEPTOR 全局拦截器对 WS @SubscribeMessage 同样生效（与守卫同坑家族，
+    // RateLimitGuard/JwtAuthGuard 均以非 http 短路修复）：WS 上下文 request 是
+    // socket，解构 method/url、调 request.get() 直接 TypeError（WS 连接后每条
+    // 消息炸一次）。WS 消息不走 HTTP 日志，直接透传。
+    if (context.getType() !== 'http') {
+      return next.handle();
+    }
+
     const http = context.switchToHttp();
     const request = http.getRequest();
     const { method, url, ip } = request;

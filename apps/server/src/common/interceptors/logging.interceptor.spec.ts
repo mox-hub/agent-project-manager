@@ -34,6 +34,7 @@ function runInterceptor(
   };
   const response = { statusCode: 200 };
   const context = {
+    getType: () => 'http',
     switchToHttp: () => ({
       getRequest: () => request,
       getResponse: () => response,
@@ -151,6 +152,7 @@ describe('LoggingInterceptor', () => {
         get: () => 'jest-agent',
       };
       const context = {
+        getType: () => 'http',
         switchToHttp: () => ({
           getRequest: () => request,
           getResponse: () => ({ statusCode: 200 }),
@@ -167,6 +169,31 @@ describe('LoggingInterceptor', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1);
       expect(logger.log).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('WS 短路', () => {
+    it('非 http 上下文（WS 消息）直接透传：不读 socket、不打日志、数据原样通过', () => {
+      const logger = buildLogger();
+      const interceptor = new LoggingInterceptor(logger as never);
+      const socket = {}; // WS 上下文 request 是 socket，无 method/url/get
+      const context = {
+        getType: () => 'ws',
+        switchToHttp: () => ({
+          getRequest: () => socket,
+          getResponse: () => socket,
+        }),
+      } as unknown as ExecutionContext;
+
+      const received: unknown[] = [];
+      interceptor
+        .intercept(context, { handle: () => of('ws-payload') } as never)
+        .subscribe((v) => received.push(v));
+
+      expect(received).toEqual(['ws-payload']);
+      expect(logger.log).not.toHaveBeenCalled();
+      expect(logger.debug).not.toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
     });
   });
 });
