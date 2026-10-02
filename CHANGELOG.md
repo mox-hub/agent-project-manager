@@ -21,6 +21,10 @@ tags: "changelog,release"
 
 ## [Unreleased]
 
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| server release + notification + frontend | **发版中心扩展批三（CAP-K-03）**：①发版计划 `plannedAt`（创建对话框挂里程碑预填 targetDate；列表「计划→实际」双日期 + 逾期红 tone + 「即将发版」预告区）②发布平台 `platforms` 封闭枚举 android/ios/windows/macos/linux/web（列表行图标徽标 + 平台/通道筛选 + 交付物 `platform` 槽）③版本通道推导（semver 后缀 alpha/beta/rc，列表徽标 + GitHub Release `prerelease` 标志联动）④升级注意事项 `upgradeNotes`（详情草案态编辑 + 门禁 `upgrade-notes` 注记检查[major 缺说明注记不阻断] + CHANGELOG 再生「升级注意事项」段）⑤热修血缘 `hotfixOfId`（创建/编辑校验[存在/同项目/已 released] + 详情「修复自」徽标 + CHANGELOG 血缘行）⑥`release.created` 通知接线（notification 订阅者 + 内容模板，发布广播补最后一跳——此前零消费）；迁移 `20261002120000_release_center_k03_batch3`（四列 + 热修索引，自关联无 DB 级外键同 retryOfId 先例） | CAP-K-03 批三（GAP-T-59） | server release+notification 64 例全绿（含批三新 11 例：新字段落库/热修三拒/非法平台 400/门禁注记四分支/CHANGELOG 扩展段/通道推导/prerelease 标志/通知降级）；frontend release 模块 18 例全绿（徽标/逾期红/即将发版排序/对话框载荷/详情扩展/交付卡 platform）；tsc 双端 0 错；contract:check 零漂移 | 能力清单 CAP-K-03 批三注记 + 测试映射矩阵 GAP-T-59 登记 |
+
 ## [0.7.14] - 2026-10-02
 
 ### v0.7.14 发版总览——工作区多库登录体验闭环 + 桌面壳死循环根治 + 管理面统一收口 + AI 表面交互定型
