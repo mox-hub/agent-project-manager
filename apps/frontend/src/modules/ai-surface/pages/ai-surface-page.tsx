@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from '@/shared/theme/theme-context';
 import { useDispatchAssistantMessage } from '@/modules/assistant/hooks/use-assistant-dispatch';
 import { useOfficeSummary } from '@/modules/office/hooks/use-office-summary';
-import { RadialWatchDeck } from '../components/radial-watch-deck';
+import { WatchDeck } from '../components/watch-deck';
 import { OmniDock } from '../components/omni-dock';
 import { SurfaceLiveness } from '../components/surface-liveness';
 import { PipelineLaneStrip } from '../components/pipeline-lane-strip';
@@ -160,10 +160,27 @@ export function AiSurfacePage() {
     navigate('/app/projects/dashboard');
   }, [navigate]);
 
+  // 全局 ESC 键退出（原在 OmniDock 内监听；坞改文档流后随职责移到页面级）
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleExitSurface();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleExitSurface]);
+
   return (
-    <div className="fixed inset-0 z-modal h-screen w-screen flex flex-col overflow-x-hidden overflow-y-auto bg-content-bg font-sans text-foreground select-none" data-ai-page="ai-surface">
+    // 2026-10-02 布局重排（ARCH-AISURFACE-001 §3.1 信息架构）：页面本身不再滚动
+    // （原 overflow-y-auto 让整页内容与 fixed 坞互叠），改为固定视口 flex column——
+    // 顶栏/总述/泳道/坞各占其位，主视界（三栏 WatchDeck）吃剩余高度、栏内自滚。
+    <div
+      className="fixed inset-0 z-modal flex h-screen w-screen flex-col overflow-hidden bg-content-bg font-sans text-foreground select-none"
+      data-ai-page="ai-surface"
+    >
       {/* 1. 顶部全屏微型全息导航条 (极其克制、通透) */}
-      <header className="sticky top-0 z-overlay flex w-full items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
+      <header className="z-overlay flex w-full shrink-0 items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -243,7 +260,7 @@ export function AiSurfacePage() {
       {/* 2. 顶栏 AI 一句话总述（S3-e，§3.1「顶栏：AI 一句话总述」）。
           叙述读的就是下面两块面板此刻同屏的事实（同一份缓存），
           只做翻译、不做计算；AI 不可用时就地降级为规则摘要并**标注出来**。 */}
-      <div className="relative z-sticky mx-auto w-full max-w-[1100px] px-6 pt-1">
+      <div className="relative z-sticky mx-auto w-full max-w-[1100px] shrink-0 px-6 pt-1">
         <SurfaceNarrationBar
           narration={narrationView}
           state={narrationState}
@@ -254,17 +271,18 @@ export function AiSurfacePage() {
         />
       </div>
 
-      {/* 3. 态势带：左「六站管道泳道」全局位置（S2-c）· 右「该你了」待办（S2-d）。
-          两者都取自既有服务，取代了原先表盘上方那块**全编造**的遥测 HUD——
-          真数据进来，假数据就必须走。 */}
-      <div className="relative z-sticky mx-auto grid w-full max-w-[1100px] gap-4 px-6 pb-2 lg:grid-cols-[2fr_1fr]">
+      {/* 3. 态势带：六站管道泳道（S2-c）——全局位置一眼可扫。
+          原「泳道 + 该你了」2fr:1fr 挤在一行：待办是无界列表，12 条就能把带子撑到
+          半屏高、把主视界推出视口（2026-10-02 形变修复）。「该你了」按架构图归位
+          WatchDeck 右栏并限高内滚；泳道整行铺开，六站恢复呼吸感。 */}
+      <div className="relative z-sticky mx-auto w-full max-w-[1100px] shrink-0 px-6 pt-3">
         <PipelineLaneStrip />
-        <DecisionQueuePanel />
       </div>
 
-      {/* 4. 空间主视界：中间手表圆形表盘 + 左右水平环绕卡片 */}
-      <main className="no-scrollbar relative z-sticky mx-auto flex w-full flex-1 flex-col items-center justify-center overflow-x-auto px-4 pb-32">
-        <RadialWatchDeck
+      {/* 4. 空间主视界：三栏 WatchDeck（左工位 · 中表盘 · 右该你了）。
+          窗口缩到 lg 以下时三栏纵向堆叠、本区整体滚动（§15.2 窗口缩小场景）。 */}
+      <main className="no-scrollbar mx-auto w-full max-w-7xl flex-1 min-h-0 overflow-y-auto px-6 pb-2 pt-3">
+        <WatchDeck
           stations={stations}
           stationsStatus={stationsStatus}
           selectedAgentId={selectedAgentId}
@@ -273,16 +291,15 @@ export function AiSurfacePage() {
           artifacts={artifacts}
           messages={messages}
           isDark={isDark}
+          queueSlot={<DecisionQueuePanel />}
         />
       </main>
 
-      {/* 5. 悬浮全能交互坞 (Omni-Dock) */}
+      {/* 5. 全能交互坞 (Omni-Dock)：文档流内收尾，不再悬浮叠压内容 */}
       <OmniDock
         onSendMessage={handleSendMessage}
-        onExitSurface={handleExitSurface}
         activeAgentName={selectedStation?.displayName}
         isDark={isDark}
-        onToggleTheme={toggleTheme}
       />
     </div>
   );

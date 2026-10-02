@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import type { StationCard } from '../adapters/office-to-station';
-import { RadialWatchDeck } from './radial-watch-deck';
+import { WatchDeck } from './watch-deck';
 import { MEMORY_ATOMS } from '../mock-data';
 
 /**
@@ -17,9 +17,9 @@ import { MEMORY_ATOMS } from '../mock-data';
  * ③ 叙事型示例内容可以留，但必须在**区域标题旁就地**标注（不是页头那枚隔着整屏的徽标）。
  */
 
-const renderDeck = (over: Partial<Parameters<typeof RadialWatchDeck>[0]> = {}) =>
+const renderDeck = (over: Partial<Parameters<typeof WatchDeck>[0]> = {}) =>
   render(
-    <RadialWatchDeck
+    <WatchDeck
       stations={[]}
       stationsStatus="ready"
       selectedAgentId={null}
@@ -28,11 +28,12 @@ const renderDeck = (over: Partial<Parameters<typeof RadialWatchDeck>[0]> = {}) =
       artifacts={{}}
       messages={[]}
       isDark
+      queueSlot={null}
       {...over}
     />,
   );
 
-describe('RadialWatchDeck（S2-e 诚实粒度）', () => {
+describe('WatchDeck（S2-e 诚实粒度）', () => {
   it('右侧信度列的编造百分比全部清零（四个维度一个都不留）', () => {
     renderDeck();
 
@@ -110,7 +111,7 @@ describe('RadialWatchDeck（S2-e 诚实粒度）', () => {
  * 与「本周 …」那行**是两套口径**，这里把两者的并存与各自的缺席行为都钉住——
  * 混用会让人把周报读成单次花费。
  */
-describe('RadialWatchDeck（单次执行成本）', () => {
+describe('WatchDeck（单次执行成本）', () => {
   const station = (over: Partial<StationCard> = {}): StationCard => ({
     memberId: 'ai-1',
     displayName: '小码',

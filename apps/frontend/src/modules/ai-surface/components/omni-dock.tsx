@@ -1,21 +1,16 @@
-import { useState, useRef, useEffect, type FormEvent } from 'react';
+import { useState, useRef, type FormEvent } from 'react';
 import { cn } from '@/lib/utils';
 import {
   Send,
   Sparkles,
   ChevronUp,
   Bot,
-  Minimize2,
-  Sun,
-  Moon,
 } from 'lucide-react';
 
 interface OmniDockProps {
   onSendMessage: (text: string, model: string) => void;
-  onExitSurface?: () => void;
   activeAgentName?: string | null;
   isDark?: boolean;
-  onToggleTheme?: () => void;
 }
 
 const AVAILABLE_MODELS = [
@@ -26,10 +21,8 @@ const AVAILABLE_MODELS = [
 
 export function OmniDock({
   onSendMessage,
-  onExitSurface,
   activeAgentName,
   isDark = true,
-  onToggleTheme,
 }: OmniDockProps) {
   const [input, setInput] = useState('');
   const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0].id);
@@ -55,27 +48,16 @@ export function OmniDock({
     inputRef.current?.focus();
   };
 
-  // 全局 ESC 键退出
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && onExitSurface) {
-        onExitSurface();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onExitSurface]);
-
   const currentModelObj =
     AVAILABLE_MODELS.find((m) => m.id === selectedModel) ?? AVAILABLE_MODELS[0];
 
   return (
-    <div
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-modal flex flex-col items-center gap-2 select-none"
-      style={{ width: 'min(92vw, 780px)' }}
-    >
-      {/* 顶部悬浮快捷建议条与切换返回提示 */}
-      <div className="flex items-center justify-between w-full px-4 text-xs">
+    // 2026-10-02 布局重排：原为 `fixed bottom-6` 悬浮层（必然叠压内容），改为页面
+    // flex column 的**文档流**尾部——页面各分区各管各的高度，坞不再需要"让位"补偿。
+    // 主题切换 / 返回控制面 / ESC 与页头重复，已收编回页头（ESC 监听随移页面级）。
+    <div className="mx-auto flex w-full max-w-3xl shrink-0 flex-col items-center gap-1.5 px-6 pb-4 select-none">
+      {/* 顶部悬浮快捷建议条（坞内只留与**输入**同语境的事：附带上文与快捷指令） */}
+      <div className="flex w-full items-center px-4 text-xs">
         <div className="flex items-center gap-2">
           {/*
             徽章写的必须是**真的会发生的事**。原文案「定向协同: @小码」承诺了两件
@@ -85,7 +67,7 @@ export function OmniDock({
           */}
           {activeAgentName ? (
             <span
-              className="px-2 py-0.5 rounded-full font-mono flex items-center gap-1"
+              className="flex items-center gap-1 rounded-full px-2 py-0.5 font-mono"
               title={`发送时会把这名同事的当前状态（在做哪张单、执行状态、最近进展、待决数）一并交给 AI；消息本身仍走既有派发，不指定具体执行者`}
               style={{
                 fontSize: 11,
@@ -110,14 +92,13 @@ export function OmniDock({
           )}
 
           {/* 快捷指令 */}
-          <div className="hidden sm:flex items-center gap-1.5 ml-2">
+          <div className="ml-2 hidden items-center gap-1.5 sm:flex">
             <button
               type="button"
               onClick={() => handleQuickCommand('/plan CAP-P-01 任务拆解')}
-              className="px-2 py-0.5 rounded-md hover:opacity-80 text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
+              className="cursor-pointer rounded-md px-2 py-0.5 font-mono text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
               style={{
                 fontSize: 11,
-                background: isDark ? 'hsl(var(--foreground) / 0.05)' : 'hsl(var(--foreground) / 0.05)',
               }}
             >
               /plan 任务拆解
@@ -125,63 +106,14 @@ export function OmniDock({
             <button
               type="button"
               onClick={() => handleQuickCommand('/verify 运行契约门禁审计')}
-              className="px-2 py-0.5 rounded-md hover:opacity-80 text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
+              className="cursor-pointer rounded-md px-2 py-0.5 font-mono text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
               style={{
                 fontSize: 11,
-                background: isDark ? 'hsl(var(--foreground) / 0.05)' : 'hsl(var(--foreground) / 0.05)',
               }}
             >
               /verify 门禁审计
             </button>
           </div>
-        </div>
-
-        {/* 右侧控制栏：主题切换与退出人类控制面 */}
-        <div className="flex items-center gap-2">
-          {onToggleTheme && (
-            <button
-              type="button"
-              onClick={onToggleTheme}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
-              style={{
-                fontSize: 11,
-                background: isDark ? 'hsl(var(--foreground) / 0.06)' : 'hsl(var(--foreground) / 0.06)',
-              }}
-              title={isDark ? '切换至日间模式' : '切换至夜间模式'}
-            >
-              {isDark ? (
-                <Sun className="size-3" style={{ color: 'hsl(var(--accent-yellow))' }} />
-              ) : (
-                <Moon className="size-3" style={{ color: 'hsl(var(--accent-blue))' }} />
-              )}
-              <span>{isDark ? '深空' : '明眸'}</span>
-            </button>
-          )}
-
-          {onExitSurface && (
-            <button
-              type="button"
-              onClick={onExitSurface}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-muted-foreground hover:text-foreground transition-colors font-mono cursor-pointer"
-              style={{
-                fontSize: 11,
-                background: isDark ? 'hsl(var(--foreground) / 0.06)' : 'hsl(var(--foreground) / 0.06)',
-              }}
-              title="返回人类控制面 (Esc)"
-            >
-              <Minimize2 className="size-3" />
-              <span>返回控制面</span>
-              <kbd
-                className="px-1 py-0.2 rounded-sm font-mono"
-                style={{
-                  fontSize: 9,
-                  background: isDark ? 'hsl(var(--background) / 0.5)' : 'hsl(var(--foreground) / 0.08)',
-                }}
-              >
-                ESC
-              </kbd>
-            </button>
-          )}
         </div>
       </div>
 

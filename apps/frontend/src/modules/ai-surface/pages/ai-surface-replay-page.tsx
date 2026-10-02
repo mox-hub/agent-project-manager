@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/shared/theme/theme-context';
-import { RadialWatchDeck } from '../components/radial-watch-deck';
+import { WatchDeck } from '../components/watch-deck';
 import { PipelineLaneStripView } from '../components/pipeline-lane-strip';
 import { DecisionQueuePanelView } from '../components/decision-queue-panel';
 import { SurfaceNarrationBar } from '../components/surface-narration-bar';
@@ -80,9 +80,14 @@ export function AiSurfaceReplayPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-modal flex h-screen w-screen flex-col overflow-x-hidden overflow-y-auto bg-content-bg font-sans text-foreground select-none" data-ai-page="ai-surface-replay">
+    // 2026-10-02 布局重排：与盯盘面同构的固定视口 flex column（页面不滚、栏内自滚），
+    // 待办区随架构图归位 WatchDeck 右栏（同一个 View，仍由本页喂剧本帧数据）。
+    <div
+      className="fixed inset-0 z-modal flex h-screen w-screen flex-col overflow-hidden bg-content-bg font-sans text-foreground select-none"
+      data-ai-page="ai-surface-replay"
+    >
       {/* 1. 页头：与盯盘面同构，但把「实时连接态」换成「回放」 */}
-      <header className="sticky top-0 z-overlay flex w-full items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
+      <header className="z-overlay flex w-full shrink-0 items-center justify-between bg-transparent px-6 py-3.5 backdrop-blur-md select-none">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -128,7 +133,7 @@ export function AiSurfaceReplayPage() {
       </header>
 
       {/* 2. 剧本说明 + 控制条。说明放在最前：看的人先要知道"这不是真的在跑" */}
-      <div className="relative z-sticky mx-auto w-full max-w-[1100px] space-y-2 px-6 pt-1">
+      <div className="relative z-sticky mx-auto w-full max-w-[1100px] shrink-0 space-y-2 px-6 pt-1">
         <p
           className="rounded-xl border border-accent-purple/20 bg-accent-purple/5 px-3 py-2 text-2xs leading-relaxed text-muted-foreground"
           data-ai-component="ai-surface.replay.about"
@@ -156,7 +161,7 @@ export function AiSurfaceReplayPage() {
       </div>
 
       {/* 3. 顶栏一句话总述：与盯盘面同一组件，数据取自当前帧的剧本叙述 */}
-      <div className="relative z-sticky mx-auto w-full max-w-[1100px] px-6 pt-2">
+      <div className="relative z-sticky mx-auto w-full max-w-[1100px] shrink-0 px-6 pt-2">
         <SurfaceNarrationBar
           narration={frame.narration}
           state="ready"
@@ -166,8 +171,8 @@ export function AiSurfaceReplayPage() {
         />
       </div>
 
-      {/* 4. 态势带：泳道 + 待办，均为与实况同一个 View，只换数据与出处注脚 */}
-      <div className="relative z-sticky mx-auto grid w-full max-w-[1100px] gap-4 px-6 pb-2 pt-2 lg:grid-cols-[2fr_1fr]">
+      {/* 4. 态势带：泳道整行铺开（待办区归位 WatchDeck 右栏），与实况同一 View，只换数据与出处注脚 */}
+      <div className="relative z-sticky mx-auto w-full max-w-[1100px] shrink-0 px-6 pt-3">
         <PipelineLaneStripView
           lanes={facts.lanes}
           scopeNote="回放演示"
@@ -177,27 +182,11 @@ export function AiSurfaceReplayPage() {
             // 剧本里的计数不对应任何真实记录，跳过去只会看到一个不相干的空列表。
           }}
         />
-        <DecisionQueuePanelView
-          queue={facts.queue}
-          isPending={false}
-          isError={false}
-          sourceNote="来自预置演示，非收件箱实时数据"
-          onAction={() => {
-            // 只读：动作栏已被 readOnly 整条隐藏，此回调不可达。
-            // 留一个空实现而非 `undefined`，是因为 DecisionCard 的签名要求它；
-            // 若哪天真被调到，说明 readOnly 被摘掉了——那是要修的地方，不是要静默的地方。
-          }}
-          busyId={null}
-          readOnly
-          readOnlyNote="回放中的数据是预置演示，这里不能拍板。真实拍板请在盯盘面的「该你了」，或去通知中心。"
-          // 等待时长按**剧本时钟**算，否则一条刚出现的待办会显示"等了 4 天"（与全屏每一处都矛盾）
-          waitingNowMs={storyAtMs + frame.atMs}
-        />
       </div>
 
-      {/* 5. 空间主视界：工位卡复用盯盘面的表盘（同一组件、同一适配器） */}
-      <main className="no-scrollbar relative z-sticky mx-auto flex w-full flex-1 flex-col items-center justify-center overflow-x-auto px-4 pb-24">
-        <RadialWatchDeck
+      {/* 5. 空间主视界：三栏 WatchDeck（工位卡复用盯盘面的表盘：同一组件、同一适配器） */}
+      <main className="no-scrollbar mx-auto w-full max-w-7xl flex-1 min-h-0 overflow-y-auto px-6 pb-2 pt-3">
+        <WatchDeck
           stations={facts.stations}
           stationsStatus="ready"
           selectedAgentId={null}
@@ -208,11 +197,29 @@ export function AiSurfaceReplayPage() {
           artifacts={INITIAL_ARTIFACTS}
           messages={INITIAL_MESSAGES}
           isDark={isDark}
+          queueSlot={
+            <DecisionQueuePanelView
+              queue={facts.queue}
+              isPending={false}
+              isError={false}
+              sourceNote="来自预置演示，非收件箱实时数据"
+              onAction={() => {
+                // 只读：动作栏已被 readOnly 整条隐藏，此回调不可达。
+                // 留一个空实现而非 `undefined`，是因为 DecisionCard 的签名要求它；
+                // 若哪天真被调到，说明 readOnly 被摘掉了——那是要修的地方，不是要静默的地方。
+              }}
+              busyId={null}
+              readOnly
+              readOnlyNote="回放中的数据是预置演示，这里不能拍板。真实拍板请在盯盘面的「该你了」，或去通知中心。"
+              // 等待时长按**剧本时钟**算，否则一条刚出现的待办会显示"等了 4 天"（与全屏每一处都矛盾）
+              waitingNowMs={storyAtMs + frame.atMs}
+            />
+          }
         />
       </main>
 
       {/* 6. 页脚：出口明确指回盯盘面 */}
-      <footer className="relative z-sticky mx-auto mb-6 w-full max-w-[1100px] px-6">
+      <footer className="relative z-sticky mx-auto w-full max-w-[1100px] shrink-0 px-6 pb-4">
         <button
           type="button"
           onClick={() => navigate('/app/ai-surface')}

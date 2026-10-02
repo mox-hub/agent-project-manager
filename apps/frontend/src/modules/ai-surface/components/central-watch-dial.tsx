@@ -16,12 +16,19 @@ interface CentralWatchDialProps {
   artifacts: Record<string, ArtifactItem>;
   messages: CognitiveMessage[];
   isDark?: boolean;
+  /**
+   * 表盘外径（px）。内部几何一律以 720 为基准坐标、按 `size/720` 等比缩放——
+   * SVG 靠 viewBox 自适应，唯一要手动缩的是内圆视口的物理尺寸与它的呼吸留白。
+   * 缺省 720（历史整尺寸）；盯盘/回放页按视口高度传响应值，避免固定外径撑破栏位。
+   */
+  size?: number;
 }
 
 export function CentralWatchDial({
   artifacts,
   messages,
   isDark = true,
+  size = 720,
 }: CentralWatchDialProps) {
   const [copiedDiff, setCopiedDiff] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'contract' | 'acceptance' | 'stream'>('overview');
@@ -94,6 +101,9 @@ export function CentralWatchDial({
   const codeArtifact = artifacts['artifact-diff-2'];
   const qaArtifact = artifacts['artifact-qa-3'];
 
+  // 等比缩放系数：全部内部几何以 720 基准坐标书写，物理尺寸乘 k
+  const k = size / 720;
+
   // 生成手表表盘 60 个刻度点与数字 (放大至 720px 精密工业表壳)
   const DIAL_RADIUS = 348;
   const DIAL_CENTER = 360;
@@ -139,8 +149,8 @@ export function CentralWatchDial({
 
   return (
     <div
-      className="relative flex items-center justify-center select-none"
-      style={{ width: 720, height: 720 }}
+      className="relative flex shrink-0 items-center justify-center select-none"
+      style={{ width: size, height: size }}
     >
       {/* 1. 表盘外表圈刻度与金属边框 SVG (Watch Bezel Frame) */}
       <svg
@@ -251,10 +261,10 @@ export function CentralWatchDial({
 
       {/* 2. 表盘内侧视口容器 (圆形裁剪，内部卡片具有 3D 景深滚动缩放) */}
       <div
-        className="relative overflow-hidden rounded-full backdrop-blur-3xl shadow-xs flex flex-col items-center justify-between"
+        className="relative flex flex-col items-center justify-between overflow-hidden rounded-full backdrop-blur-3xl shadow-xs"
         style={{
-          width: 624,
-          height: 624,
+          width: 624 * k,
+          height: 624 * k,
           background: isDark
             ? 'radial-gradient(circle at 50% 50%, hsl(var(--background) / 0.95) 0%, hsl(var(--background) / 0.98) 100%)'
             : 'radial-gradient(circle at 50% 50%, hsl(var(--background) / 0.96) 0%, hsl(var(--background) / 0.92) 100%)',
@@ -330,8 +340,12 @@ export function CentralWatchDial({
         <div
           ref={scrollContainerRef}
           onScroll={handleScroll}
-          className="size-full overflow-y-auto overflow-x-hidden pt-24 pb-20 px-8 flex flex-col gap-4 no-scrollbar scroll-smooth select-text"
+          className="no-scrollbar size-full scroll-smooth select-text overflow-y-auto overflow-x-hidden flex flex-col gap-4"
           style={{
+            // 呼吸留白随表盘等比缩放（96/80/32 为 720 基准的 pt/pb/px）
+            paddingTop: 96 * k,
+            paddingBottom: 80 * k,
+            paddingInline: 32 * k,
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
           }}
