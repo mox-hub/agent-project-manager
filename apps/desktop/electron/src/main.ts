@@ -24,7 +24,7 @@ import {
   restoreDefaultDbIfNeeded,
 } from './setup';
 import { createTray, hasTray } from './tray';
-import { checkForUpdates, initAutoUpdater } from './updater';
+import { checkForUpdates, initAutoUpdater, setUpdateStatusBroadcaster } from './updater';
 import { setInitError, state, stopAllProcesses } from './state';
 import { loadDesktopState, saveDesktopState } from './desktop-state';
 import {
@@ -359,6 +359,13 @@ function bootstrap(): void {
   state.config = config;
 
   initAutoUpdater();
+  // 更新状态实时广播到当前前端窗口（设置页桌面偏好卡消费）；认证窗/主窗均可承载
+  setUpdateStatusBroadcaster((updateStatus) => {
+    const win = activeWindow();
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('desktop:update-status', updateStatus);
+    }
+  });
   installApplicationMenu({
     showMainWindow,
     checkUpdates: () => {

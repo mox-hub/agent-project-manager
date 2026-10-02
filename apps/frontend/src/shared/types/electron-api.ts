@@ -55,6 +55,8 @@ export interface DesktopUpdateStatus {
   state: 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
   version?: string;
   progress?: number;
+  /** 更新日志（GitHub Release body；available/downloaded 时携带） */
+  releaseNotes?: string;
   error?: string;
 }
 
@@ -97,6 +99,8 @@ declare global {
       invoke: <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
       /** apm:// 深链订阅（ADR-015 P2）；返回解绑函数。旧壳版本无此能力为可选 */
       onDeepLink?: (callback: (url: string) => void) => () => void;
+      /** 自动更新状态实时推送（ADR-015 补记 4）；返回解绑函数。旧壳无此能力为可选 */
+      onUpdateStatus?: (callback: (status: DesktopUpdateStatus) => void) => () => void;
     };
     __DESKTOP_API_BASE_URL__?: string;
   }
@@ -114,7 +118,9 @@ export function setApiBaseUrl(url: string): void {
 }
 
 export function getApiBaseUrl(): string | null {
-  return _apiBaseUrl;
+  // 回落 window 全局：dev HMR 重新执行模块会把 _apiBaseUrl 归零，而 setApiBaseUrl
+  // 同步写过的 window 槽不受影响；不回落会把已钉底误判成「尚未就绪」
+  return _apiBaseUrl ?? window.__DESKTOP_API_BASE_URL__ ?? null;
 }
 
 export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
@@ -122,4 +128,16 @@ export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Pr
     throw new Error('桌面壳桥（__APM_DESKTOP__）不可用');
   }
   return window.__APM_DESKTOP__.invoke<T>(cmd, args);
+}
+
+/**
+ * 订阅壳侧自动更新状态推送（ADR-015 补记 4）。旧壳无推送通道时返回空解绑函数、
+ * 不做兜底轮询——壳与前端同安装包分发，不存在「新前端配旧壳」的组合；
+ * 状态仍可靠「检查更新」按钮手动刷新。返回解绑函数，供 useEffect 清理。
+ */
+export function subscribeUpdateStatus(
+  callback: (status: DesktopUpdateStatus) => void,
+): () => void {
+  const unsubscribe = window.__APM_DESKTOP__?.onUpdateStatus?.(callback);
+  return unsubscribe ?? (() => undefined);
 }

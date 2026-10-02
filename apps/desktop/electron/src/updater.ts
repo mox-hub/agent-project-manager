@@ -3,8 +3,10 @@
  * 消费端策略：打包模式启动 30s 后静默首轮检查（避开冷启动窗口）；下载自动进行；
  * 下载完成弹窗询问立即重启安装，未确认则退出时自动安装。dev / 未打包无 app-update.yml，
  * 直接禁用（ initialized=false，检查请求优雅返回 idle）。
- * 发布端（latest.yml + 安装包上传 GitHub Releases）待 CI 接线；feed 缺失时更新检查
- * 落 error 状态，不影响主流程。代码签名未启用（单独裁决），更新分发风险与首装一致。
+ * 发布端 = desktop-release.yml（tag v* → draft Release：exe+blockmap+latest.yml → 人工
+ * Publish）；feed 缺失时更新检查落 error 状态，不影响主流程。代码签名未启用（单独裁决）。
+ * 状态广播：main.ts 注册 broadcaster（activeWindow → webContents.send），设置页实时
+ * 消费进度；releaseNotes 取 Release body 随状态透传。
  */
 import { app, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
@@ -23,12 +25,52 @@ export interface UpdateStatus {
   version?: string;
   /** 下载进度（0-100） */
   progress?: number;
+  /** 更新日志（GitHub Release body；update-available/downloaded 时携带） */
+  releaseNotes?: string;
   error?: string;
 }
 
 let status: UpdateStatus = { state: 'idle' };
 let initialized = false;
 let installPromptOpen = false;
+
+/** 状态广播回调（main.ts 注入；updater 不反向依赖窗口层） */
+let broadcaster: ((status: UpdateStatus) => void) | null = null;
+/** 下载进度高频事件节流（同状态同进度流合并，150ms 内只广播一帧；状态切换不节流） */
+let lastProgressSentAt = 0;
+
+export function setUpdateStatusBroadcaster(fn: (status: UpdateStatus) => void): void {
+  broadcaster = fn;
+}
+
+function broadcast(next: UpdateStatus): void {
+  if (!broadcaster) {
+    return;
+  }
+  if (next.state === 'downloading' && status.state === 'downloading') {
+    const now = Date.now();
+    if (now - lastProgressSentAt < 150) {
+      return;
+    }
+    lastProgressSentAt = now;
+  }
+  broadcaster(next);
+}
+
+/** electron-updater 的 releaseNotes 三形态（string / ReleaseNoteInfo[] / null）归一为文本。 */
+function normalizeReleaseNotes(notes: unknown): string | undefined {
+  if (typeof notes === 'string' && notes.trim()) {
+    return notes;
+  }
+  if (Array.isArray(notes)) {
+    const joined = notes
+      .map((it) => (typeof it === 'string' ? it : (it as { note?: string }).note ?? ''))
+      .filter(Boolean)
+      .join('\n\n');
+    return joined || undefined;
+  }
+  return undefined;
+}
 
 function setStatus(next: UpdateStatus): void {
   status = next;
@@ -37,6 +79,7 @@ function setStatus(next: UpdateStatus): void {
       next.progress !== undefined ? ` ${next.progress}%` : ''
     }${next.error ? ` (${next.error})` : ''}`,
   );
+  broadcast(next);
 }
 
 /** 下载完成后询问立即重启安装；重复弹窗防抖（多事件竞态）。 */
@@ -73,7 +116,13 @@ export function initAutoUpdater(): void {
   autoUpdater.autoInstallOnAppQuit = true;
 
   autoUpdater.on('checking-for-update', () => setStatus({ state: 'checking' }));
-  autoUpdater.on('update-available', (it) => setStatus({ state: 'available', version: it.version }));
+  autoUpdater.on('update-available', (it) =>
+    setStatus({
+      state: 'available',
+      version: it.version,
+      releaseNotes: normalizeReleaseNotes(it.releaseNotes),
+    }),
+  );
   autoUpdater.on('update-not-available', (it) =>
     setStatus({ state: 'not-available', version: it.version }),
   );
@@ -81,7 +130,11 @@ export function initAutoUpdater(): void {
     setStatus({ state: 'downloading', progress: Math.round(p.percent) }),
   );
   autoUpdater.on('update-downloaded', (it) => {
-    setStatus({ state: 'downloaded', version: it.version });
+    setStatus({
+      state: 'downloaded',
+      version: it.version,
+      releaseNotes: normalizeReleaseNotes(it.releaseNotes),
+    });
     void askInstall(it.version ?? '未知版本');
   });
   autoUpdater.on('error', (err) => setStatus({ state: 'error', error: err.message }));
@@ -95,6 +148,14 @@ export function initAutoUpdater(): void {
 export async function checkForUpdates(): Promise<UpdateStatus> {
   if (!initialized) {
     return { state: 'idle' };
+  }
+  // 重入防御：检查/下载进行中（含已下载待装）再触发会抛错并把进行中状态误覆盖成 error
+  if (
+    status.state === 'checking' ||
+    status.state === 'downloading' ||
+    status.state === 'downloaded'
+  ) {
+    return status;
   }
   try {
     await autoUpdater.checkForUpdates();
