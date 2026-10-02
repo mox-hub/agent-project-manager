@@ -7,10 +7,17 @@ import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
 import { AuthVisualCard } from '../components/auth-visual-card';
+import { LoginWorkspacePicker } from '../components/login-workspace-picker';
+import {
+  getCurrentWorkspaceId,
+  setWorkspaceSelection,
+} from '@/modules/workspace/api/workspace-api';
 
 const ERROR_MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: 'auth.errors.invalidCredentials',
   USER_INACTIVE: 'auth.errors.userInactive',
+  // 「凭证正确但当前工作区里没有这个账号」（CAP-A-25 ⑤）：可行动，必须与密码错误区分开
+  WORKSPACE_SUBJECT_MISSING: 'auth.errors.workspaceSubjectMissing',
 };
 
 /** api-client 拦截器把后端错误信封转成顶层 code/status 的 ApiClientError */
@@ -20,8 +27,20 @@ export function LoginPage() {
   const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  // 目标工作区（CAP-A-26）：默认取本机当前选择，用户可在登录前显式改变。
+  const [workspaceId, setWorkspaceId] = useState(getCurrentWorkspaceId());
   const [error, setError] = useState<string | null>(null);
   const { login, isLoading } = useAuth();
+
+  /**
+   * 选择工作区即写成本机的「当前工作区选择」——登录请求由 api-client 据此注入
+   * `x-workspace-id`（这正是此前被隐形本地值决定、用户看不见也改不了的那一环）。
+   * 选择本身不触发重载（与登录后的 switchWorkspace 不同）。
+   */
+  const handleWorkspaceChange = (id: string, name?: string) => {
+    setWorkspaceId(id);
+    setWorkspaceSelection(id, name);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +72,12 @@ export function LoginPage() {
         )}
 
         <div className="space-y-3">
+          <LoginWorkspacePicker
+            value={workspaceId}
+            onChange={handleWorkspaceChange}
+            disabled={isLoading}
+          />
+
           <div className="space-y-1.5">
             <label
               className="text-xs font-medium text-foreground"

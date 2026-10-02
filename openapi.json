@@ -45076,6 +45076,170 @@
         ]
       }
     },
+    "/_api/workspaces/public": {
+      "get": {
+        "operationId": "WorkspaceController_publicList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "开关状态与（开启时的）脱敏工作区名单",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicWorkspaceListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "公开工作区名单（CAP-A-26；可配置，默认关闭，仅 id/名称）",
+        "tags": [
+          "Workspaces"
+        ]
+      }
+    },
+    "/_api/workspaces/public-list": {
+      "put": {
+        "operationId": "WorkspaceController_setPublicList",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPublicWorkspaceListDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "写入后的开关状态与（开启时的）脱敏工作区名单",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicWorkspaceListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "设置是否向未认证方公开工作区名单（管理员；默认关）",
+        "tags": [
+          "Workspaces"
+        ]
+      }
+    },
     "/_api/workspaces/{id}/activate": {
       "post": {
         "operationId": "WorkspaceController_activate",
@@ -76734,6 +76898,59 @@
         },
         "required": [
           "workspaceId"
+        ]
+      },
+      "PublicWorkspaceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "工作区 ID（default 为内置默认工作区）"
+          },
+          "name": {
+            "type": "string",
+            "description": "工作区名称"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "是否默认工作区"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "PublicWorkspaceListResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "是否向未认证方公开工作区名单（管理员开关，默认关；关闭时 workspaces 为空）"
+          },
+          "workspaces": {
+            "description": "公开的工作区名单（enabled=false 时为空数组）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicWorkspaceDto"
+            }
+          }
+        },
+        "required": [
+          "enabled",
+          "workspaces"
+        ]
+      },
+      "SetPublicWorkspaceListDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "是否向未认证方公开工作区名单"
+          }
+        },
+        "required": [
+          "enabled"
         ]
       },
       "CreateWorkspaceDto": {

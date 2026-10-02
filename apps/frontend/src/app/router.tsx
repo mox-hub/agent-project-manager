@@ -30,6 +30,7 @@ import {
 } from '@/modules/settings/pages/sections/manager-sections';
 import { ShortIdSettingsSection } from '@/modules/settings/pages/sections/short-id-section';
 import { BackupsSection } from '@/modules/settings/pages/sections/backups-section';
+import { WorkspaceSection } from '@/modules/settings/pages/sections/workspace-section';
 import { IssueTypesSettingsSection } from '@/modules/settings/pages/sections/issue-types-section';
 import { IssueTypeDetailSection } from '@/modules/settings/pages/sections/issue-type-detail-section';
 import { ChecklistsSettingsSection } from '@/modules/settings/pages/sections/checklists-section';
@@ -37,9 +38,9 @@ import { AiManagementSection } from '@/modules/settings/pages/sections/ai-manage
 import { MemorySection } from '@/modules/settings/pages/sections/memory-section';
 import { PromptsSettingsSection } from '@/modules/settings/pages/sections/prompts-section';
 import { RuntimeSettingsSection } from '@/modules/settings/pages/sections/runtime-section';
+import { AboutSection } from '@/modules/settings/pages/sections/about-section';
 import { RuntimeMachineDetailSection } from '@/modules/settings/pages/sections/runtime-machine-detail-section';
 import { AccessTokensSettingsSection } from '@/modules/settings/pages/sections/access-tokens-section';
-import { AiExecutionCenterSection } from '@/modules/settings/pages/sections/ai-execution-center-section';
 import { IntegrationsSettingsSection } from '@/modules/settings/pages/sections/integrations-section';
 import { GithubIntegrationSection } from '@/modules/settings/pages/sections/github-integration-section';
 import { LinearIntegrationSection } from '@/modules/settings/pages/sections/linear-integration-section';
@@ -77,6 +78,13 @@ import { OPEN_COMMAND_PALETTE_EVENT } from '@/shared/command-palette/command-pal
 function RedirectToSettings({ to }: { to: string }) {
   const { search, state } = useLocation();
   return <Navigate to={{ pathname: to, search }} state={state} replace />;
+}
+
+/** 旧「AI 执行中心」退场重定向（2026-10-02 UI 收口）：执行域落执行记录页，?tab=trust 落办公室页 */
+function RedirectExecutions() {
+  const { search } = useLocation();
+  const tab = new URLSearchParams(search).get('tab');
+  return <Navigate to={tab === 'trust' ? '/app/office' : '/app/executions'} replace />;
 }
 
 /** 旧 Linear 集成详情路径重定向（携带动态 integrationId） */
@@ -190,6 +198,17 @@ const RequirementIntakePage = lazy(() =>
   })),
 );
 
+/**
+ * 根路径分流：有登录态直达工作台，无登录态去登录。启动路径不再强制经过
+ * 启动页（/boot 保留为手动入口）——boot 页挂紧凑窗钩子，主窗启动落在 /
+ * 时会被误切到认证小窗并重跑一遍初始化。
+ */
+function RootRedirect() {
+  const authenticated =
+    typeof window !== 'undefined' && !!localStorage.getItem('access_token');
+  return <Navigate to={authenticated ? '/app' : '/login'} replace />;
+}
+
 export const router = createBrowserRouter([
   // Boot startup page (first screen shown on cold start)
   {
@@ -203,10 +222,10 @@ export const router = createBrowserRouter([
     element: <DesktopInitPage />,
     errorElement: <ErrorPage />,
   },
-  // Redirect root path to boot so users see the startup screen first
+  // Root path: straight to the app when a session exists, login otherwise
   {
     path: '/',
-    element: <Navigate to="/boot" replace />,
+    element: <RootRedirect />,
     errorElement: <ErrorPage />,
   },
   {
@@ -340,7 +359,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'ai/executions',
-        element: <RedirectToSettings to="/app/settings/ai/executions" />,
+        element: <RedirectExecutions />,
         errorElement: <ErrorPage />,
       },
       {
@@ -685,16 +704,21 @@ export const router = createBrowserRouter([
       { path: 'short-id', element: <ShortIdSettingsSection />, errorElement: <ErrorPage /> },
       // CAP-A-03 工作区备份与恢复（2026-10-01 迁 settings sections 并对齐 PageShell 规范）
       { path: 'backups', element: <BackupsSection />, errorElement: <ErrorPage /> },
+      // CAP-A-26 工作区可见性（公开名单开关；2026-10-02 新增）
+      { path: 'workspace', element: <WorkspaceSection />, errorElement: <ErrorPage /> },
       { path: 'storage', element: <StorageSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'ai', element: <AiManagementSection />, errorElement: <ErrorPage /> },
       // 「Agent 管理」已并入本页页签（2026-09-19 合并）：旧路径重定向保书签，?tab=overview 贴近原页落地
       { path: 'ai/agents', element: <Navigate to="/app/settings/ai?tab=overview" replace /> },
-      { path: 'ai/executions', element: <AiExecutionCenterSection />, errorElement: <ErrorPage /> },
+      // 「AI 执行中心」已废弃（2026-10-02 UI 收口）：执行队列/回放归执行记录页、信任归办公室页，旧路径重定向保书签
+      { path: 'ai/executions', element: <RedirectExecutions />, errorElement: <ErrorPage /> },
       // 设置「AI 用量」页已迁入 /app/analytics 成本 Tab（CAP-C-06，2026-09-19）；旧路径重定向保书签
       { path: 'ai/usage', element: <Navigate to="/app/analytics?tab=cost" replace /> },
       { path: 'memory', element: <MemorySection />, errorElement: <ErrorPage /> },
       { path: 'prompts', element: <PromptsSettingsSection />, errorElement: <ErrorPage /> },
       { path: 'runtime', element: <RuntimeSettingsSection />, errorElement: <ErrorPage /> },
+      // 关于页（ADR-015 补记 4：更新入口自 runtime 页桌面偏好卡升格为独立页）
+      { path: 'about', element: <AboutSection />, errorElement: <ErrorPage /> },
       {
         path: 'runtime/:runtimeId',
         element: <RuntimeMachineDetailSection />,

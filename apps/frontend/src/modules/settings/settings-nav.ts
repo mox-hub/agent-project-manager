@@ -15,13 +15,14 @@ import {
   FolderOpen,
   Hash,
   Brain,
-  Play,
   Plug,
   Github,
+  Info,
   LayoutList,
   Keyboard,
   ScrollText,
   DatabaseBackup,
+  Building2,
 } from 'lucide-react';
 
 export interface SettingsNavItem {
@@ -67,6 +68,8 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
       { to: '/app/settings/short-id', labelKey: 'settings.shortId', icon: Hash },
       // CAP-A-03 工作区备份与恢复（G7-a）
       { to: '/app/settings/backups', labelKey: 'settings.backups', icon: DatabaseBackup },
+      // CAP-A-26 工作区可见性（登录页公开名单开关）
+      { to: '/app/settings/workspace', labelKey: 'settings.workspaceVisibility', icon: Building2 },
     ],
   },
   {
@@ -82,7 +85,6 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
     items: [
       // 「Agent 管理」已并入「AI 管理」页签（2026-09-19 合并），独立入口移除
       { to: '/app/settings/ai', labelKey: 'settings.aiManagement', icon: Brain },
-      { to: '/app/settings/ai/executions', labelKey: 'settings.aiExecutions', icon: Play },
       { to: '/app/settings/memory', labelKey: 'settings.memory', icon: Brain },
       { to: '/app/settings/prompts', labelKey: 'settings.prompts', icon: ScrollText },
       { to: '/app/settings/runtime', labelKey: 'settings.runtime', icon: Server, status: 'runtime' },
@@ -97,6 +99,10 @@ export const SETTINGS_NAV_GROUPS: SettingsNavGroup[] = [
   },
   {
     labelKey: 'settings.groupSystem',
-    items: [{ to: '/app/settings/storage', labelKey: 'settings.storage', icon: FolderOpen }],
+    items: [
+      { to: '/app/settings/storage', labelKey: 'settings.storage', icon: FolderOpen },
+      // 关于页（版本/更新/产品信息；桌面偏好卡自 runtime 页迁入，ADR-015 补记 4）
+      { to: '/app/settings/about', labelKey: 'settings.about', icon: Info },
+    ],
   },
 ];

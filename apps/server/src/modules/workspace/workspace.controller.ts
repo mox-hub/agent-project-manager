@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -27,10 +36,13 @@ import {
 } from '@nestjs/common';
 import { getCurrentWorkspaceId } from '@/core/database/workspace-context';
 import {
+  PublicWorkspaceListResponseDto,
+  SetPublicWorkspaceListDto,
   WorkspaceCurrentResponseDto,
   WorkspaceListResponseDto,
   WorkspaceRecordResponseDto,
 } from './dto/workspace-response.dto';
+import { WorkspacePublicSettingsService } from './public-settings.service';
 import {
   RestoreBackupResponseDto,
   WorkspaceBackupListResponseDto,
@@ -59,11 +71,18 @@ class CreateWorkspaceDto {
  * 列表与激活需登录（注册表含工作区名与库路径，不向未认证方暴露）；
  * 创建/备份/恢复需默认工作区的 admin 身份
  * （客户端调用时不携带 x-workspace-id，即在默认库校验）。
+ *
+ * CAP-A-26（2026-10-02 用户裁决）：新增**可配置（默认关）**的公开名单端点——管理员开启后，
+ * 未认证方可读 `GET /workspaces/public`（登录页工作区选择）。这是对「不向未认证方暴露」的
+ * **显式放开**（非静默）：**仅名称**放开且可关，**库路径 `path` 始终不暴露**。
  */
 @ApiTags('Workspaces')
 @Controller('workspaces')
 export class WorkspaceController {
-  constructor(private readonly backupService: WorkspaceBackupService) {}
+  constructor(
+    private readonly backupService: WorkspaceBackupService,
+    private readonly publicSettings: WorkspacePublicSettingsService,
+  ) {}
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @Get()
@@ -85,6 +104,58 @@ export class WorkspaceController {
   })
   current() {
     return { workspaceId: getCurrentWorkspaceId() ?? 'default' };
+  }
+
+  /** 公开名单的脱敏投影：只透 id/名称/是否默认，绝不带 path 与时间戳。 */
+  private publicWorkspaces() {
+    return listWorkspaces().map((w) => ({
+      id: w.id,
+      name: w.name,
+      isDefault: w.isDefault,
+    }));
+  }
+
+  @Public()
+  @Get('public')
+  @ApiOperation({
+    summary: '公开工作区名单（CAP-A-26；可配置，默认关闭，仅 id/名称）',
+  })
+  @ApiOkResponse({
+    type: PublicWorkspaceListResponseDto,
+    description: '开关状态与（开启时的）脱敏工作区名单',
+  })
+  async publicList(): Promise<PublicWorkspaceListResponseDto> {
+    const enabled = await this.publicSettings.isPublicListEnabled();
+    // 关闭时返回空名单——即使调用方知道端点存在，也拿不到工作区信息
+    return enabled
+      ? { enabled: true, workspaces: this.publicWorkspaces() }
+      : { enabled: false, workspaces: [] };
+  }
+
+  @Put('public-list')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: '设置是否向未认证方公开工作区名单（管理员；默认关）',
+  })
+  @ApiOkResponse({
+    type: PublicWorkspaceListResponseDto,
+    description: '写入后的开关状态与（开启时的）脱敏工作区名单',
+  })
+  @ApiStandardErrors()
+  async setPublicList(
+    @Body() dto: SetPublicWorkspaceListDto,
+    @Request() req: { user?: { userId?: string; id?: string } },
+  ): Promise<PublicWorkspaceListResponseDto> {
+    const actorId = req.user?.userId || req.user?.id;
+    const enabled = await this.publicSettings.setPublicListEnabled(
+      dto.enabled,
+      actorId,
+    );
+    return enabled
+      ? { enabled: true, workspaces: this.publicWorkspaces() }
+      : { enabled: false, workspaces: [] };
   }
 
   @Post()
