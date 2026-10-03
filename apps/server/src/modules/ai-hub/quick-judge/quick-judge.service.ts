@@ -53,6 +53,12 @@ export class QuickJudgeService {
   private readonly enabledScenarios = new Set([
     'approval_risk',
     'evidence_precheck',
+    'intake_readiness',
+    'intake_decomposition',
+    'contract_drift',
+    'trust_evaluation',
+    'decision_suggestion',
+    'workflow_judge',
   ]);
 
   constructor(

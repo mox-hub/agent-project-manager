@@ -464,6 +464,10 @@
       "today": "today",
       "unnamed": "Unnamed release"
     },
+    "list": {
+      "pendingApproval": "Pending approval",
+      "gateFailed": "{{count}} gate check(s) failed"
+    },
     "table": {
       "version": "Version",
       "name": "Name",
@@ -595,6 +599,10 @@
       "upgradeNotesSaved": "Upgrade notes saved",
       "upgradeNotesEmpty": "No upgrade notes — major/breaking releases should document upgrade and migration steps here",
       "upgradeNotesPlaceholder": "Upgrade & migration notes for major/breaking changes (migration steps, config changes, compatibility breaks)",
+      "changelogPreview": "Preview CHANGELOG",
+      "changelogTitle": "CHANGELOG preview",
+      "changelogHint": "Read-only preview of the full text regenerated from the Release entity (written to the workspace file on publish; nothing is written here)",
+      "changelogLoadFailed": "Failed to load preview",
       "github": "GitHub Release",
       "yes": "Created",
       "no": "Not created",
@@ -1236,6 +1244,7 @@
       "managedHint": "A managed block was edited directly in the file. Keep file adopts the file as-is; keep platform writes managed content back.",
       "derivedHint": "This platform-derived file was hand-edited. Keep the file as the new baseline, or re-export to restore platform truth.",
       "blockDiff": "Conflicted blocks ({{n}})",
+      "aiSuggestion": "AI pre-judgement: {{impact}} (confidence {{confidence}}) — advisory only, inspect the blocks and decide yourself",
       "actionAcceptFile": "Keep file: the file becomes the new baseline; managed content adopts it",
       "actionAcceptDb": "Keep platform: write managed content back to the file (derived files must be re-exported)",
       "actionDetach": "Unbind: stop managed alignment; file and platform evolve independently (can re-bind later)",
@@ -5275,7 +5284,9 @@
       "aligned": "Aligned",
       "conflicted": "Conflicted",
       "skipped_detached": "Skipped (detached)",
-      "missing_file": "File missing"
+      "missing_file": "File missing",
+      "aligned_with_drift": "Drift (AI: benign)",
+      "aiImpactTitle": "AI drift impact judgement (advisory): judged benign so not escalated to a decision card; the drift keeps being tracked"
     },
     "result": {
       "seedTitle": "Last seed result",

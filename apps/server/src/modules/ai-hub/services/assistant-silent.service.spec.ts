@@ -1994,3 +1994,208 @@ describe('AssistantSilentService.run · release-notes-draft（CAP-A-18 样板推
     expect(instructions).toContain('尚未登记交付物');
   });
 });
+
+/** CAP-A-27 批二 P1-C：intake 两场景 quick-judge「枚举快筛」档（双闸 + 回落） */
+describe('intake quick-judge 快筛档（CAP-A-27 批二）', () => {
+  const DOCS = [
+    { id: 'r1', title: '调研纪要', content: '目标：秘书会前知道盯哪几件事' },
+  ];
+  const TASKS = [
+    { title: '任务A', estimate: 4, criteria: [{ content: '可判定标准' }] },
+    { title: '任务B', estimate: 2, criteria: [] },
+  ];
+
+  const READINESS_ANSWERS = {
+    dim_goal: { type: 'choice', choice: 'ready', confidence: 0.95 },
+    dim_scope: { type: 'choice', choice: 'unclear', confidence: 0.8 },
+    dim_scenario: { type: 'choice', choice: 'ready', confidence: 0.9 },
+    dim_acceptance: { type: 'choice', choice: 'missing', confidence: 0.85 },
+    dim_dependency: { type: 'choice', choice: 'unclear', confidence: 0.7 },
+    dim_fallback: { type: 'choice', choice: 'missing', confidence: 0.88 },
+    verdict: { type: 'choice', choice: 'blocked', confidence: 0.91 },
+  };
+
+  const makeQuickService = (opts: {
+    enabled?: boolean;
+    intakeReviewViaJudge?: boolean;
+    judgeResult?: Record<string, unknown> | null;
+  }) => {
+    const chat = vi.fn().mockResolvedValue({
+      content:
+        '{"dimensions": [], "missingInfo": [], "verdict": "ready", "summary": "x"}',
+      model: 'llm-model',
+      tokens: { prompt: 10, completion: 5, total: 15 },
+    });
+    const prisma = {
+      aIUsageLog: { create: vi.fn().mockResolvedValue({}) },
+      document: { findMany: vi.fn().mockResolvedValue(DOCS) },
+    };
+    const quickJudge = {
+      judge: vi.fn().mockResolvedValue(
+        opts.judgeResult === undefined
+          ? {
+              scenario: 'intake_readiness',
+              model: 'jev-1.13-free',
+              answers: READINESS_ANSWERS,
+              usage: { inputTokens: 900, outputTokens: 80 },
+            }
+          : opts.judgeResult,
+      ),
+    };
+    const settings = {
+      getSettings: vi.fn().mockResolvedValue({
+        enabled: opts.enabled ?? true,
+        intakeReviewViaJudge: opts.intakeReviewViaJudge ?? true,
+        provider: 'opencode-go',
+        model: 'jev-1.13-free',
+        baseUrl: 'x',
+        timeoutMs: 8000,
+      }),
+    };
+    const service = new AssistantSilentService(
+      prisma as never,
+      {
+        listAdapters: () => [{ provider: 'glm', model: 'm' }],
+        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+      } as never,
+      { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
+      quickJudge as never,
+      settings as never,
+    );
+    return { service, chat, quickJudge, settings };
+  };
+
+  it('双闸关闭（intakeReviewViaJudge=false）→ 走大模型全量通道', async () => {
+    const { service, chat, quickJudge } = makeQuickService({
+      intakeReviewViaJudge: false,
+    });
+
+    await service.run(
+      'readiness-review',
+      { researchDocumentId: 'r1' },
+      null,
+      'u1',
+    );
+
+    expect(chat).toHaveBeenCalledTimes(1);
+    expect(quickJudge.judge).not.toHaveBeenCalled();
+  });
+
+  it('双闸开 + judge 成功 → 快筛 data（六维三态 + verdict + 模板 summary + quickJudge 字段），不走大模型', async () => {
+    const { service, chat, quickJudge } = makeQuickService({});
+
+    const result = await service.run(
+      'readiness-review',
+      { researchDocumentId: 'r1' },
+      null,
+      'u1',
+    );
+
+    expect(quickJudge.judge).toHaveBeenCalledTimes(1);
+    expect(chat).not.toHaveBeenCalled();
+    const dims = result.data.dimensions as Array<Record<string, unknown>>;
+    expect(dims).toHaveLength(6);
+    expect(dims[0]).toMatchObject({
+      key: 'goal',
+      status: 'ready',
+      evidence: '',
+    });
+    expect(result.data.verdict).toBe('blocked');
+    expect(result.data.missingInfo).toEqual([]);
+    expect(String(result.data.summary)).toContain('快筛结论');
+    expect(result.data.quickJudge).toMatchObject({
+      model: 'jev-1.13-free',
+      mode: 'quick',
+    });
+    expect(result.usage).toMatchObject({
+      promptTokens: 900,
+      completionTokens: 80,
+      totalTokens: 980,
+      model: 'jev-1.13-free',
+    });
+  });
+
+  it('judge 返回 null → 回落大模型全量通道', async () => {
+    const { service, chat, quickJudge } = makeQuickService({
+      judgeResult: null,
+    });
+
+    await service.run(
+      'readiness-review',
+      { researchDocumentId: 'r1' },
+      null,
+      'u1',
+    );
+
+    expect(quickJudge.judge).toHaveBeenCalledTimes(1);
+    expect(chat).toHaveBeenCalledTimes(1);
+  });
+
+  it('judge 结果畸形（verdict 无效）→ 回落大模型', async () => {
+    const { service, chat } = makeQuickService({
+      judgeResult: {
+        scenario: 'intake_readiness',
+        model: 'm',
+        answers: { verdict: { type: 'noul', noul: 0.5 } },
+        usage: { inputTokens: 1, outputTokens: 1 },
+      },
+    });
+
+    await service.run(
+      'readiness-review',
+      { researchDocumentId: 'r1' },
+      null,
+      'u1',
+    );
+
+    expect(chat).toHaveBeenCalledTimes(1);
+  });
+
+  it('decomposition 快筛：逐任务 gran/test 扇出 + 形状对齐', async () => {
+    const { service, chat, quickJudge } = makeQuickService({});
+    (quickJudge.judge as ReturnType<typeof vi.fn>).mockResolvedValue({
+      scenario: 'intake_decomposition',
+      model: 'jev-1.13-free',
+      answers: {
+        gran_0: { type: 'choice', choice: 'too-big', confidence: 0.8 },
+        test_0: { type: 'choice', choice: 'ok', confidence: 0.9 },
+        gran_1: { type: 'choice', choice: 'ok', confidence: 0.85 },
+        test_1: { type: 'choice', choice: 'weak', confidence: 0.95 },
+        verdict: { type: 'choice', choice: 'needs-review', confidence: 0.9 },
+      },
+      usage: { inputTokens: 500, outputTokens: 60 },
+    });
+
+    const result = await service.run(
+      'decomposition-review',
+      { tasks: TASKS },
+      null,
+      'u1',
+    );
+
+    expect(chat).not.toHaveBeenCalled();
+    const called = (quickJudge.judge as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(called[0]).toBe('intake_decomposition');
+    expect(called[2]).toHaveLength(5); // 2 任务 × 2 问 + verdict
+    const tasks = result.data.tasks as Array<Record<string, unknown>>;
+    expect(tasks).toEqual([
+      {
+        index: 0,
+        granularity: 'too-big',
+        testability: 'ok',
+        confidence: 0.8,
+        reason: '',
+        suggestion: '',
+      },
+      {
+        index: 1,
+        granularity: 'ok',
+        testability: 'weak',
+        confidence: 0.85,
+        reason: '',
+        suggestion: '',
+      },
+    ]);
+    expect(result.data.verdict).toBe('needs-review');
+  });
+});

@@ -464,6 +464,10 @@
       "today": "今天",
       "unnamed": "未命名发版"
     },
+    "list": {
+      "pendingApproval": "待审批",
+      "gateFailed": "门禁 {{count}} 项未过"
+    },
     "table": {
       "version": "版本",
       "name": "名称",
@@ -595,6 +599,10 @@
       "upgradeNotesSaved": "升级注意事项已保存",
       "upgradeNotesEmpty": "暂无升级注意事项——major/破坏性变更建议在此写明升级与迁移要点",
       "upgradeNotesPlaceholder": "major/破坏性变更的升级与迁移注意事项（如：迁移步骤、配置变更、兼容性断点）",
+      "changelogPreview": "预览 CHANGELOG",
+      "changelogTitle": "CHANGELOG 预览",
+      "changelogHint": "由 Release 实体集合单向再生的全文预览（发布时写入工作区文件，此处只读不改文件）",
+      "changelogLoadFailed": "预览加载失败",
       "github": "GitHub Release",
       "yes": "已创建",
       "no": "未创建",
@@ -1236,6 +1244,7 @@
       "managedHint": "托管区间在文件侧被直接修改。采纳文件侧=以文件现值为准；采纳平台侧=把托管内容写回文件。",
       "derivedHint": "该文件由平台派生（真相在平台侧）却被手改。可认可手改版为新基线，或通过重新导出恢复平台真相。",
       "blockDiff": "冲突区间（{{n}}）",
+      "aiSuggestion": "AI 判定参考：{{impact}}（置信 {{confidence}}）——仅作初审参考，请按区间对照自行裁决",
       "actionAcceptFile": "采纳文件侧：文件现值成为新基线，平台托管内容同步为文件版",
       "actionAcceptDb": "采纳平台侧：把平台托管内容写回文件（派生型文件需走重新导出）",
       "actionDetach": "解绑：停止托管对齐，文件与平台各自演进，之后可重新绑定",
@@ -5275,7 +5284,9 @@
       "aligned": "对齐",
       "conflicted": "冲突",
       "skipped_detached": "独立模式跳过",
-      "missing_file": "文件缺失"
+      "missing_file": "文件缺失",
+      "aligned_with_drift": "有漂移（AI 判无害）",
+      "aiImpactTitle": "AI 漂移语义判定（advisory）：判为无害故未升级决策卡，漂移仍会持续跟踪"
     },
     "result": {
       "seedTitle": "最近一次种生结果",

@@ -26,6 +26,7 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+import { QuickJudgeService } from '../ai-hub/quick-judge/quick-judge.service';
 import { Interval } from '@nestjs/schedule';
 import { generateText } from 'ai';
 import { Prisma } from '@prisma/client';
@@ -95,6 +96,7 @@ export class WorkflowV2EngineService implements OnModuleInit, OnModuleDestroy {
     private readonly adapterRegistry: AdapterRegistryService,
     private readonly usagePricing: UsagePricingService,
     private readonly cliDispatch: CliDispatchService,
+    private readonly quickJudge: QuickJudgeService,
   ) {}
 
   onModuleInit() {
@@ -550,6 +552,40 @@ export class WorkflowV2EngineService implements OnModuleInit, OnModuleDestroy {
         }
         case 'loop': {
           return await this.execLoopNode(node, runId, row.id, frame);
+        }
+        case 'judge': {
+          // CAP-A-27 P2-F：System One 判断节点——毫秒级枚举判断写 steps.<id>
+          // 供后续 condition/interpolate 消费。流程控制点 fail-visible：通道
+          // 不可用/失败即节点失败（作者可用 condition+llm 自行兜底）。
+          const state = interpolateV2Template(node.state, frame.ctx);
+          const questions = node.questions.map((q) => ({
+            id: q.id,
+            type: q.type,
+            instructions: interpolateV2Template(q.instructions, frame.ctx),
+            ...(q.criteria !== undefined
+              ? {
+                  criteria: interpolateV2Deep(q.criteria, frame.ctx) as
+                    Record<string, string> | string[],
+                }
+              : {}),
+          }));
+          const result = await this.quickJudge.judge(
+            'workflow_judge',
+            state,
+            questions,
+          );
+          if (!result) {
+            throw Object.assign(
+              new Error(
+                `judge 节点 ${node.id}：判断通道不可用（未启用/失败/超时）`,
+              ),
+              { classification: 'provider_deterministic' },
+            );
+          }
+          const output = { answers: result.answers, model: result.model };
+          await this.settleNode(row.id, 'succeeded', output);
+          frame.ctx.steps[node.id] = output;
+          return { kind: 'ok' };
         }
       }
     } catch (err) {

@@ -17,9 +17,18 @@ export interface QuickJudgeSettings {
   model: string;
   baseUrl: string;
   timeoutMs: number;
+  /**
+   * P1-C：intake 两评估场景（readiness/decomposition）改走 quick-judge「枚举快筛」档
+   * （只出三态+verdict，无缺口账/证据文本）。双闸之一——还须 enabled=true 才生效；
+   * 关闭时照旧走原大模型通道出完整评估。
+   */
+  intakeReviewViaJudge: boolean;
 }
 
-export const QUICK_JUDGE_DEFAULTS: Omit<QuickJudgeSettings, 'enabled'> = {
+export const QUICK_JUDGE_DEFAULTS: Omit<
+  QuickJudgeSettings,
+  'enabled' | 'intakeReviewViaJudge'
+> = {
   provider: 'opencode-go',
   model: 'jev-1.13-free',
   baseUrl: 'https://opencode.ai/zen/v1',
@@ -40,6 +49,7 @@ export class QuickJudgeSettingsService {
       const value = (row?.value ?? {}) as Record<string, unknown>;
       return {
         enabled: value.enabled === true,
+        intakeReviewViaJudge: value.intakeReviewViaJudge === true,
         provider:
           typeof value.provider === 'string' && value.provider
             ? value.provider
@@ -58,14 +68,21 @@ export class QuickJudgeSettingsService {
             : QUICK_JUDGE_DEFAULTS.timeoutMs,
       };
     } catch {
-      return { enabled: false, ...QUICK_JUDGE_DEFAULTS };
+      return {
+        enabled: false,
+        intakeReviewViaJudge: false,
+        ...QUICK_JUDGE_DEFAULTS,
+      };
     }
   }
 
   /** 写入设置（管理员写路径）。null 字段表示回落缺省。 */
   async updateSettings(
     patch: Partial<
-      Pick<QuickJudgeSettings, 'enabled' | 'provider' | 'model' | 'baseUrl'>
+      Pick<
+        QuickJudgeSettings,
+        'enabled' | 'provider' | 'model' | 'baseUrl' | 'intakeReviewViaJudge'
+      >
     >,
     actorId?: string,
   ): Promise<QuickJudgeSettings> {
@@ -73,6 +90,9 @@ export class QuickJudgeSettingsService {
     const next: QuickJudgeSettings = {
       ...current,
       ...(patch.enabled !== undefined ? { enabled: patch.enabled } : {}),
+      ...(patch.intakeReviewViaJudge !== undefined
+        ? { intakeReviewViaJudge: patch.intakeReviewViaJudge }
+        : {}),
       ...(patch.provider !== undefined
         ? { provider: patch.provider || QUICK_JUDGE_DEFAULTS.provider }
         : {}),
@@ -90,6 +110,7 @@ export class QuickJudgeSettingsService {
     const data = {
       value: {
         enabled: next.enabled,
+        intakeReviewViaJudge: next.intakeReviewViaJudge,
         provider: next.provider,
         model: next.model,
         baseUrl: next.baseUrl,

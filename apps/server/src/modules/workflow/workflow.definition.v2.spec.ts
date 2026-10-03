@@ -318,3 +318,125 @@ describe('插值与条件判定', () => {
     expect(evaluateV2Condition('ne', 'a', 'a')).toBe(false);
   });
 });
+
+/** CAP-A-27 批二 P2-F：judge 节点文法校验 */
+describe('judge 节点文法（CAP-A-27 P2-F）', () => {
+  const BASE = {
+    version: 2 as const,
+    nodes: [
+      {
+        id: 'j1',
+        type: 'judge' as const,
+        state: '工单：{{input.title}}',
+        questions: [
+          { id: 'risky', type: 'noul' as const, instructions: '有风险吗？' },
+          {
+            id: 'level',
+            type: 'choice' as const,
+            instructions: '风险等级',
+            criteria: { read: '只读', write: '写', high_risk: '高危' },
+          },
+        ],
+      },
+    ],
+  };
+
+  it('合法 judge 节点通过校验且类型收窄', () => {
+    const doc = parseWorkflowDefinitionV2(BASE);
+    expect(doc.nodes[0].type).toBe('judge');
+  });
+
+  it('缺 questions / 超 20 问 / 问题 id 重复 / choice criteria 非对象 / score 档位越界 均拒绝', () => {
+    expect(() =>
+      parseWorkflowDefinitionV2({
+        version: 2,
+        nodes: [{ id: 'j1', type: 'judge', state: 'x', questions: [] }],
+      }),
+    ).toThrow(WorkflowV2DefinitionError);
+    expect(() =>
+      parseWorkflowDefinitionV2({
+        version: 2,
+        nodes: [
+          {
+            id: 'j1',
+            type: 'judge',
+            state: 'x',
+            questions: Array.from({ length: 21 }, (_, i) => ({
+              id: `q${i}`,
+              type: 'noul',
+              instructions: 'x',
+            })),
+          },
+        ],
+      }),
+    ).toThrow(WorkflowV2DefinitionError);
+    expect(() =>
+      parseWorkflowDefinitionV2({
+        version: 2,
+        nodes: [
+          {
+            id: 'j1',
+            type: 'judge',
+            state: 'x',
+            questions: [
+              { id: 'q', type: 'noul', instructions: 'x' },
+              { id: 'q', type: 'noul', instructions: 'y' },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(WorkflowV2DefinitionError);
+    expect(() =>
+      parseWorkflowDefinitionV2({
+        version: 2,
+        nodes: [
+          {
+            id: 'j1',
+            type: 'judge',
+            state: 'x',
+            questions: [
+              {
+                id: 'q',
+                type: 'choice',
+                instructions: 'x',
+                criteria: ['a', 'b'],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(WorkflowV2DefinitionError);
+    expect(() =>
+      parseWorkflowDefinitionV2({
+        version: 2,
+        nodes: [
+          {
+            id: 'j1',
+            type: 'judge',
+            state: 'x',
+            questions: [
+              {
+                id: 'q',
+                type: 'score',
+                instructions: 'x',
+                criteria: [
+                  '1',
+                  '2',
+                  '3',
+                  '4',
+                  '5',
+                  '6',
+                  '7',
+                  '8',
+                  '9',
+                  '10',
+                  '11',
+                ],
+              },
+            ],
+          },
+        ],
+      }),
+    ).toThrow(WorkflowV2DefinitionError);
+  });
+});

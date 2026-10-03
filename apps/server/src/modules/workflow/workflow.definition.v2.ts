@@ -108,6 +108,23 @@ export interface V2WaitNode extends V2BaseNode {
   timeoutMinutes?: number;
 }
 
+/** judge 节点问题定义（CAP-A-27 P2-F）：System One 判断的结构化问题 */
+export interface V2JudgeQuestion {
+  id: string;
+  type: 'noul' | 'choice' | 'score';
+  instructions: string;
+  /** choice=选项 ID→判据对象；score=档位标签数组（2-10 档）；noul 不带 */
+  criteria?: Record<string, string> | string[];
+}
+
+export interface V2JudgeNode extends V2BaseNode {
+  type: 'judge';
+  /** 判断上下文（支持插值）；只允许系统结构化内容，防注入边界由流程作者负责 */
+  state: WorkflowTemplate;
+  /** 1-20 问，一次调用扇出 */
+  questions: V2JudgeQuestion[];
+}
+
 export type V2Node =
   | V2LlmNode
   | V2HumanNode
@@ -116,7 +133,8 @@ export type V2Node =
   | V2AgentNode
   | V2FanOutNode
   | V2LoopNode
-  | V2WaitNode;
+  | V2WaitNode
+  | V2JudgeNode;
 
 export interface V2WorkflowDoc {
   version: 2;
@@ -137,6 +155,7 @@ const NODE_TYPES = [
   'fan-out',
   'loop',
   'wait',
+  'judge',
 ] as const;
 
 const CONDITION_OPS: ReadonlySet<string> = new Set([
@@ -358,6 +377,68 @@ function validateNode(
           throw new WorkflowV2DefinitionError(
             `wait 节点 ${node.id} timeoutMinutes 须为 1-${limit}`,
           );
+        }
+      }
+      break;
+    }
+    case 'judge': {
+      if (!node.state)
+        throw new WorkflowV2DefinitionError(`judge 节点 ${node.id} 缺 state`);
+      if (!Array.isArray(node.questions) || node.questions.length === 0) {
+        throw new WorkflowV2DefinitionError(
+          `judge 节点 ${node.id} 缺 questions`,
+        );
+      }
+      if (node.questions.length > 20) {
+        throw new WorkflowV2DefinitionError(
+          `judge 节点 ${node.id} questions 超 20 问上限（一次调用扇出上限）`,
+        );
+      }
+      const qIds = new Set<string>();
+      for (const q of node.questions) {
+        if (!q.id || !/^[a-zA-Z0-9_-]{1,64}$/.test(q.id)) {
+          throw new WorkflowV2DefinitionError(
+            `judge 节点 ${node.id} 问题 id 非法：${String(q.id)}`,
+          );
+        }
+        if (qIds.has(q.id)) {
+          throw new WorkflowV2DefinitionError(
+            `judge 节点 ${node.id} 问题 id 重复：${q.id}`,
+          );
+        }
+        qIds.add(q.id);
+        if (!['noul', 'choice', 'score'].includes(q.type)) {
+          throw new WorkflowV2DefinitionError(
+            `judge 节点 ${node.id} 问题 ${q.id} type 非法（noul | choice | score）`,
+          );
+        }
+        if (!q.instructions) {
+          throw new WorkflowV2DefinitionError(
+            `judge 节点 ${node.id} 问题 ${q.id} 缺 instructions`,
+          );
+        }
+        if (q.type === 'choice') {
+          if (
+            !q.criteria ||
+            Array.isArray(q.criteria) ||
+            typeof q.criteria !== 'object' ||
+            Object.keys(q.criteria).length < 2
+          ) {
+            throw new WorkflowV2DefinitionError(
+              `judge 节点 ${node.id} 问题 ${q.id}（choice）criteria 须为至少 2 选项的对象`,
+            );
+          }
+        }
+        if (q.type === 'score') {
+          if (
+            !Array.isArray(q.criteria) ||
+            q.criteria.length < 2 ||
+            q.criteria.length > 10
+          ) {
+            throw new WorkflowV2DefinitionError(
+              `judge 节点 ${node.id} 问题 ${q.id}（score）criteria 须为 2-10 档位数组`,
+            );
+          }
         }
       }
       break;

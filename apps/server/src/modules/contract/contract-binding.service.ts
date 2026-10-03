@@ -8,6 +8,11 @@ import {
   ContractWorkspaceFs,
   ContractWorkspaceResolver,
 } from './contract-workspace-fs';
+import { QuickJudgeService } from '../ai-hub/quick-judge/quick-judge.service';
+import {
+  contractDriftQuestions,
+  extractContractDrift,
+} from '../ai-hub/quick-judge/judge-scenarios';
 
 /** 托管区间在 DB 侧的真相记录（binding.managedBlocks JSON 元素） */
 export interface ManagedBlockRecord {
@@ -36,12 +41,23 @@ export type ContractSyncMode = (typeof CONTRACT_SYNC_MODES)[number];
 export type ConflictAction = 'accept_file' | 'accept_db' | 'detach';
 
 export interface AlignmentReport {
-  state: 'aligned' | 'conflicted' | 'skipped_detached' | 'missing_file';
+  state:
+    | 'aligned'
+    | 'conflicted'
+    | 'skipped_detached'
+    | 'missing_file'
+    | 'aligned_with_drift';
   diffs?: {
     id: string;
     state: 'equal' | 'file_differs' | 'missing_in_file';
   }[];
   proposalId?: string;
+  /** CAP-A-27 P1-D：AI 漂移语义判定（advisory）——benign 降级时不建卡仅记事件 */
+  aiImpact?: {
+    impact: 'benign' | 'semantic-break' | 'formatting-only';
+    confidence: number | null;
+    model: string;
+  };
 }
 
 @Injectable()
@@ -54,6 +70,7 @@ export class ContractBindingService {
     private readonly resolver: ContractWorkspaceResolver,
     @Inject(CONTRACT_WORKSPACE_FS) private readonly fs: ContractWorkspaceFs,
     private readonly messageBus: MessageBusService,
+    private readonly quickJudge: QuickJudgeService,
   ) {}
 
   async getBinding(projectId: string, fileType: ContractFileType) {
@@ -179,18 +196,90 @@ export class ContractBindingService {
 
     if (binding.syncMode === 'managed') {
       if (binding.conflictState !== 'conflicted') {
+        // CAP-A-27 P1-D：升级前 AI 语义判定（advisory）——benign 且高置信仅记
+        // 事件不建卡（漂移事实仍在，下轮对齐会再检出再判，成本可忽略）；
+        // judge 失败/未启用（null）→ 照旧升级，行为与现状一致。
+        const aiImpact = await this.judgeDriftImpact(binding, diffs, expected);
+        if (
+          aiImpact?.impact === 'benign' &&
+          (aiImpact.confidence ?? 0) >= 0.85
+        ) {
+          this.messageBus.publish('contract.drift.benign', {
+            bindingId: binding.id,
+            projectId: binding.projectId,
+            filePath: binding.filePath,
+            driftedBlocks: drifted.map((d) => d.id),
+            impact: aiImpact.impact,
+            confidence: aiImpact.confidence,
+            model: aiImpact.model,
+          });
+          this.logger.log(
+            `契约漂移判为 benign（conf ${aiImpact.confidence}），降级不建卡: ${binding.filePath}`,
+          );
+          return { state: 'aligned_with_drift', diffs, aiImpact };
+        }
         const proposalId = await this.escalateConflict(
           binding.id,
           binding.projectId,
           binding.filePath,
           diffs,
           expected,
+          aiImpact,
         );
-        return { state: 'conflicted', diffs, proposalId };
+        return {
+          state: 'conflicted',
+          diffs,
+          proposalId,
+          aiImpact: aiImpact ?? undefined,
+        };
       }
       return { state: 'conflicted', diffs };
     }
     return { state: 'conflicted', diffs };
+  }
+
+  /**
+   * P1-D：漂移语义判定（quick-judge advisory）。state 只含系统结构化内容
+   * （托管区间 DB 侧真相 + 文件侧 diff），失败/未启用返回 null。
+   */
+  private async judgeDriftImpact(
+    binding: { id: string; filePath: string },
+    diffs: ReturnType<ContractEngineService['compareManagedBlocks']>,
+    expected: ManagedBlockRecord[],
+  ): Promise<AlignmentReport['aiImpact'] | null> {
+    try {
+      const expectedById = new Map(expected.map((b) => [b.id, b.source]));
+      const state = diffs
+        .filter((d) => d.state !== 'equal')
+        .map((d) => {
+          const truncated = (s: string | null | undefined, n = 1500) =>
+            String(s ?? '').slice(0, n);
+          if (d.state === 'missing_in_file') {
+            return `【托管区间 ${d.id}】文件侧缺失。\nDB 侧期望：\n${truncated(expectedById.get(d.id))}`;
+          }
+          return `【托管区间 ${d.id}】\nDB 侧期望：\n${truncated(expectedById.get(d.id))}\n文件侧实际：\n${truncated(d.fileSide)}`;
+        })
+        .join('\n\n');
+      if (!state) return null;
+      const result = await this.quickJudge.judge(
+        'contract_drift',
+        `契约文件：${binding.filePath}\n\n检出偏差：\n${state}`,
+        contractDriftQuestions(),
+      );
+      if (!result) return null;
+      const j = extractContractDrift(result.answers);
+      if (!j.impact) return null;
+      return {
+        impact: j.impact,
+        confidence: j.confidence,
+        model: result.model,
+      };
+    } catch (err) {
+      this.logger.warn(
+        `AI 漂移判定失败（照旧升级）: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return null;
+    }
   }
 
   /**
@@ -290,6 +379,7 @@ export class ContractBindingService {
     filePath: string,
     diffs: ReturnType<ContractEngineService['compareManagedBlocks']>,
     expected: ManagedBlockRecord[],
+    aiImpact?: AlignmentReport['aiImpact'] | null,
   ): Promise<string> {
     const expectedById = new Map(expected.map((b) => [b.id, b.source]));
     const proposal = await this.prisma.decisionProposal.create({
@@ -308,6 +398,16 @@ export class ContractBindingService {
             fileSide: d.fileSide ?? null,
             dbSide: expectedById.get(d.id) ?? null,
           })),
+          // CAP-A-27 P2-G：AI 参考槽——有判定（semantic-break/formatting-only/
+          // 低置信 benign）时随卡带给决策者参考；benign 高置信根本不建卡
+          ...(aiImpact
+            ? {
+                aiSuggestion: {
+                  ...aiImpact,
+                  judgedAt: new Date().toISOString(),
+                },
+              }
+            : {}),
         },
         proposerType: 'system',
         proposerId: 'apm:contract',

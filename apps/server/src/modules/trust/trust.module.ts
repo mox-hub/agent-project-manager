@@ -12,9 +12,11 @@
  */
 
 import { Module } from '@nestjs/common';
+import { QuickJudgeModule } from '../ai-hub/quick-judge/quick-judge.module';
 import { TrustService } from './trust.service';
 
 @Module({
+  imports: [QuickJudgeModule],
   providers: [TrustService],
   exports: [TrustService],
 })

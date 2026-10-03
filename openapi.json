@@ -58693,7 +58693,7 @@
             "JWT-auth": []
           }
         ],
-        "summary": "发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水）",
+        "summary": "发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水；瘦身投影+卡点摘要）",
         "tags": [
           "Releases"
         ]
@@ -58964,6 +58964,137 @@
           }
         ],
         "summary": "版本推荐（POST 形态，body 传 projectId）",
+        "tags": [
+          "Releases"
+        ]
+      }
+    },
+    "/_api/releases/{id}/changelog-preview": {
+      "get": {
+        "operationId": "ReleaseController_changelogPreview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "预览 CHANGELOG 再生文本（Release 实体单向投影，只读不写文件）",
         "tags": [
           "Releases"
         ]
@@ -66855,6 +66986,32 @@
           "state"
         ]
       },
+      "ContractDriftAiImpactDto": {
+        "type": "object",
+        "properties": {
+          "impact": {
+            "type": "string",
+            "enum": [
+              "benign",
+              "semantic-break",
+              "formatting-only"
+            ],
+            "description": "AI 漂移语义判定（CAP-A-27 P1-D advisory）"
+          },
+          "confidence": {
+            "type": "number",
+            "nullable": true
+          },
+          "model": {
+            "type": "string",
+            "description": "判断模型版本"
+          }
+        },
+        "required": [
+          "impact",
+          "model"
+        ]
+      },
       "ContractAlignmentReportDto": {
         "type": "object",
         "properties": {
@@ -66874,7 +67031,8 @@
               "aligned",
               "conflicted",
               "skipped_detached",
-              "missing_file"
+              "missing_file",
+              "aligned_with_drift"
             ]
           },
           "diffs": {
@@ -66886,6 +67044,14 @@
           "proposalId": {
             "type": "string",
             "description": "升级出的冲突提案 id"
+          },
+          "aiImpact": {
+            "description": "AI 漂移语义判定（benign 降级时不建卡仅记事件）",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContractDriftAiImpactDto"
+              }
+            ]
           }
         },
         "required": [

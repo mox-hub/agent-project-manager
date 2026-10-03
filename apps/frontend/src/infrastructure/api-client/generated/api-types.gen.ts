@@ -7042,7 +7042,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水） */
+        /** 发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水；瘦身投影+卡点摘要） */
         get: operations["ReleaseController_list"];
         put?: never;
         /** 创建发版草案（版本号须合法 semver、项目内唯一、大于基线） */
@@ -7065,6 +7065,23 @@ export interface paths {
         put?: never;
         /** 版本推荐（POST 形态，body 传 projectId） */
         post: operations["ReleaseController_recommendPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/releases/{id}/changelog-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 预览 CHANGELOG 再生文本（Release 实体单向投影，只读不写文件） */
+        get: operations["ReleaseController_changelogPreview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9851,14 +9868,26 @@ export interface components {
             /** @enum {string} */
             state: "equal" | "file_differs" | "missing_in_file";
         };
+        ContractDriftAiImpactDto: {
+            /**
+             * @description AI 漂移语义判定（CAP-A-27 P1-D advisory）
+             * @enum {string}
+             */
+            impact: "benign" | "semantic-break" | "formatting-only";
+            confidence?: number | null;
+            /** @description 判断模型版本 */
+            model: string;
+        };
         ContractAlignmentReportDto: {
             /** @enum {string} */
             fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
             /** @enum {string} */
-            state: "aligned" | "conflicted" | "skipped_detached" | "missing_file";
+            state: "aligned" | "conflicted" | "skipped_detached" | "missing_file" | "aligned_with_drift";
             diffs?: components["schemas"]["AlignmentDiffDto"][];
             /** @description 升级出的冲突提案 id */
             proposalId?: string;
+            /** @description AI 漂移语义判定（benign 降级时不建卡仅记事件） */
+            aiImpact?: components["schemas"]["ContractDriftAiImpactDto"];
         };
         UpdateContractBindingDto: {
             /**
@@ -49216,6 +49245,74 @@ export interface operations {
                 "application/json": components["schemas"]["VersionRecommendRequestDto"];
             };
         };
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_changelogPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description 请求参数错误 */
             400: {

@@ -116,13 +116,35 @@ export class AlignmentDiffDto {
   state!: string;
 }
 
+export class ContractDriftAiImpactDto {
+  @ApiProperty({
+    enum: ['benign', 'semantic-break', 'formatting-only'],
+    description: 'AI 漂移语义判定（CAP-A-27 P1-D advisory）',
+  })
+  impact!: string;
+  @ApiPropertyOptional({ type: Number, nullable: true }) confidence?:
+    number | null;
+  @ApiProperty({ description: '判断模型版本' }) model!: string;
+}
+
 export class ContractAlignmentReportDto {
   @ApiProperty({ enum: FILE_TYPES }) fileType!: string;
   @ApiProperty({
-    enum: ['aligned', 'conflicted', 'skipped_detached', 'missing_file'],
+    enum: [
+      'aligned',
+      'conflicted',
+      'skipped_detached',
+      'missing_file',
+      'aligned_with_drift',
+    ],
   })
   state!: string;
   @ApiPropertyOptional({ type: [AlignmentDiffDto] }) diffs?: AlignmentDiffDto[];
   @ApiPropertyOptional({ description: '升级出的冲突提案 id' })
   proposalId?: string;
+  @ApiPropertyOptional({
+    type: ContractDriftAiImpactDto,
+    description: 'AI 漂移语义判定（benign 降级时不建卡仅记事件）',
+  })
+  aiImpact?: ContractDriftAiImpactDto;
 }
