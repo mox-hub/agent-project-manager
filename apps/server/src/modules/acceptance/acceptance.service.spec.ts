@@ -3,18 +3,20 @@ import { AcceptanceService } from './acceptance.service';
 
 /** CAP-B-01 验收判定接入：接收完成要求每条标准至少一条有效（同版本）证据 */
 
-function buildDeps(prisma: any) {
+function buildDeps(prisma: any, quickJudge?: { judge: any }) {
   const messageBus = { publish: vi.fn(async () => undefined) };
   const proposalService = {
     proposeTaskResolutionIfReady: vi.fn(async () => undefined),
   };
+  const judge = quickJudge ?? { judge: vi.fn(async () => null) };
   const service = new AcceptanceService(
     prisma,
     {} as any,
     proposalService as any,
     messageBus as any,
+    judge as any,
   );
-  return { service, messageBus, proposalService };
+  return { service, messageBus, proposalService, quickJudge: judge };
 }
 
 function makeAcceptance(criteria: Array<Record<string, unknown>>) {
@@ -228,5 +230,135 @@ describe('AcceptanceService.applyCriteriaForIssue 非法项显式拒绝', () => 
     expect(result.added).toBe(0);
     expect(result.skipped).toBe(1);
     expect(createMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('AcceptanceService 决策卡选项倾向判定（CAP-A-27 decision_option）', () => {
+  function makeReviewable() {
+    return {
+      id: 'acc1',
+      issueId: 'iss1',
+      status: 'in_review',
+      completionType: 'artifact',
+      priority: 'high',
+      completionEvidence: {
+        artifacts: [{ id: 'a1' }, { id: 'a2' }],
+        autoChecks: { passed: 3, total: 4 },
+      },
+      metadata: { aiCompletionType: { type: 'artifact' } },
+      issue: { title: '导出功能' },
+      criteria: [
+        { status: 'passed', severity: 'medium' },
+        { status: 'pending', severity: 'critical' },
+      ],
+    };
+  }
+
+  function buildPrisma(acceptance: Record<string, unknown>) {
+    return {
+      acceptance: {
+        findUnique: vi.fn(async () => acceptance),
+        update: vi.fn(async ({ data }: any) => ({ ...acceptance, ...data })),
+      },
+    };
+  }
+
+  const JUDGE_OK = {
+    model: 'jev-mock',
+    answers: {
+      decision_choice: {
+        type: 'choice',
+        choice: 'accept',
+        confidence: 0.82,
+        probabilities: { accept: 0.86, reject: 0.1, waive: 0.04 },
+      },
+    },
+  };
+
+  // 判定是 fire-and-forget：一个宏任务冲刷完微任务链后再断言
+  const flush = () => new Promise((r) => setTimeout(r, 0));
+
+  it('update 流转到 in_review → 触发判定并合并非覆盖回写 metadata.aiJudge', async () => {
+    const acceptance = makeReviewable();
+    const prisma = buildPrisma(acceptance);
+    const { service, quickJudge } = buildDeps(prisma, {
+      judge: vi.fn(async () => JUDGE_OK),
+    });
+
+    await service.update('acc1', { status: 'in_review' } as any);
+    await flush();
+
+    expect(quickJudge.judge).toHaveBeenCalledTimes(1);
+    const [scenario, state] = (quickJudge.judge as any).mock.calls[0];
+    expect(scenario).toBe('decision_option');
+    // 防操纵边界：state 只含结构化字段，不含标准内容等自由文本
+    expect(state).toContain('导出功能');
+    expect(state).toContain('产物 2 项');
+    expect(state).toContain('自动检查 3/4 通过');
+    expect(state).toContain('critical 未过 1');
+
+    const writeCall = prisma.acceptance.update.mock.calls.find(
+      ([call]: any) => call?.data?.metadata,
+    );
+    expect(writeCall).toBeDefined();
+    const aiJudge = writeCall[0].data.metadata.aiJudge;
+    expect(aiJudge).toMatchObject({
+      options: { accept: 0.86, reject: 0.1, waive: 0.04 },
+      optionsChoice: 'accept',
+      confidence: 0.82,
+      advisory: true,
+    });
+    // 既有 metadata 键合并不覆盖
+    expect(writeCall[0].data.metadata.aiCompletionType).toEqual({
+      type: 'artifact',
+    });
+  });
+
+  it('通道不可用（judge → null）→ 静默跳过不回写', async () => {
+    const acceptance = makeReviewable();
+    const prisma = buildPrisma(acceptance);
+    const { service, quickJudge } = buildDeps(prisma);
+
+    await service.update('acc1', { status: 'in_review' } as any);
+    await flush();
+
+    expect(quickJudge.judge).toHaveBeenCalledTimes(1);
+    expect(
+      prisma.acceptance.update.mock.calls.some(
+        ([call]: any) => call?.data?.metadata,
+      ),
+    ).toBe(false);
+  });
+
+  it('非待决状态（draft/passed）流转不触发判定', async () => {
+    const acceptance = { ...makeReviewable(), status: 'draft' };
+    const prisma = buildPrisma(acceptance);
+    const { service, quickJudge } = buildDeps(prisma, {
+      judge: vi.fn(async () => JUDGE_OK),
+    });
+
+    await service.update('acc1', { priority: 'low' } as any);
+    await flush();
+
+    expect(quickJudge.judge).not.toHaveBeenCalled();
+  });
+
+  it('判定答案畸形（无 probabilities）→ 不回写 metadata', async () => {
+    const acceptance = makeReviewable();
+    const prisma = buildPrisma(acceptance);
+    const { service } = buildDeps(prisma, {
+      judge: vi.fn(async () => ({
+        model: 'jev-mock',
+        answers: { decision_choice: { type: 'choice', choice: 'accept' } },
+      })),
+    });
+
+    await service.judgeDecisionOptions('acc1');
+
+    expect(
+      prisma.acceptance.update.mock.calls.some(
+        ([call]: any) => call?.data?.metadata,
+      ),
+    ).toBe(false);
   });
 });

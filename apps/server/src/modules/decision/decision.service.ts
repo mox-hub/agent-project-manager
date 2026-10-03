@@ -309,6 +309,11 @@ export class DecisionService {
         completionType: a.completionType,
         priority: a.priority,
         completionEvidence: a.completionEvidence,
+        // AI 选项倾向投影（CAP-A-27 decision_option）：metadata.aiJudge
+        // {confidence, options, optionsChoice}——advisory 展示；存量卡无判定
+        // 时为 undefined，前端不渲染（零噪音纪律）
+        aiJudge:
+          (a.metadata as Record<string, unknown> | null)?.aiJudge ?? undefined,
       },
       createdAt: a.createdAt.toISOString(),
       contextPath: `/app/acceptance/${a.id}`,

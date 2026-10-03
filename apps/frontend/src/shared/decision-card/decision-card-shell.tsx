@@ -64,12 +64,23 @@ export function aiOptionProbability(
   return null;
 }
 
+/**
+ * 低置信阈值（CAP-A-27 全特征统一口径）：概率/置信 < 0.7 视为低置信转黄。
+ * 与 ConfidenceBar、AiVerdictPill、动作栏徽注同一把尺子。
+ */
+export const AI_LOW_CONFIDENCE = 0.7;
+
 /** 从决策卡 payload 读 AI 选项倾向分布（payload.aiJudge.options）。 */
 function aiOptionsOf(decision: Decision): Record<string, number> | null {
   const judge = (decision.payload as Record<string, unknown> | null)?.aiJudge as
     | { options?: Record<string, number> }
     | undefined;
-  return judge?.options ?? null;
+  const options = judge?.options;
+  // 存量/畸形数据容错：options 必须是普通对象，否则按「无判定」处理（零渲染）
+  if (typeof options !== 'object' || options === null || Array.isArray(options)) {
+    return null;
+  }
+  return options;
 }
 
 export const DEFAULT_ACTIONS: DecisionActionDef[] = [
@@ -218,28 +229,42 @@ function ActionBar({
         const gated =
           index === 0 &&
           ((requireEvidence && !evidenceOpen) || cooldownLeft > 0);
+        // AI 选项倾向（advisory）：判定键映射到卡动作键后取概率；
+        // 无判定（含存量旧卡）恒 null——底色与徽注都不渲染，绝不造「AI 失败」噪音
+        const prob = aiOptionProbability(aiOptions, def.action);
+        const low = prob !== null && prob < AI_LOW_CONFIDENCE;
         return (
           <button
             key={def.action}
             disabled={busy || gated}
             onClick={() => handleSelect(def)}
             className={cn(
-              'flex flex-1 items-center justify-center gap-1 border-r border-border/30 py-2.5 text-xs font-medium text-content-text-secondary whitespace-nowrap transition-colors last:border-r-0 hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-40',
+              'relative flex flex-1 items-center justify-center gap-1 overflow-hidden border-r border-border/30 py-2.5 text-xs font-medium text-content-text-secondary whitespace-nowrap transition-colors last:border-r-0 hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-40',
             )}
           >
-            <Icon className="size-3.5 shrink-0" />
-            <span className="whitespace-nowrap">
-              {index === 0 && cooldownLeft > 0
-                ? t('decision.action.cooldown', { n: cooldownLeft })
-                : t(def.label)}
-            </span>
-            {(() => {
-              // AI 选项倾向（advisory）：判定键映射到卡动作键后取概率；
-              // 低置信（<0.7）转黄，无判定不渲染——绝不渲染「AI 失败」噪音
-              const prob = aiOptionProbability(aiOptions, def.action);
-              if (prob === null) return null;
-              const low = prob < 0.7;
-              return (
+            {/* 概率底色（进度条式，按置信度比例自左填充）：低置信（<0.7）转黄，
+                其余紫色系=AI advisory 语义色（与 ConfidenceBar/徽注同规则）。
+                纯装饰层：aria-hidden + pointer-events-none，装饰绝不拦点击。 */}
+            {prob !== null ? (
+              <span
+                aria-hidden="true"
+                data-ai-option-fill={prob}
+                className={cn(
+                  'pointer-events-none absolute inset-y-0 left-0 transition-[width] duration-normal ease-out',
+                  low ? 'bg-accent-yellow-light' : 'bg-accent-purple-light',
+                )}
+                style={{ width: `${Math.round(prob * 100)}%` }}
+              />
+            ) : null}
+            {/* 内容提层（relative）：压在绝对定位底色之上，保证图标文字可读可点 */}
+            <span className="relative inline-flex items-center gap-1">
+              <Icon className="size-3.5 shrink-0" />
+              <span className="whitespace-nowrap">
+                {index === 0 && cooldownLeft > 0
+                  ? t('decision.action.cooldown', { n: cooldownLeft })
+                  : t(def.label)}
+              </span>
+              {prob !== null ? (
                 <span
                   title={t('aiJudge.advisoryTooltip')}
                   data-ai-option-probability={prob}
@@ -250,10 +275,10 @@ function ActionBar({
                 >
                   {Math.round(prob * 100)}%
                 </span>
-              );
-            })()}
-            <span className="shrink-0 rounded-sm border border-current/20 px-1 font-mono text-3xs opacity-50 whitespace-nowrap">
-              {index + 1}
+              ) : null}
+              <span className="shrink-0 rounded-sm border border-current/20 px-1 font-mono text-3xs opacity-50 whitespace-nowrap">
+                {index + 1}
+              </span>
             </span>
           </button>
         );

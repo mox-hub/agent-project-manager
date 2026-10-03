@@ -1583,6 +1583,12 @@ export class CliDispatchService {
         data: { status: 'in_review' },
       });
 
+      // 决策卡选项倾向判定（CAP-A-27，advisory）：卡进待决队列即出
+      // 「通过/驳回/豁免」倾向分布（fire-and-forget，失败零影响）
+      void this.acceptanceService
+        .judgeDecisionOptions(run.acceptanceId)
+        .catch(() => {});
+
       this.logger.log(
         `Persisted completion evidence for acceptance ${run.acceptanceId} (${artifacts.length} artifacts)`,
       );

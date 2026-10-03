@@ -558,3 +558,47 @@ export function extractAuditCoverage(
     covered: a?.type === 'noul' && typeof a.noul === 'number' ? a.noul : null,
   };
 }
+
+// ---------- 扩展批三：决策卡选项倾向（decision_option） ----------
+// 批二预注册场景的首个消费方：验收卡进入待决队列时对「通过/驳回/豁免」出
+// 选项概率分布（审批卡的选项分布随 approval_risk 的 approval_choice 一并产出，
+// 不走本场景）。选项键 = 决策卡动作键（accept/reject/waive...），前端
+// AI_OPTION_TO_ACTION 直映，不另造判定词汇表；criteria 由调用方按卡种给判据。
+
+export function decisionOptionQuestions(
+  criteria: Record<string, string>,
+): QuickJudgeQuestion[] {
+  return [
+    {
+      id: 'decision_choice',
+      type: 'choice',
+      instructions:
+        '综合该待决事项的当前状态与证据，此时此刻最恰当的处理倾向是？',
+      criteria,
+    },
+  ];
+}
+
+export interface DecisionOptionJudgement {
+  confidence: number | null;
+  /** 选项倾向分布（选项键 → 0-1）：决策卡按钮概率底色/徽注与收件箱 pill 消费 */
+  options: Record<string, number> | null;
+  optionsChoice: string | null;
+}
+
+export function extractDecisionOption(
+  answers: Record<string, QuickJudgeAnswer>,
+): DecisionOptionJudgement {
+  const c = answers.decision_choice;
+  return {
+    confidence:
+      c?.type === 'choice' && typeof c.confidence === 'number'
+        ? c.confidence
+        : null,
+    options:
+      c?.type === 'choice' && c.probabilities
+        ? (c.probabilities as Record<string, number>)
+        : null,
+    optionsChoice: c?.type === 'choice' ? (c.choice ?? null) : null,
+  };
+}

@@ -9,6 +9,8 @@ import {
   extractCompletionType,
   auditCoverageQuestions,
   extractAuditCoverage,
+  decisionOptionQuestions,
+  extractDecisionOption,
 } from './judge-scenarios';
 
 /** CAP-A-27 场景注册表：questions 构造 + answers 提取容错 */
@@ -203,5 +205,60 @@ describe('audit_coverage 场景（扩展批三）', () => {
       extractAuditCoverage({ covered: { type: 'noul', noul: 0.86 } }),
     ).toEqual({ covered: 0.86 });
     expect(extractAuditCoverage({}).covered).toBeNull();
+  });
+});
+
+describe('decision_option 场景（扩展批三：验收卡选项倾向）', () => {
+  it('questions 单问 decision_choice Choice，criteria 由调用方按卡种给定', () => {
+    const qs = decisionOptionQuestions({
+      accept: '证据充分，可以通过验收',
+      reject: '证据不足或未达成，应当驳回退回执行方',
+      waive: '可以豁免：不再要求证据直接放行',
+    });
+    expect(qs).toHaveLength(1);
+    expect(qs[0].id).toBe('decision_choice');
+    expect(qs[0].type).toBe('choice');
+    expect(Object.keys(qs[0].criteria as Record<string, string>)).toEqual([
+      'accept',
+      'reject',
+      'waive',
+    ]);
+  });
+
+  it('提取：choice + confidence + probabilities 全量解析', () => {
+    expect(
+      extractDecisionOption({
+        decision_choice: {
+          type: 'choice',
+          choice: 'accept',
+          confidence: 0.82,
+          probabilities: { accept: 0.86, reject: 0.1, waive: 0.04 },
+        },
+      }),
+    ).toEqual({
+      confidence: 0.82,
+      options: { accept: 0.86, reject: 0.1, waive: 0.04 },
+      optionsChoice: 'accept',
+    });
+  });
+
+  it('容错：缺键/类型不符/无 probabilities → 对应字段 null，不抛', () => {
+    expect(extractDecisionOption({})).toEqual({
+      confidence: null,
+      options: null,
+      optionsChoice: null,
+    });
+    expect(
+      extractDecisionOption({ decision_choice: { type: 'noul', noul: 0.5 } }),
+    ).toEqual({
+      confidence: null,
+      options: null,
+      optionsChoice: null,
+    });
+    expect(
+      extractDecisionOption({
+        decision_choice: { type: 'choice', choice: 'reject' },
+      }).options,
+    ).toBeNull();
   });
 });
