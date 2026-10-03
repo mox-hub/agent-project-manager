@@ -7,6 +7,7 @@ import {
 import semver from 'semver';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
+import { DomainEventTypes } from '../../core/message-bus/domain-events';
 import {
   ContractBindingService,
   ContractFileType,
@@ -172,12 +173,105 @@ export class ReleaseService {
     }
   }
 
-  /** 发版列表：projectId 缺省返回全部（CAP-A-15 跨项目发版流水） */
+  /** 发版列表：projectId 缺省返回全部（CAP-A-15 跨项目发版流水）——内部全量投影（CHANGELOG 再生/版本基线依赖 notes 等全字段） */
   async listReleases(projectId?: string) {
     return this.prisma.release.findMany({
       where: projectId ? { projectId } : undefined,
       orderBy: [{ releasedAt: 'desc' }, { createdAt: 'desc' }],
       include: RELEASE_INCLUDE,
+    });
+  }
+
+  /**
+   * 列表端点瘦身投影（CAP-K-03 批四）：notes/executionLog/deliverables/scope/
+   * upgradeNotes 大字段不进列表响应，换算卡点摘要——gateFailedChecks（门禁
+   * 未过计数）与 hasPendingApproval（待审批决策卡存在性，一次 in 查询）。
+   * 服务端分页不做：客户端过滤架构依赖全量，瘦身已达性能目的。
+   */
+  async listReleaseItems(projectId?: string) {
+    const releases = await this.prisma.release.findMany({
+      where: projectId ? { projectId } : undefined,
+      orderBy: [{ releasedAt: 'desc' }, { createdAt: 'desc' }],
+      select: {
+        id: true,
+        projectId: true,
+        version: true,
+        name: true,
+        status: true,
+        gitTag: true,
+        releasedAt: true,
+        createdBy: true,
+        createdAt: true,
+        updatedAt: true,
+        plannedAt: true,
+        platforms: true,
+        hotfixOfId: true,
+        failureReason: true,
+        approvedBy: true,
+        approvedAt: true,
+        tagPushed: true,
+        githubReleased: true,
+        milestoneId: true,
+        gateResult: true,
+        milestone: { select: { id: true, name: true, status: true } },
+        project: { select: { id: true, name: true } },
+      },
+    });
+    let pendingReleaseIds = new Set<string>();
+    if (releases.length > 0) {
+      // Prisma JsonFilter 不支持 path+in 组合；pending 发布卡是瞬态少量行，
+      // 全取后 JS 交集（同 createApprovalProposal 的 path+equals 查询口径）
+      const pendings = await this.prisma.decisionProposal.findMany({
+        where: { kind: 'release', status: 'pending' },
+        select: { payload: true },
+      });
+      const idSet = new Set(releases.map((r) => r.id));
+      pendingReleaseIds = new Set(
+        pendings
+          .map((p) => (p.payload as { releaseId?: string } | null)?.releaseId)
+          .filter((v): v is string => !!v && idSet.has(v)),
+      );
+    }
+    return releases.map((r) => {
+      const gate = r.gateResult as { checks?: { passed: boolean }[] } | null;
+      return {
+        ...r,
+        gateResult: undefined,
+        gateFailedChecks: gate
+          ? (gate.checks ?? []).filter((c) => !c.passed).length
+          : null,
+        hasPendingApproval: pendingReleaseIds.has(r.id),
+      };
+    });
+  }
+
+  /** CHANGELOG 再生文本预览（CAP-K-03 批四）：只读不写文件，详情页预览对话框数据源 */
+  async previewChangelog(releaseId: string) {
+    const release = await this.getRelease(releaseId);
+    return {
+      releaseId,
+      projectId: release.projectId,
+      version: release.version,
+      content: await this.generateChangelog(release.projectId),
+    };
+  }
+
+  /**
+   * 状态机跃迁广播（CAP-K-03 批四）：release.status.changed 出网关，
+   * 列表页据此实时失效、详情页由轮询兜底——事件只描述事实不携带判定。
+   */
+  private emitStatusChanged(
+    release: Pick<ReleaseModel, 'id' | 'projectId' | 'version'>,
+    from: string,
+    to: string,
+  ): void {
+    this.messageBus.publish(DomainEventTypes.ReleaseStatusChanged, {
+      releaseId: release.id,
+      projectId: release.projectId,
+      version: release.version,
+      from,
+      to,
+      at: new Date().toISOString(),
     });
   }
 
@@ -328,6 +422,9 @@ export class ReleaseService {
         gateResult: result as unknown as Prisma.InputJsonValue,
       },
     });
+    if (result.passed) {
+      this.emitStatusChanged(release, 'draft', 'gated');
+    }
     return result;
   }
 
@@ -472,6 +569,7 @@ export class ReleaseService {
       where: { id: releaseId },
       data: { status: 'approved', approvedBy: userId, approvedAt: new Date() },
     });
+    this.emitStatusChanged(release, release.status, 'approved');
     this.messageBus.publish('release.approved', { releaseId });
     return approved;
   }
@@ -480,23 +578,27 @@ export class ReleaseService {
   async rejectToDraft(releaseId: string, reason?: string) {
     const release = await this.getRelease(releaseId);
     assertReleaseTransition(release.status, 'draft');
-    return this.prisma.release.update({
+    const rejected = await this.prisma.release.update({
       where: { id: releaseId },
       data: {
         status: 'draft',
         failureReason: reason ? `已打回: ${reason}` : '已打回',
       },
     });
+    this.emitStatusChanged(release, release.status, 'draft');
+    return rejected;
   }
 
   /** 失败重开：failed → draft（重走门禁） */
   async reopenDraft(releaseId: string) {
     const release = await this.getRelease(releaseId);
     assertReleaseTransition(release.status, 'draft');
-    return this.prisma.release.update({
+    const reopened = await this.prisma.release.update({
       where: { id: releaseId },
       data: { status: 'draft', failureReason: null, executionLog: [] },
     });
+    this.emitStatusChanged(release, release.status, 'draft');
+    return reopened;
   }
 
   /** 版本推荐（conventional commits 机械推断，见 ReleaseVersionService） */
