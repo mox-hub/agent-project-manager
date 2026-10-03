@@ -81,6 +81,8 @@ const OVERLAY_ALLOWLIST = new Set([
   "src/modules/project/pages/project-settings-page.tsx",
   // office 信任分级面板（TrustTiersPanel 详情 Dialog）——office 改批引入，2026-10-02 补录解锁 lint 链
   "src/modules/office/pages/office-page.tsx",
+  // 发版详情 CHANGELOG 预览弹层（ChangelogPreviewDialog）——CAP-K-03 批四引入，2026-10-03 补录
+  "src/modules/release/pages/release-detail-page.tsx",
 ]);
 
 // 动态色值白名单（页面内 `style={{ ... #hex }}`）：扩面后实测 0 命中

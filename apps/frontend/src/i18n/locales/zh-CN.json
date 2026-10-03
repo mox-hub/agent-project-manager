@@ -541,6 +541,11 @@
       "submit": "创建草案",
       "created": "发版草案已创建"
     },
+    "meta": {
+      "edit": "编辑信息",
+      "saved": "发版信息已更新",
+      "tagAuto": "发布时自动创建 v{{version}}"
+    },
     "gate": {
       "title": "发布门禁",
       "submit": "提交门禁",
@@ -565,6 +570,12 @@
       "aiDraft": "AI 起草",
       "notesSaved": "发版说明已保存",
       "noNotes": "暂无发版说明——可用 AI 起草后人工修订",
+      "notesPlaceholder": "用 Markdown 记录发版说明：版本亮点、已知问题、升级提示…",
+      "secStatus": "状态",
+      "secMeta": "信息",
+      "secNotes": "发版说明",
+      "secDeliverables": "交付成果",
+      "secTrace": "前因后果",
       "notesDraft": {
         "title": "AI 起草发版说明",
         "description": "AI 按范围工单与交付物清单起草面向内测用户的发版说明；您编辑确认后才保存，取消不会改动现有说明",
@@ -588,7 +599,6 @@
         "sourceCurrentNotesNone": "无已有说明"
       },
       "tag": "Git Tag",
-      "tagPending": "发布时创建",
       "project": "所属项目",
       "milestone": "所属里程碑",
       "planned": "计划发版",

@@ -541,6 +541,11 @@
       "submit": "Create draft",
       "created": "Release draft created"
     },
+    "meta": {
+      "edit": "Edit info",
+      "saved": "Release info updated",
+      "tagAuto": "Auto-created as v{{version}} on publish"
+    },
     "gate": {
       "title": "Release gate",
       "submit": "Run gate",
@@ -565,6 +570,12 @@
       "aiDraft": "AI draft",
       "notesSaved": "Release notes saved",
       "noNotes": "No notes yet — try AI draft and refine manually",
+      "notesPlaceholder": "Write release notes in Markdown: highlights, known issues, upgrade tips…",
+      "secStatus": "Status",
+      "secMeta": "Info",
+      "secNotes": "Notes",
+      "secDeliverables": "Deliverables",
+      "secTrace": "Trace",
       "notesDraft": {
         "title": "AI-draft release notes",
         "description": "AI drafts beta-user-facing notes from the scoped issues and deliverables; nothing is saved until you review and confirm — cancelling leaves the current notes untouched",
@@ -588,7 +599,6 @@
         "sourceCurrentNotesNone": "No existing notes"
       },
       "tag": "Git Tag",
-      "tagPending": "created on publish",
       "project": "Project",
       "milestone": "Milestone",
       "planned": "Planned",

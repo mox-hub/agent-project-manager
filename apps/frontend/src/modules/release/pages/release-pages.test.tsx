@@ -3,7 +3,7 @@
  * 计划·实际日期/即将发版区/详情门禁面板/执行日志/升级说明/交付卡 platform。
  * hooks 层整体 mock（api 经由 hooks 消费），i18n 走键名直读。
  */
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach, beforeAll } from 'vitest';
@@ -421,12 +421,14 @@ describe('ReleaseDetailPage', () => {
       ],
     };
     renderWithRouter(<ReleaseDetailPage />, '/r-1');
-    expect(screen.getByText('发布门禁')).toBeTruthy();
+    // 「发布门禁」同时出现在左栏 scrubber 与门禁卡标题，取门禁卡内断言
+    expect(screen.getAllByText('发布门禁').length).toBeGreaterThanOrEqual(1);
     // 项目名行：{label}: {name} 插值拆成多段 text node，用正则匹配整行文本
     expect(screen.getByText(/所属项目/)).toBeTruthy();
     expect(screen.getByText(/示例项目/)).toBeTruthy();
     expect(screen.getByText('存在失败结论')).toBeTruthy();
-    expect(screen.getByText('发布执行日志')).toBeTruthy();
+    // 「发布执行日志」同时出现在左栏 scrubber 与日志卡标题
+    expect(screen.getAllByText('发布执行日志').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('github-release')).toBeTruthy();
     expect(screen.getByText('说明文本')).toBeTruthy();
   });
@@ -592,13 +594,103 @@ describe('ReleaseDetailPage', () => {
     renderWithRouter(<ReleaseDetailPage />, '/r-9');
     expect(screen.getByText('暂无升级注意事项')).toBeTruthy();
     await user.click(screen.getByText('补充升级说明'));
-    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement;
+    // 发版说明与升级注意事项都是 PromptEditor（页上两个 textbox），在升级说明块内收敛定位
+    const block = screen.getByTestId('release-upgrade-notes');
+    const textarea = within(block).getByRole('textbox') as HTMLTextAreaElement;
     await user.type(textarea, '破坏性变更：配置文件格式迁移');
-    await user.click(screen.getByText('common.save'));
+    await user.click(within(block).getByText('common.save'));
     expect(updateMutate).toHaveBeenCalledWith(
       { upgradeNotes: '破坏性变更：配置文件格式迁移' },
       expect.objectContaining({ onSuccess: expect.any(Function) }),
     );
+  });
+
+  it('详情 meta 胶囊组：项目/Git Tag/GitHub Release 展示，无 tag 显发布时自动创建，released 无编辑入口（详情页改版）', () => {
+    detailState.release = {
+      id: 'r-1',
+      projectId: 'p-1',
+      project: { id: 'p-1', name: '示例项目' },
+      version: '1.2.0',
+      status: 'released',
+      tagPushed: true,
+      githubReleased: false,
+      gitTag: null,
+      releasedAt: '2026-09-13T00:00:00Z',
+    };
+    renderWithRouter(<ReleaseDetailPage />, '/r-1');
+    const bar = screen.getByTestId('release-meta-bar');
+    expect(bar.textContent).toContain('示例项目');
+    expect(bar.textContent).toContain('v1.2.0');
+    // gitTag 空 → 「发布时自动创建 v{version}」预期值（t mock 键名直读 + 插值替换）
+    expect(bar.textContent).toContain('release.meta.tagAuto');
+    // GitHub Release 未创建（release.detail.no 键）
+    expect(bar.textContent).toContain('release.detail.no');
+    // released 态无编辑入口（仅草案可改）
+    expect(screen.queryByTestId('release-meta-edit')).toBeNull();
+  });
+
+  it('draft 态 meta 胶囊组：编辑信息 → 表单改版本/平台 → 保存载荷入 updateDraft（详情页改版）', async () => {
+    const user = userEvent.setup();
+    detailState.release = {
+      id: 'r-9',
+      projectId: 'p-1',
+      project: { id: 'p-1', name: '示例项目' },
+      version: '2.0.0',
+      name: '内测版',
+      status: 'draft',
+      tagPushed: false,
+      githubReleased: false,
+      gitTag: null,
+      releasedAt: null,
+      milestone: { id: 'ms-1', name: 'MVP', status: 'reached' },
+      platforms: ['windows'],
+    };
+    renderWithRouter(<ReleaseDetailPage />, '/r-9');
+    await user.click(screen.getByTestId('release-meta-edit'));
+    const form = screen.getByTestId('release-meta-form');
+    const versionInput = within(form).getByDisplayValue('2.0.0') as HTMLInputElement;
+    await user.clear(versionInput);
+    await user.type(versionInput, '2.1.0');
+    // 平台初始勾选 windows（初值来自 release.platforms），追加勾选 web；
+    // base-ui Checkbox 勾选态不落根元素 data-state，以保存载荷断言为准
+    const checks = form.querySelectorAll(
+      '[data-testid="release-meta-platforms"] [role="checkbox"]',
+    );
+    expect(checks.length).toBe(6);
+    await user.click(checks[5] as HTMLElement);
+    await user.click(screen.getByTestId('release-meta-save'));
+    expect(updateMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        version: '2.1.0',
+        name: '内测版',
+        platforms: ['windows', 'web'],
+        milestoneId: 'ms-1',
+        plannedAt: null,
+      }),
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    );
+  });
+
+  it('左栏栏目导航：竖排 scrubber 渲染各节，执行日志有内容时追加第八节（详情页改版）', () => {
+    detailState.release = {
+      id: 'r-1',
+      projectId: 'p-1',
+      project: { id: 'p-1', name: '示例项目' },
+      version: '1.2.0',
+      status: 'released',
+      tagPushed: true,
+      githubReleased: false,
+      executionLog: [{ step: 'tag', status: 'ok', detail: 'ok', at: '' }],
+    };
+    renderWithRouter(<ReleaseDetailPage />, '/r-1');
+    const navEl = document.querySelector(
+      '[data-slot="section-scrubber"]',
+    ) as HTMLElement;
+    expect(navEl.getAttribute('data-orientation')).toBe('vertical');
+    // 状态/信息/发版说明/交付成果/前因后果/门禁/审批发布 + 执行日志 = 8 节
+    expect(navEl.querySelectorAll('button').length).toBe(8);
+    expect(navEl.textContent).toContain('release.detail.secNotes');
+    expect(navEl.textContent).toContain('发布门禁');
   });
 
   it('交付清单行渲染所属平台徽标（批三 platform 列）', () => {
