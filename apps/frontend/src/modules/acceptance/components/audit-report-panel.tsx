@@ -4,6 +4,7 @@
  * 建议/阻断项支持采纳（onApplySuggestions 回调，由页面接 mutation）。
  */
 import { useTranslation } from 'react-i18next';
+import { AiVerdictPill } from '@/components/semantic/ai-verdict-pill';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,11 @@ import type { AuditReport, AuditItem } from '../api/acceptance-api';
 
 interface Props {
   report: AuditReport;
+  /** JEV 覆盖复核提示（扩展批三，advisory）：键=finding id——仅本次跑审计会话内有效 */
+  aiCoverageHints?: Record<
+    string,
+    { covered: number; confidence: number | null }
+  > | null;
   onApplySuggestions?: (itemIds: string[]) => void;
   loading?: boolean;
 }
@@ -28,7 +34,12 @@ const SEVERITY_STYLE: Record<string, string> = {
   low: 'text-muted-foreground border-border',
 };
 
-export function AuditReportPanel({ report, onApplySuggestions, loading }: Props) {
+export function AuditReportPanel({
+  report,
+  aiCoverageHints,
+  onApplySuggestions,
+  loading,
+}: Props) {
   const { t } = useTranslation();
   const blocked = report.blockedItems ?? [];
   const suggested = report.suggestedItems ?? [];
@@ -81,7 +92,11 @@ export function AuditReportPanel({ report, onApplySuggestions, loading }: Props)
           </h4>
           <div className="space-y-2">
             {blocked.map((item) => (
-              <AuditItemCard key={item.id} item={item} />
+              <AuditItemCard
+                key={item.id}
+                item={item}
+                aiHint={aiCoverageHints?.[item.id]}
+              />
             ))}
           </div>
         </div>
@@ -99,6 +114,7 @@ export function AuditReportPanel({ report, onApplySuggestions, loading }: Props)
               <AuditItemCard
                 key={item.id}
                 item={item}
+                aiHint={aiCoverageHints?.[item.id]}
                 showApply={!!onApplySuggestions}
                 onApply={() => onApplySuggestions?.([item.id])}
                 loading={loading}
@@ -155,7 +171,16 @@ interface AuditItemCardProps {
   loading?: boolean;
 }
 
-function AuditItemCard({ item, showApply, onApply, loading }: AuditItemCardProps) {
+function AuditItemCard({
+  item,
+  aiHint,
+  showApply,
+  onApply,
+  loading,
+}: AuditItemCardProps & {
+  /** JEV 覆盖复核（advisory）：covered 高说明规则层疑似误报，仅提示不撤项 */
+  aiHint?: { covered: number; confidence: number | null };
+}) {
   const { t } = useTranslation();
 
   return (
@@ -174,6 +199,15 @@ function AuditItemCard({ item, showApply, onApply, loading }: AuditItemCardProps
             )}
             {item.source && (
               <span className="text-xs text-muted-foreground">{item.source}</span>
+            )}
+            {aiHint && aiHint.covered >= 0.8 && (
+              <AiVerdictPill
+                size="xs"
+                label={t('aiJudge.coverageHint', {
+                  pct: Math.round(aiHint.covered * 100),
+                })}
+                confidence={aiHint.confidence}
+              />
             )}
           </div>
           {item.suggestion && (

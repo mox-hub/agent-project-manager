@@ -69,7 +69,9 @@
     "download": "下载",
     "export": "导出",
     "grid": "卡片",
-    "cards": "卡片"
+    "cards": "卡片",
+    "prevPage": "上一页",
+    "nextPage": "下一页"
   },
   "workspace": {
     "backups": {
@@ -546,7 +548,8 @@
       "submit": "提交门禁",
       "ranAt": "上次检查：",
       "notRun": "尚未提交门禁——门禁校验范围归属、验收全绿、CI 证据、契约绑定与完整性审计",
-      "skippedEmptyScope": "范围内无内容，跳过"
+      "skippedEmptyScope": "范围内无内容，跳过",
+      "aiReadiness": "AI 就绪度"
     },
     "action": {
       "title": "审批与发布",
@@ -935,7 +938,9 @@
     "statusExpired": "已过期",
     "statusCancelled": "已取消",
     "aiJudgeTitle": "AI 风险定级（advisory，仅供决策参考）",
-    "lowConfidence": "低置信"
+    "lowConfidence": "低置信",
+    "riskMismatch": "AI 判 {{ai}}（与自报不一致）",
+    "riskMismatchTitle": "审批定级由请求方自报；AI 独立定级与之不一致时提示——双轨对照期，判定权仍在人"
   },
   "runDetails": {
     "title": "运行详情",
@@ -1394,6 +1399,14 @@
     "empty": {
       "title": "没有待决事项",
       "description": "需要你裁决的事情会以决策卡的形式送到这里"
+    },
+    "aiJudge": {
+      "approve": "建议批准",
+      "accept": "建议通过",
+      "reject": "建议拒绝",
+      "needs_more_info": "需补充信息",
+      "cancel": "建议取消",
+      "waive": "建议豁免"
     }
   },
   "boot": {
@@ -1594,8 +1607,7 @@
       "emailAlreadyRegistered": "该邮箱已注册，请直接登录",
       "userInactive": "账号已被禁用，请联系管理员",
       "loginFailed": "登录失败，请稍后重试",
-      "sessionExpired": "会话已过期，请重新登录",
-      "emailAlreadyRegistered": "该邮箱已注册，请直接登录"
+      "sessionExpired": "会话已过期，请重新登录"
     }
   },
   "contextMenu": {
@@ -2509,57 +2521,150 @@
         "linear": {
           "desc": "把 Linear 的问题、周期与项目同步为 APM 任务。",
           "longDesc": "连接你的 Linear 工作区，导入并双向同步问题为任务。AI 同事可直接创建 Linear 问题，验收结果会作为问题评论回传。",
-          "f1": { "label": "问题同步", "desc": "导入 Linear 问题并与 APM 任务保持同步" },
-          "f2": { "label": "双向同步", "desc": "任一系统的变更自动互相传播" },
-          "f3": { "label": "AI 建单", "desc": "AI 同事可直接创建 Linear 问题" },
-          "f4": { "label": "评论同步", "desc": "验收结果以 Linear 评论回传" },
-          "f5": { "label": "成员映射", "desc": "把 Linear 成员映射到 APM 团队成员" },
-          "f6": { "label": "周期跟踪", "desc": "把周期进度导入里程碑视图" }
+          "f1": {
+            "label": "问题同步",
+            "desc": "导入 Linear 问题并与 APM 任务保持同步"
+          },
+          "f2": {
+            "label": "双向同步",
+            "desc": "任一系统的变更自动互相传播"
+          },
+          "f3": {
+            "label": "AI 建单",
+            "desc": "AI 同事可直接创建 Linear 问题"
+          },
+          "f4": {
+            "label": "评论同步",
+            "desc": "验收结果以 Linear 评论回传"
+          },
+          "f5": {
+            "label": "成员映射",
+            "desc": "把 Linear 成员映射到 APM 团队成员"
+          },
+          "f6": {
+            "label": "周期跟踪",
+            "desc": "把周期进度导入里程碑视图"
+          }
         },
         "jira": {
           "desc": "导入 Jira 工单与史诗，AI 产出的工作成果回推到你的看板。",
           "longDesc": "把 Jira Cloud 或 Data Center 实例作为任务源。导入史诗、故事与缺陷，AI 同事执行 Jira 中跟踪的工作并把结果以评论回传。",
-          "f1": { "label": "工单导入", "desc": "把 Jira 史诗、故事与缺陷导入为任务" },
-          "f2": { "label": "状态同步", "desc": "把 Jira 工作流状态同步到 APM" },
-          "f3": { "label": "AI 建单", "desc": "AI 同事可创建并更新 Jira 工单" },
-          "f4": { "label": "评论同步", "desc": "验收结果以 Jira 问题评论回传" },
-          "f5": { "label": "负责人映射", "desc": "把 Jira 用户映射到 APM 团队成员" },
-          "f6": { "label": "缺陷跟踪", "desc": "把 Jira 缺陷报告导入 APM 缺陷列表" }
+          "f1": {
+            "label": "工单导入",
+            "desc": "把 Jira 史诗、故事与缺陷导入为任务"
+          },
+          "f2": {
+            "label": "状态同步",
+            "desc": "把 Jira 工作流状态同步到 APM"
+          },
+          "f3": {
+            "label": "AI 建单",
+            "desc": "AI 同事可创建并更新 Jira 工单"
+          },
+          "f4": {
+            "label": "评论同步",
+            "desc": "验收结果以 Jira 问题评论回传"
+          },
+          "f5": {
+            "label": "负责人映射",
+            "desc": "把 Jira 用户映射到 APM 团队成员"
+          },
+          "f6": {
+            "label": "缺陷跟踪",
+            "desc": "把 Jira 缺陷报告导入 APM 缺陷列表"
+          }
         },
         "github": {
           "desc": "同步仓库、PR 与 CI 状态，自动把 PR 关联到任务。",
           "longDesc": "连接 GitHub 跟踪 PR、代码评审与 CI/CD 运行。AI 同事可发起 PR、请求评审并实时监控构建状态。",
-          "f1": { "label": "PR 同步", "desc": "自动把 PR 关联到任务" },
-          "f2": { "label": "AI 发 PR", "desc": "AI 同事可发起并更新 PR" },
-          "f3": { "label": "分支规则", "desc": "通过 APM 策略执行分支保护" },
-          "f4": { "label": "CI 状态", "desc": "在任务卡片上展示 CI/CD 构建状态" },
-          "f5": { "label": "Webhook", "desc": "经 GitHub webhook 实时推送事件" },
-          "f6": { "label": "评审评论", "desc": "把验收审计结果以 PR 评论回传" }
+          "f1": {
+            "label": "PR 同步",
+            "desc": "自动把 PR 关联到任务"
+          },
+          "f2": {
+            "label": "AI 发 PR",
+            "desc": "AI 同事可发起并更新 PR"
+          },
+          "f3": {
+            "label": "分支规则",
+            "desc": "通过 APM 策略执行分支保护"
+          },
+          "f4": {
+            "label": "CI 状态",
+            "desc": "在任务卡片上展示 CI/CD 构建状态"
+          },
+          "f5": {
+            "label": "Webhook",
+            "desc": "经 GitHub webhook 实时推送事件"
+          },
+          "f6": {
+            "label": "评审评论",
+            "desc": "把验收审计结果以 PR 评论回传"
+          }
         },
         "gitlab": {
           "desc": "同步 GitLab MR 与流水线，支持自建实例与 GitLab.com。",
           "longDesc": "集成 GitLab 管理合并请求、监控流水线，让代码与任务保持同步。支持 GitLab.com 与自建实例。",
-          "f1": { "label": "MR 同步", "desc": "把合并请求同步到 APM 任务时间线" },
-          "f2": { "label": "AI 发 MR", "desc": "AI 同事可发起并更新合并请求" },
-          "f3": { "label": "流水线状态", "desc": "在任务上跟踪 GitLab CI/CD 流水线状态" },
-          "f4": { "label": "Webhook", "desc": "经 GitLab webhook 实时推送事件" },
-          "f5": { "label": "自建实例", "desc": "通过 PAT 连接你的 GitLab CE/EE 实例" },
-          "f6": { "label": "MR 讨论", "desc": "把验收结果以 MR 讨论线程回传" }
+          "f1": {
+            "label": "MR 同步",
+            "desc": "把合并请求同步到 APM 任务时间线"
+          },
+          "f2": {
+            "label": "AI 发 MR",
+            "desc": "AI 同事可发起并更新合并请求"
+          },
+          "f3": {
+            "label": "流水线状态",
+            "desc": "在任务上跟踪 GitLab CI/CD 流水线状态"
+          },
+          "f4": {
+            "label": "Webhook",
+            "desc": "经 GitLab webhook 实时推送事件"
+          },
+          "f5": {
+            "label": "自建实例",
+            "desc": "通过 PAT 连接你的 GitLab CE/EE 实例"
+          },
+          "f6": {
+            "label": "MR 讨论",
+            "desc": "把验收结果以 MR 讨论线程回传"
+          }
         },
         "slack": {
           "desc": "把任务动态、AI 执行告警与验收结果发送到 Slack 频道。",
           "longDesc": "当任务状态变化、AI 同事完成执行或验收通过/驳回时，向你的 Slack 工作区推送通知。",
-          "f1": { "label": "任务通知", "desc": "把任务状态变化推送到指定频道" },
-          "f2": { "label": "AI 执行告警", "desc": "AI 同事开始或完成执行时告警" },
-          "f3": { "label": "验收告警", "desc": "把批准/驳回推送到评审频道" },
-          "f4": { "label": "每日摘要", "desc": "每天早上发送项目动态摘要" }
+          "f1": {
+            "label": "任务通知",
+            "desc": "把任务状态变化推送到指定频道"
+          },
+          "f2": {
+            "label": "AI 执行告警",
+            "desc": "AI 同事开始或完成执行时告警"
+          },
+          "f3": {
+            "label": "验收告警",
+            "desc": "把批准/驳回推送到评审频道"
+          },
+          "f4": {
+            "label": "每日摘要",
+            "desc": "每天早上发送项目动态摘要"
+          }
         },
         "sentry": {
           "desc": "把 Sentry 错误告警自动转为 APM 缺陷。",
           "longDesc": "连接 Sentry，从错误事件自动创建缺陷报告。AI 同事可分析堆栈并提出修复建议。",
-          "f1": { "label": "自动建缺陷", "desc": "从 Sentry 错误事件自动创建缺陷" },
-          "f2": { "label": "AI 诊断", "desc": "AI 同事分析堆栈并给出根因建议" },
-          "f3": { "label": "错误趋势", "desc": "在项目健康仪表盘上呈现错误频率" }
+          "f1": {
+            "label": "自动建缺陷",
+            "desc": "从 Sentry 错误事件自动创建缺陷"
+          },
+          "f2": {
+            "label": "AI 诊断",
+            "desc": "AI 同事分析堆栈并给出根因建议"
+          },
+          "f3": {
+            "label": "错误趋势",
+            "desc": "在项目健康仪表盘上呈现错误频率"
+          }
         }
       },
       "githubIntegration": {
@@ -2858,8 +2963,8 @@
     "profileDesc": "管理个人资料与登录安全。",
     "tokensDesc": "创建与管理个人访问令牌（PAT）。",
     "shortcutsDesc": "自定义全局与上下文快捷键。",
-    "issueTypesDesc": "工单类型、图标颜色与启用状态。",
-    "checklistsDesc": "验收完备性清单模板管理。",
+    "issueTypesDesc": "类型元数据的唯一事实源：图标、名称与颜色在此配置，任务/缺陷/自定义类型共用同一套渲染。内置 task 类型不可删除，删除类型前需先迁移其下任务。",
+    "checklistsDesc": "完整性审计的检查清单：系统预置只读，团队自定义可创建与维护；审计时按项目类型与技术栈匹配。",
     "shortIdDesc": "工单短号统计、回填与前缀配置。",
     "templatesDesc": "项目与任务的工单模板。",
     "promptsDesc": "提示词注入开关、注入率统计与分层编辑入口。",
@@ -2867,7 +2972,7 @@
     "gitPageDesc": "Git 默认供应商、提交身份与同步行为。",
     "terminalPageDesc": "默认 Shell、工作目录与终端偏好。",
     "runtimeDesc": "本机执行节点注册与运行时管理。",
-    "storageDesc": "工作区存储用量与同步文件管理。",
+    "storageDesc": "配置本地文件系统路径，自动将文档内容同步到磁盘。",
     "unsavedChanges": "有未保存更改",
     "discardChanges": "放弃更改",
     "language": {
@@ -2965,7 +3070,7 @@
     "addStatus": "新建状态",
     "editStatus": "编辑状态",
     "statusFormDesc": "定义工作流状态、顺序与流转规则。",
-    "statusName": "状态名称",
+    "statusName": "名称",
     "statusKeyPlaceholder": "如：in_progress",
     "statusType": "类型",
     "statusOrder": "排序",
@@ -3081,7 +3186,6 @@
     "defaultPathDetectFailed": "检测默认路径失败",
     "storageLoading": "正在加载存储配置…",
     "storageTitle": "本地文件存储",
-    "storageDesc": "配置本地文件系统路径，自动将文档内容同步到磁盘。",
     "storagePathLabel": "存储路径",
     "storagePathPlaceholder": "例如：C:\\Users\\you\\Documents\\APM-Documents",
     "detectDefault": "检测默认",
@@ -3146,16 +3250,46 @@
       "other": "其他"
     },
     "recommendedTypes": {
-      "requirement": { "name": "需求", "desc": "跟踪产品需求与规格" },
-      "story": { "name": "用户故事", "desc": "从最终用户角度描述需求或功能" },
-      "request": { "name": "请求", "desc": "处理来自客户或团队成员的请求或任务" },
-      "asset": { "name": "资产", "desc": "跟踪和管理实体或数字资产" },
-      "campaign": { "name": "活动", "desc": "规划和监控市场或推广活动" },
-      "content": { "name": "内容", "desc": "管理内容的创作和发布" },
-      "deal": { "name": "交易", "desc": "跟踪商业交易和谈判的进展与详情" },
-      "client": { "name": "客户", "desc": "管理客户账户详情和互动" },
-      "plan": { "name": "计划", "desc": "组织面向更大业务目标的工作" },
-      "goal": { "name": "目标", "desc": "跟踪战略目标与进展" }
+      "requirement": {
+        "name": "需求",
+        "desc": "跟踪产品需求与规格"
+      },
+      "story": {
+        "name": "用户故事",
+        "desc": "从最终用户角度描述需求或功能"
+      },
+      "request": {
+        "name": "请求",
+        "desc": "处理来自客户或团队成员的请求或任务"
+      },
+      "asset": {
+        "name": "资产",
+        "desc": "跟踪和管理实体或数字资产"
+      },
+      "campaign": {
+        "name": "活动",
+        "desc": "规划和监控市场或推广活动"
+      },
+      "content": {
+        "name": "内容",
+        "desc": "管理内容的创作和发布"
+      },
+      "deal": {
+        "name": "交易",
+        "desc": "跟踪商业交易和谈判的进展与详情"
+      },
+      "client": {
+        "name": "客户",
+        "desc": "管理客户账户详情和互动"
+      },
+      "plan": {
+        "name": "计划",
+        "desc": "组织面向更大业务目标的工作"
+      },
+      "goal": {
+        "name": "目标",
+        "desc": "跟踪战略目标与进展"
+      }
     },
     "addField": "添加自定义字段",
     "editField": "编辑自定义字段",
@@ -3173,9 +3307,7 @@
     "issueTypesFieldTypesMember": "成员选择器",
     "issueTypesFieldTypesUrl": "URL",
     "statusGroupsHint": "设置该工作空间可用的状态；状态按分组聚合展示。",
-    "addStatus": "新建状态",
     "addStatusDesc": "新增状态将对该空间所有任务类型生效。",
-    "statusName": "名称",
     "statusKey": "键（小写 slug）",
     "statusGroupLabel": "所属分组",
     "statusFinalLabel": "终态（表示工作已完成或关闭）",
@@ -3214,7 +3346,6 @@
     },
     "checklists": "完备性清单",
     "checklistsTitle": "完备性清单",
-    "checklistsDesc": "完整性审计的检查清单：系统预置只读，团队自定义可创建与维护；审计时按项目类型与技术栈匹配。",
     "checklistsCreate": "创建清单",
     "checklistsEdit": "编辑清单",
     "checklistsDialogDesc": "检查项按严重级别判定：紧急/高为阻断项，中/低为建议项。",
@@ -3241,7 +3372,6 @@
     "checklistsDeleteConfirmTitle": "删除清单",
     "checklistsDeleteConfirm": "确定删除清单「{{name}}」？该操作不可恢复。",
     "issueTypesTitle": "工单类型管理",
-    "issueTypesDesc": "类型元数据的唯一事实源：图标、名称与颜色在此配置，任务/缺陷/自定义类型共用同一套渲染。内置 task 类型不可删除，删除类型前需先迁移其下任务。",
     "issueTypesRequired": "请填写类型 key 和名称",
     "issueTypesCreated": "类型已创建",
     "issueTypesUpdated": "类型已更新",
@@ -3942,16 +4072,16 @@
       "projects": "项目数"
     },
     "acceptance": {
-    "draft": {
-      "title": "AI 代写验收标准",
-      "description": "AI 按工单内容起草可检查的验收标准，勾选确认后落入验收契约（已有标准不会被覆盖）",
-      "generating": "AI 正在起草验收标准…",
-      "button": "AI 代写验收标准",
-      "apply": "确认落库",
-      "functional": "功能",
-      "technical": "技术",
-      "applied": "已落库 {{added}} 条验收标准{{skipped}}"
-    },
+      "draft": {
+        "title": "AI 代写验收标准",
+        "description": "AI 按工单内容起草可检查的验收标准，勾选确认后落入验收契约（已有标准不会被覆盖）",
+        "generating": "AI 正在起草验收标准…",
+        "button": "AI 代写验收标准",
+        "apply": "确认落库",
+        "functional": "功能",
+        "technical": "技术",
+        "applied": "已落库 {{added}} 条验收标准{{skipped}}"
+      },
       "task": "关联任务",
       "project": "所属项目"
     },
@@ -4037,114 +4167,114 @@
     "remainingTokens": "剩余 Token",
     "bugsThisWeek": "本周 Bug",
     "askAi": "追问 AI…",
- "shortcuts": {
-  "close": "关闭",
-  "switchType": "切换类型",
-  "submit": "提交"
- },
- "cancel": "取消",
- "createMore": "连续创建",
- "properties": "属性",
- "severity": {
-  "critical": "S0 致命",
-  "high": "S1 严重",
-  "medium": "S2 一般",
-  "low": "S3 轻微"
- },
- "iconTips": {
-  "hideProps": "隐藏属性面板",
-  "showProps": "显示属性面板",
-  "maximize": "展开",
-  "restore": "还原",
-  "close": "关闭"
- },
- "aiDraft": "AI 起草",
+    "shortcuts": {
+      "close": "关闭",
+      "switchType": "切换类型",
+      "submit": "提交"
+    },
+    "cancel": "取消",
+    "createMore": "连续创建",
+    "properties": "属性",
+    "severity": {
+      "critical": "S0 致命",
+      "high": "S1 严重",
+      "medium": "S2 一般",
+      "low": "S3 轻微"
+    },
+    "iconTips": {
+      "hideProps": "隐藏属性面板",
+      "showProps": "显示属性面板",
+      "maximize": "展开",
+      "restore": "还原",
+      "close": "关闭"
+    },
+    "aiDraft": "AI 起草",
     "aiDraftComing": "AI 起草功能开发中",
     "creating": "创建中…",
     "create": "创建",
- "applied": "已应用建议",
- "success": "{{type}} 创建成功",
- "placeholder": {
-  "task": "任务标题",
-  "bug": "Bug 标题",
-  "doc": "文档标题",
-  "project": "项目名称",
-  "milestone": "里程碑名称"
- },
- "descHint": {
-  "task": "补充描述…",
-  "bug": "复现步骤、预期与实际表现…",
-  "doc": "摘要或初始内容…",
-  "project": "目标、范围与成功标准…",
-  "milestone": "关键交付物…"
- },
- "field": {
-  "status": "状态",
-  "priority": "优先级",
-  "severity": "严重度",
-  "assignee": "负责人",
-  "project": "项目",
-  "author": "作者",
-  "dueDate": "截止日期",
-  "targetDate": "目标日期",
-  "type": "类型",
-  "me": "我",
-  "none": "无",
-  "clearDueDate": "清除截止日期"
- },
- "error": {
-  "taskTitle": "请输入任务标题",
-  "bugTitle": "请输入 Bug 标题",
-  "docTitle": "请输入文档标题",
-  "projectName": "请输入项目名称",
-  "milestoneName": "请输入里程碑名称",
-  "projectRequired": "请选择所属项目",
-  "prompt": "请描述要创建的内容",
-  "createFailed": "创建失败",
-  "noDraft": "AI 没有解析出可用的创建草稿，试试补充类型或关键词",
-  "aiFailed": "AI 生成失败",
-  "suggestionFailed": "AI 建议暂不可用"
- },
- "mode": {
-  "manual": "手动创建",
-  "ai": "AI 代理"
- },
- "quickPrompt": "智能填单",
- "quickPromptPlaceholder": "输入一句话描述（如：建一个登录页重构任务，周五截止，高优先级），Enter 自动提取填单…",
- "quickPromptApplied": "已根据描述自动解析并填充表单",
- "acceptanceCriteria": "验收标准",
- "addCriterion": "添加验收要点",
- "aiGenerateCriteria": "AI 智能生成验收要点",
- "criteriaPlaceholder": "输入可验证的完成标准（如：支持快捷键提交，断网展示重试...）",
- "completenessHint": "完备性治理建议：确保覆盖正常流交付验证、异常边界与自动化测试要求",
- "quickChips": {
-  "decompose": "⚡ 快速拆解需求",
-  "bug": "🐞 提取报错日志",
-  "testcase": "📋 补全验收用例"
- },
- "edit": "编辑",
- "preview": "预览",
- "previewEmpty": "暂无描述内容，切换至编辑模式即可书写 Markdown。",
- "aiPanel": {
-  "hint": "用一句话描述你想创建的内容，AI 代理解析为结构化草稿；确认后直接创建。可先用上方类型切换指定目标（默认按描述自动判断）。",
-  "inputPlaceholder": "例如：建一个任务「登录页改版」，本周五截止，优先级高，打上 frontend 标签",
-  "generate": "生成草稿",
-  "parsing": "解析中…",
-  "regen": "重新生成",
-  "draftBadge": "草稿 · {{type}}",
-  "fieldTitle": "标题",
-  "fieldDesc": "描述",
-  "fieldPriority": "优先级",
-  "fieldSeverity": "严重度",
-  "fieldDue": "截止",
-  "fieldCategory": "类目",
-  "fieldLabels": "标签",
-  "confirm": "确认创建",
-  "editManually": "回手动编辑",
-  "fallback": "转小助理",
-  "fallbackTitle": "AI 代理解析失败时的兜底：转小助理对话创建",
-  "forwardedToast": "已转给小周，在右下角对话里发送即可"
- },
+    "applied": "已应用建议",
+    "success": "{{type}} 创建成功",
+    "placeholder": {
+      "task": "任务标题",
+      "bug": "Bug 标题",
+      "doc": "文档标题",
+      "project": "项目名称",
+      "milestone": "里程碑名称"
+    },
+    "descHint": {
+      "task": "补充描述…",
+      "bug": "复现步骤、预期与实际表现…",
+      "doc": "摘要或初始内容…",
+      "project": "目标、范围与成功标准…",
+      "milestone": "关键交付物…"
+    },
+    "field": {
+      "status": "状态",
+      "priority": "优先级",
+      "severity": "严重度",
+      "assignee": "负责人",
+      "project": "项目",
+      "author": "作者",
+      "dueDate": "截止日期",
+      "targetDate": "目标日期",
+      "type": "类型",
+      "me": "我",
+      "none": "无",
+      "clearDueDate": "清除截止日期"
+    },
+    "error": {
+      "taskTitle": "请输入任务标题",
+      "bugTitle": "请输入 Bug 标题",
+      "docTitle": "请输入文档标题",
+      "projectName": "请输入项目名称",
+      "milestoneName": "请输入里程碑名称",
+      "projectRequired": "请选择所属项目",
+      "prompt": "请描述要创建的内容",
+      "createFailed": "创建失败",
+      "noDraft": "AI 没有解析出可用的创建草稿，试试补充类型或关键词",
+      "aiFailed": "AI 生成失败",
+      "suggestionFailed": "AI 建议暂不可用"
+    },
+    "mode": {
+      "manual": "手动创建",
+      "ai": "AI 代理"
+    },
+    "quickPrompt": "智能填单",
+    "quickPromptPlaceholder": "输入一句话描述（如：建一个登录页重构任务，周五截止，高优先级），Enter 自动提取填单…",
+    "quickPromptApplied": "已根据描述自动解析并填充表单",
+    "acceptanceCriteria": "验收标准",
+    "addCriterion": "添加验收要点",
+    "aiGenerateCriteria": "AI 智能生成验收要点",
+    "criteriaPlaceholder": "输入可验证的完成标准（如：支持快捷键提交，断网展示重试...）",
+    "completenessHint": "完备性治理建议：确保覆盖正常流交付验证、异常边界与自动化测试要求",
+    "quickChips": {
+      "decompose": "⚡ 快速拆解需求",
+      "bug": "🐞 提取报错日志",
+      "testcase": "📋 补全验收用例"
+    },
+    "edit": "编辑",
+    "preview": "预览",
+    "previewEmpty": "暂无描述内容，切换至编辑模式即可书写 Markdown。",
+    "aiPanel": {
+      "hint": "用一句话描述你想创建的内容，AI 代理解析为结构化草稿；确认后直接创建。可先用上方类型切换指定目标（默认按描述自动判断）。",
+      "inputPlaceholder": "例如：建一个任务「登录页改版」，本周五截止，优先级高，打上 frontend 标签",
+      "generate": "生成草稿",
+      "parsing": "解析中…",
+      "regen": "重新生成",
+      "draftBadge": "草稿 · {{type}}",
+      "fieldTitle": "标题",
+      "fieldDesc": "描述",
+      "fieldPriority": "优先级",
+      "fieldSeverity": "严重度",
+      "fieldDue": "截止",
+      "fieldCategory": "类目",
+      "fieldLabels": "标签",
+      "confirm": "确认创建",
+      "editManually": "回手动编辑",
+      "fallback": "转小助理",
+      "fallbackTitle": "AI 代理解析失败时的兜底：转小助理对话创建",
+      "forwardedToast": "已转给小周，在右下角对话里发送即可"
+    },
     "agentPresence": {
       "immediate": "创建后 {{agent}} 会立即开始工作。",
       "approval": "创建后需经审批，通过后 {{agent}} 才会工作。",
@@ -4173,36 +4303,36 @@
       "testing": "测试方案",
       "guide": "操作指南"
     },
- "discard": {
-  "title": "放弃未保存内容？",
-  "desc": "面板里有未提交的输入，关闭后将丢失。",
-  "keep": "继续编辑",
-  "discard": "放弃并关闭"
- },
- "docCategory": {
-  "requirement": "需求",
-  "analysis": "分析",
-  "design": "设计",
-  "api": "API",
-  "testing": "测试",
-  "guide": "指南"
- },
- "projectSource": {
-  "label": "项目来源",
-  "scratch": "从零开始",
-  "existing": "导入已有项目",
-  "ai": "AI 代理 · 对话创建",
-  "existingHint": "项目已在进行中？创建后自动进入接入向导：AI 只读扫描仓库，生成项目档案草稿供你校对。",
-  "grillHint": "在上面的对话里确认摘要后即可创建"
- },
- "suggestions": {
-  "title": "智能建议",
-  "generating": "生成中…",
-  "regen": "再生成",
-  "empty": "暂无建议",
-  "emptyHint": "点上方「AI 建议」，按已填内容生成补全",
-  "appliedToast": "已应用：{{label}}"
- },
+    "discard": {
+      "title": "放弃未保存内容？",
+      "desc": "面板里有未提交的输入，关闭后将丢失。",
+      "keep": "继续编辑",
+      "discard": "放弃并关闭"
+    },
+    "docCategory": {
+      "requirement": "需求",
+      "analysis": "分析",
+      "design": "设计",
+      "api": "API",
+      "testing": "测试",
+      "guide": "指南"
+    },
+    "projectSource": {
+      "label": "项目来源",
+      "scratch": "从零开始",
+      "existing": "导入已有项目",
+      "ai": "AI 代理 · 对话创建",
+      "existingHint": "项目已在进行中？创建后自动进入接入向导：AI 只读扫描仓库，生成项目档案草稿供你校对。",
+      "grillHint": "在上面的对话里确认摘要后即可创建"
+    },
+    "suggestions": {
+      "title": "智能建议",
+      "generating": "生成中…",
+      "regen": "再生成",
+      "empty": "暂无建议",
+      "emptyHint": "点上方「AI 建议」，按已填内容生成补全",
+      "appliedToast": "已应用：{{label}}"
+    },
     "linear": {
       "new": "新建",
       "description": "描述",
@@ -4914,7 +5044,8 @@
     "skillUpdatedToast": "技能“{{name}}”已保存",
     "skillDeleteTitle": "删除技能“{{name}}”？",
     "skillDeleteDesc": "删除后不可恢复；内置技能不可删除，只能禁用。",
-    "skillDeletedToast": "技能“{{name}}”已删除"
+    "skillDeletedToast": "技能“{{name}}”已删除",
+    "tabJudgment": "判断介入"
   },
   "shell": {
     "mainNav": "主导航",
@@ -6169,5 +6300,76 @@
       "enterApp": "直接进入 APM",
       "viewDocs": "查看文档"
     }
+  },
+  "aiJudge": {
+    "advisoryTooltip": "AI 快速判断 · 仅辅助参考，不改变判定权",
+    "lowConfidence": "低置信",
+    "estimatedProbability": "AI 预估",
+    "matrixTitle": "场景介入矩阵",
+    "matrixDescOn": "每个场景独立开关：关闭后该位置不再出现 AI 判断（静默回落规则行为）；默认全部跟随总开关",
+    "matrixDescOff": "总开关未启用——以下开关暂不生效，启用总开关后按此矩阵介入",
+    "logsTitle": "判定记录",
+    "logsDesc": "全部判断场景的判定流水，按时间倒序分页——结论与置信度可审计",
+    "logsFilterAll": "全部",
+    "logsEmpty": "暂无判定记录——启用通道并在对应业务动作触发后可见",
+    "scenario": {
+      "approval_risk": {
+        "name": "审批风险定级",
+        "desc": "AI 执行审批创建时"
+      },
+      "evidence_precheck": {
+        "name": "验收证据预审",
+        "desc": "CI/PR 证据回流时"
+      },
+      "intake_readiness": {
+        "name": "需求就绪快筛",
+        "desc": "需求评估（快筛档）"
+      },
+      "intake_decomposition": {
+        "name": "拆解质量快筛",
+        "desc": "拆解评估（快筛档）"
+      },
+      "contract_drift": {
+        "name": "契约漂移判定",
+        "desc": "契约对齐检查检出漂移时"
+      },
+      "trust_evaluation": {
+        "name": "信任评估双轨",
+        "desc": "执行终态（只记账不生效）"
+      },
+      "decision_suggestion": {
+        "name": "决策卡 AI 建议",
+        "desc": "决策卡生成时"
+      },
+      "decision_option": {
+        "name": "决策卡选项概率",
+        "desc": "有选项语义的决策卡"
+      },
+      "acceptance_probability": {
+        "name": "验收达成概率",
+        "desc": "验收标准面板（预估）"
+      },
+      "workflow_judge": {
+        "name": "工作流判断节点",
+        "desc": "workflow 定义 judge 节点"
+      },
+      "failure_classify": {
+        "name": "执行失败分类",
+        "desc": "执行失败时（规则层之后）"
+      },
+      "completion_type": {
+        "name": "完成类型判定",
+        "desc": "执行完成物类型推断"
+      },
+      "audit_coverage": {
+        "name": "审计覆盖判断",
+        "desc": "完整性审计覆盖检查"
+      }
+    },
+    "quickMode": "JEV 快筛",
+    "estimateAction": "AI 预估",
+    "estimateHint": "按当前证据状态逐条预估标准达成概率（AI 快速判断，仅辅助参考）",
+    "completionTypeMismatch": "AI 认为完成形态应为 {{type}}",
+    "coverageHint": "AI 复核：或已被现有标准覆盖（{{pct}}%），采纳前请人工确认"
   }
 }

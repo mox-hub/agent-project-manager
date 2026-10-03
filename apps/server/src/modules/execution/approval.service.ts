@@ -138,7 +138,12 @@ export class ApprovalService {
     );
     if (!result) return;
     const judgement = extractApprovalRisk(result.answers);
-    if (!judgement.riskLevel && judgement.safeToAutoApprove === null) return;
+    if (
+      !judgement.riskLevel &&
+      judgement.safeToAutoApprove === null &&
+      judgement.options === null
+    )
+      return;
 
     try {
       const current = await this.prisma.approvalRequest.findUnique({
@@ -156,6 +161,9 @@ export class ApprovalService {
               confidence: judgement.confidence,
               probabilities: judgement.probabilities,
               safeToAutoApprove: judgement.safeToAutoApprove,
+              // 扩展批二：审批卡选项倾向分布（决策卡选项概率条消费源）
+              options: judgement.options,
+              optionsChoice: judgement.optionsChoice,
               model: result.model,
               judgedAt: new Date().toISOString(),
               advisory: true,

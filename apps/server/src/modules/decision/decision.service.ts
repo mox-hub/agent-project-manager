@@ -278,6 +278,10 @@ export class DecisionService {
         executionRun: a.executionRun
           ? { id: a.executionRun.id, goal: a.executionRun.goal }
           : null,
+        // AI 初审投影（CAP-A-27）：metadata.aiJudge {riskLevel, confidence,
+        // probabilities, safeToAutoApprove, options, optionsChoice}——advisory 展示
+        aiJudge:
+          (a.metadata as Record<string, unknown> | null)?.aiJudge ?? undefined,
       },
       createdAt: a.requestedAt.toISOString(),
       expiresAt: a.expiresAt?.toISOString(),

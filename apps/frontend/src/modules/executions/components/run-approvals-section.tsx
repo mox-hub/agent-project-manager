@@ -42,9 +42,14 @@ export function RunApprovalsSection({ approvals }: { approvals?: ApprovalEntry[]
                 riskLevel?: string | null;
                 confidence?: number | null;
                 safeToAutoApprove?: number | null;
+                options?: Record<string, number>;
+                optionsChoice?: string;
                 advisory?: boolean;
               }
             | null;
+          // 自报 vs AI 独立定级不一致（MCP/CLI 审批的 riskLevel 由被审批方自报，
+          // AI 判定是系统侧第二意见）——偏差提示是双轨期的核心观察位
+          const riskMismatch = !!ai?.advisory && !!ai.riskLevel && ai.riskLevel !== a.riskLevel;
           return (
             <li
               key={a.id}
@@ -62,6 +67,20 @@ export function RunApprovalsSection({ approvals }: { approvals?: ApprovalEntry[]
               <span className="shrink-0 text-2xs text-muted-foreground">
                 {t(STATUS_I18N[a.status] ?? 'runApprovals.statusPending')}
               </span>
+              {riskMismatch && (
+                <span
+                  className="flex shrink-0 items-center gap-0.5 rounded-sm bg-accent-red-light/40 px-1.5 py-0.5 text-2xs font-medium text-accent-red"
+                  title={t('runApprovals.riskMismatchTitle', {
+                    self: t(`runApprovals.risk.${a.riskLevel}`, a.riskLevel),
+                    ai: t(`runApprovals.risk.${ai?.riskLevel}`, ai?.riskLevel ?? ''),
+                  })}
+                >
+                  <Sparkles className="size-3" />
+                  {t('runApprovals.riskMismatch', {
+                    ai: t(`runApprovals.risk.${ai?.riskLevel}`, ai?.riskLevel ?? ''),
+                  })}
+                </span>
+              )}
               {ai?.advisory && ai.riskLevel ? (
                 <span
                   className={cn(

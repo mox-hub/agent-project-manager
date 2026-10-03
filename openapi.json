@@ -22885,6 +22885,158 @@
         ]
       }
     },
+    "/_api/acceptance/{id}/criteria/probability": {
+      "post": {
+        "operationId": "AcceptanceController_judgeCriteriaProbability",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "契约 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JudgeAcceptanceProbabilityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "逐标准预估达成概率（0-100）——只写 metadata 供展示，不改标准状态；内容指纹命中缓存不重复调用；通道不可用时项内 probability=null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptanceProbabilityResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "AI 预估验收标准达成概率（CAP-A-27 扩展批，advisory）",
+        "tags": [
+          "Acceptance"
+        ]
+      }
+    },
     "/_api/acceptance/criteria/{criteriaId}": {
       "patch": {
         "operationId": "AcceptanceController_updateCriteria",
@@ -28758,7 +28910,7 @@
         },
         "responses": {
           "200": {
-            "description": "更新后的通道设置（null/空串字段回落缺省）",
+            "description": "更新后的通道设置（null/空串字段回落缺省；scenarios 增量合并）",
             "content": {
               "application/json": {
                 "schema": {
@@ -28879,6 +29031,166 @@
           }
         ],
         "summary": "Update quick-judge channel settings (admin only)",
+        "tags": [
+          "AI Hub"
+        ]
+      }
+    },
+    "/_api/ai/quick-judge/logs": {
+      "get": {
+        "operationId": "AiHubController_listQuickJudgeLogs",
+        "parameters": [
+          {
+            "name": "scenario",
+            "required": false,
+            "in": "query",
+            "description": "按场景过滤",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "页码（从 1 起）",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "description": "每页条数（1-100）",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "判定记录流水（AIUsageLog kind=judge 倒序分页）：场景/模型/tokens/答案摘要（值+置信度）——「判断介入」设置页与审计用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuickJudgeLogsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "List quick-judge decision logs (admin only)",
         "tags": [
           "AI Hub"
         ]
@@ -70804,6 +71116,104 @@
           "content"
         ]
       },
+      "JudgeAcceptanceProbabilityDto": {
+        "type": "object",
+        "properties": {
+          "criteriaIds": {
+            "description": "只判这些标准（缺省判整张验收单的全部标准）",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CriteriaProbabilityItemDto": {
+        "type": "object",
+        "properties": {
+          "criteriaId": {
+            "type": "string"
+          },
+          "probability": {
+            "type": "object",
+            "description": "预估达成概率 0-100；判断通道不可用/场景禁用时 null（前端整块隐藏）",
+            "nullable": true
+          },
+          "confidence": {
+            "type": "object",
+            "description": "判定置信度 0-1；noul/score 无置信字段时 null",
+            "nullable": true
+          },
+          "cached": {
+            "type": "boolean",
+            "description": "是否命中内容指纹缓存（未重复调用判断通道）"
+          },
+          "model": {
+            "type": "string",
+            "description": "判定模型（缓存命中时为落账版本）",
+            "nullable": true
+          }
+        },
+        "required": [
+          "criteriaId",
+          "probability",
+          "confidence",
+          "cached",
+          "model"
+        ]
+      },
+      "AcceptanceProbabilityResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CriteriaProbabilityItemDto"
+            }
+          },
+          "model": {
+            "type": "string",
+            "description": "本次判定模型（全部命中缓存时缺省）",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "model"
+        ]
+      },
+      "AcceptanceProbabilityMetaDto": {
+        "type": "object",
+        "properties": {
+          "fingerprint": {
+            "type": "string",
+            "description": "内容指纹（内容/版本/证据签名任一变化即失效）"
+          },
+          "probability": {
+            "type": "number",
+            "description": "预估达成概率 0-100"
+          },
+          "confidence": {
+            "type": "number",
+            "nullable": true,
+            "description": "判定置信度 0-1"
+          },
+          "model": {
+            "type": "string",
+            "description": "判定模型"
+          },
+          "judgedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "fingerprint",
+          "probability",
+          "confidence",
+          "judgedAt"
+        ]
+      },
       "AcceptanceEvidenceDto": {
         "type": "object",
         "properties": {
@@ -70926,6 +71336,16 @@
           "updatedAt": {
             "type": "string",
             "description": "更新时间（ISO）"
+          },
+          "acceptanceProbability": {
+            "nullable": true,
+            "description": "AI 预估达成概率（metadata.acceptanceProbability 投影；未判定时缺省）",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AcceptanceProbabilityMetaDto"
+              }
+            ]
           },
           "evidences": {
             "description": "证据列表（按时间倒序）",
@@ -73049,6 +73469,10 @@
           "timeoutMs": {
             "type": "number",
             "description": "单次判断超时（毫秒）"
+          },
+          "scenarios": {
+            "type": "object",
+            "description": "每场景介入开关（扩展批）：键=场景 ID，值仅认显式 false=用户禁用该介入点；未配置=true 均视为跟随总开关"
           }
         },
         "required": [
@@ -73056,7 +73480,8 @@
           "provider",
           "model",
           "baseUrl",
-          "timeoutMs"
+          "timeoutMs",
+          "scenarios"
         ]
       },
       "UpdateQuickJudgeSettingsDto": {
@@ -73065,6 +73490,10 @@
           "enabled": {
             "type": "boolean",
             "description": "是否启用（缺省不改）"
+          },
+          "scenarios": {
+            "type": "object",
+            "description": "每场景介入开关（增量合并：传键覆盖、未传键保留；仅布尔值键生效）"
           },
           "provider": {
             "type": "string",
@@ -73079,6 +73508,84 @@
             "description": "网关 base URL（空串回落缺省）"
           }
         }
+      },
+      "QuickJudgeLogItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "scenario": {
+            "type": "string",
+            "description": "判断场景 ID"
+          },
+          "model": {
+            "type": "string",
+            "description": "判定模型（响应回显版本）"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "promptTokens": {
+            "type": "number"
+          },
+          "completionTokens": {
+            "type": "number"
+          },
+          "totalTokens": {
+            "type": "number"
+          },
+          "questions": {
+            "type": "number",
+            "description": "本次调用的问题数"
+          },
+          "answers": {
+            "type": "object",
+            "description": "答案摘要：问题 ID → { value, confidence }（noul/score 为数值，choice 为选项 ID）"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "scenario",
+          "model",
+          "provider",
+          "promptTokens",
+          "completionTokens",
+          "totalTokens",
+          "questions",
+          "answers",
+          "createdAt"
+        ]
+      },
+      "QuickJudgeLogsResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuickJudgeLogItemDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ]
       },
       "DefaultModelResponseDto": {
         "type": "object",

@@ -17,6 +17,11 @@ import {
   validateTestReport,
   inferCompletionType,
 } from '@/modules/cli-dispatch/adapters/test-report.schema';
+import { QuickJudgeService } from '@/modules/ai-hub/quick-judge/quick-judge.service';
+import {
+  completionTypeQuestions,
+  extractCompletionType,
+} from '@/modules/ai-hub/quick-judge/judge-scenarios';
 
 @Injectable()
 export class AcceptanceService {
@@ -27,6 +32,7 @@ export class AcceptanceService {
     private readonly executionService: ExecutionService,
     private readonly proposalService: ProposalService,
     private readonly messageBus: MessageBusService,
+    private readonly quickJudge: QuickJudgeService,
   ) {}
 
   /**
@@ -55,6 +61,51 @@ export class AcceptanceService {
         type: task.type,
         tags: task.issueTags.map((tt) => tt.tag.name),
       });
+    // JEV 完成类型判定（CAP-A-27 扩展批，advisory）：规则值照旧落库；AI 不一致时
+    // 落 metadata.aiCompletionType 供人对照改判。fire-and-forget 静默降级。
+    const ruleType = completionType;
+    const judgeInput = {
+      type: task.type,
+      tags: task.issueTags.map((tt) => tt.tag.name),
+      title: task.title,
+    };
+    void this.quickJudge
+      .judge(
+        'completion_type',
+        `任务交付形态判定。
+任务标题：${judgeInput.title}
+任务类型：${judgeInput.type ?? '未指定'}
+标签：${judgeInput.tags.join('、') || '无'}`,
+        completionTypeQuestions(),
+      )
+      .then(async (result) => {
+        if (!result) return;
+        const j = extractCompletionType(result.answers);
+        if (!j.type || j.type === ruleType) return;
+        const fresh = await this.prisma.acceptance.findUnique({
+          where: { id: (acceptance as { id: string }).id },
+          select: { metadata: true },
+        });
+        if (!fresh) return;
+        await this.prisma.acceptance.update({
+          where: { id: (acceptance as { id: string }).id },
+          data: {
+            metadata: {
+              ...((fresh.metadata as Record<string, unknown> | null) ?? {}),
+              aiCompletionType: {
+                type: j.type,
+                confidence: j.confidence,
+                ruleType,
+                agree: false,
+                model: result.model,
+                judgedAt: new Date().toISOString(),
+                advisory: true,
+              },
+            },
+          },
+        });
+      })
+      .catch(() => {});
 
     // 创建 Acceptance
     const acceptance = await this.prisma.acceptance.create({

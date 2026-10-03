@@ -89,6 +89,8 @@ export interface AcceptanceCriterion {
   /** 实质内容修订版本号（CAP-B-01）：content 修订时 +1，初版为 1 */
   revision?: number;
   revisedAt?: string | null;
+  /** 实体 metadata 透传（AI 预估概率投影在其 acceptanceProbability 键，读 readCriteriaProbability） */
+  metadata?: Record<string, unknown> | null;
   evidences?: CriterionEvidence[];
 }
 
@@ -159,6 +161,8 @@ export interface Acceptance {
     project?: { id: string; name: string } | null;
   } | null;
   executions?: AcceptanceExecution[];
+  /** 实体 metadata 透传（AI 完成类型对照在其 aiCompletionType 键） */
+  metadata?: Record<string, unknown> | null;
   totalCost?: number | null;
   totalTokens?: number | null;
 }

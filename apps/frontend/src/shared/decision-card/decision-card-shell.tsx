@@ -33,6 +33,45 @@ import type {
 } from './types';
 
 /** 默认四键：接受 / 微调 / 驳回 / 要替代方案（顺序与快捷键 1-4 全系统一致） */
+/**
+ * 判定选项键 → 卡动作键映射（CAP-A-27 扩展批）：不同判定场景的选项命名
+ * （approve/pass/accept...）统一对齐到 KIND_ACTIONS 的动作键。
+ */
+const AI_OPTION_TO_ACTION: Record<string, string> = {
+  approve: 'accept',
+  pass: 'accept',
+  accept: 'accept',
+  accept_file: 'accept_file',
+  accept_db: 'accept_db',
+  reject: 'reject',
+  cancel: 'cancel',
+  waive: 'waive',
+  detach: 'detach',
+};
+
+/** 查某卡动作的 AI 倾向概率（0-1）；无判定/无对应键返回 null（调用方不渲染）。 */
+export function aiOptionProbability(
+  aiOptions: Record<string, number> | null | undefined,
+  action: string,
+): number | null {
+  if (!aiOptions) return null;
+  for (const [optionKey, prob] of Object.entries(aiOptions)) {
+    if (typeof prob !== 'number') continue;
+    if ((AI_OPTION_TO_ACTION[optionKey] ?? optionKey) === action) {
+      return Math.max(0, Math.min(1, prob));
+    }
+  }
+  return null;
+}
+
+/** 从决策卡 payload 读 AI 选项倾向分布（payload.aiJudge.options）。 */
+function aiOptionsOf(decision: Decision): Record<string, number> | null {
+  const judge = (decision.payload as Record<string, unknown> | null)?.aiJudge as
+    | { options?: Record<string, number> }
+    | undefined;
+  return judge?.options ?? null;
+}
+
 export const DEFAULT_ACTIONS: DecisionActionDef[] = [
   { action: 'accept', label: 'decision.action.accept', icon: Check },
   { action: 'adjust', label: 'decision.action.adjust', icon: Edit2 },
@@ -109,6 +148,7 @@ function ActionBar({
   reasonFor,
   onOpenReason,
   onAction,
+  aiOptions,
 }: {
   decision: Decision;
   actions: DecisionActionDef[];
@@ -125,6 +165,8 @@ function ActionBar({
     decision: Decision,
     opts?: DecisionActionOptions,
   ) => void;
+  /** AI 判定选项倾向分布（CAP-A-27 扩展批：payload.aiJudge.options，键=判定选项 ID） */
+  aiOptions?: Record<string, number> | null;
 }) {
   const { t } = useTranslation();
 
@@ -191,6 +233,25 @@ function ActionBar({
                 ? t('decision.action.cooldown', { n: cooldownLeft })
                 : t(def.label)}
             </span>
+            {(() => {
+              // AI 选项倾向（advisory）：判定键映射到卡动作键后取概率；
+              // 低置信（<0.7）转黄，无判定不渲染——绝不渲染「AI 失败」噪音
+              const prob = aiOptionProbability(aiOptions, def.action);
+              if (prob === null) return null;
+              const low = prob < 0.7;
+              return (
+                <span
+                  title={t('aiJudge.advisoryTooltip')}
+                  data-ai-option-probability={prob}
+                  className={cn(
+                    'shrink-0 font-mono text-3xs tabular-nums',
+                    low ? 'text-accent-yellow' : 'text-accent-purple',
+                  )}
+                >
+                  {Math.round(prob * 100)}%
+                </span>
+              );
+            })()}
             <span className="shrink-0 rounded-sm border border-current/20 px-1 font-mono text-3xs opacity-50 whitespace-nowrap">
               {index + 1}
             </span>
@@ -552,6 +613,7 @@ export function DecisionCardShell({
             <ActionBar
               decision={decision}
               actions={actionDefs}
+              aiOptions={aiOptionsOf(decision)}
               busy={busy}
               requireEvidence={requireEvidence ?? false}
               cooldownLeft={cooldownLeft}
