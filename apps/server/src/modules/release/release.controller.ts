@@ -31,11 +31,6 @@ import {
   VersionRecommendRequestDto,
 } from './dto/release.dto';
 
-class PublishResultDto extends ReleaseDto {
-  @ApiPropertyOptional({ description: '发布失败的失败原因' })
-  failureReason?: string | null;
-}
-
 class ApprovalProposalRequestDto {
   @ApiPropertyOptional({ description: '预留：附言' })
   @IsOptional()

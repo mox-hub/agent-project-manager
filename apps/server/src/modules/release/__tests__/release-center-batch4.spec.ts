@@ -190,7 +190,12 @@ describe('CAP-K-03 批四：listReleaseItems 卡点摘要投影', () => {
           ranAt: '',
           checks: [
             { key: 'scope', label: '发布范围', passed: true, detail: 'ok' },
-            { key: 'ci', label: 'CI 证据', passed: false, detail: '有失败结论' },
+            {
+              key: 'ci',
+              label: 'CI 证据',
+              passed: false,
+              detail: '有失败结论',
+            },
             { key: 'audit', label: '审计', passed: false, detail: '有 red' },
           ],
         },
@@ -198,8 +203,18 @@ describe('CAP-K-03 批四：listReleaseItems 卡点摘要投影', () => {
     });
     // 跨项目 pending 卡不应命中 proj-1 列表（交集口径）
     prisma.proposals.push(
-      { id: 'dp-a', kind: 'release', status: 'pending', payload: { releaseId: a.id } },
-      { id: 'dp-x', kind: 'release', status: 'pending', payload: { releaseId: 'release_其他' } },
+      {
+        id: 'dp-a',
+        kind: 'release',
+        status: 'pending',
+        payload: { releaseId: a.id },
+      },
+      {
+        id: 'dp-x',
+        kind: 'release',
+        status: 'pending',
+        payload: { releaseId: 'release_其他' },
+      },
     );
 
     const items = (await releases.listReleaseItems('proj-1')) as Array<
