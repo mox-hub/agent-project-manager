@@ -246,6 +246,7 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       DomainEventTypes.AcceptanceDeleted,
       DomainEventTypes.ReleaseCreated,
       DomainEventTypes.ReleaseApproved,
+      DomainEventTypes.ReleaseStatusChanged,
     ] as const;
     governanceEvents.forEach((evt) => {
       this.messageBus.subscribe(evt, (payload: unknown) => {

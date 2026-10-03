@@ -2395,9 +2395,17 @@ model Release {
   githubReleased Boolean @default(false)
 
   // ── 交付成果清单（CAP-K-03 批二切片）：交付了什么/在哪拿/怎么验证/限制/接收人 ──
-  // 单字段承载：{ items: [{name, location, howToVerify, limitations?, receiver?}], updatedBy?, updatedAt? }
+  // 单字段承载：{ items: [{name, location, howToVerify, limitations?, receiver?, platform?}], updatedBy?, updatedAt? }
   // 不建子表（避免发布实体膨胀）；部署状态从外部 CI/CD 回流，本清单只记录交付物与验证口径
   deliverables   Json?
+
+  // ── 发版中心扩展（CAP-K-03 批三）：计划/平台/通道/升级注意/热修血缘 ──
+  plannedAt    DateTime? // 计划发版时间：挂里程碑时由 targetDate 预填，独立发版手填；「即将发版」与逾期红 tone 的数据源
+  platforms    Json?     // 发布平台封闭枚举数组 ['android','ios','windows','macos','linux','web']；渠道级状态（外部 CI/CD 回流）待真需求另立子表
+  upgradeNotes String?   // 升级/迁移注意事项：major/breaking 版本由门禁 upgrade-notes 检查注记要求（先注记不阻断）；CHANGELOG 再生渲染升级注意段
+  hotfixOfId   String?
+  hotfixOf     Release?  @relation("ReleaseHotfixLineage", fields: [hotfixOfId], references: [id], onDelete: SetNull)
+  hotfixes     Release[] @relation("ReleaseHotfixLineage")
 
   // ── 里程碑关联（CAP-A-16 计划-交付轴整合）：Release 挂可选里程碑 ──
   milestoneId String?
@@ -2408,6 +2416,7 @@ model Release {
   @@unique([projectId, version])
   @@index([projectId, status], name: "idx_releases_project_status")
   @@index([milestoneId], name: "idx_releases_milestone_id")
+  @@index([hotfixOfId], name: "idx_releases_hotfix_of_id")
 }
 
 // ============ 通用动态追踪（操作记录） ============

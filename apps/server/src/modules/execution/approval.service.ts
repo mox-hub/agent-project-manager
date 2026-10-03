@@ -7,6 +7,11 @@ import { PrismaService } from '@/core/database/prisma.service';
 import { LoggerService } from '@/core/logger/logger.service';
 import { MessageBusService } from '@/core/message-bus/message-bus.service';
 import { Prisma } from '@prisma/client';
+import { QuickJudgeService } from '@/modules/ai-hub/quick-judge/quick-judge.service';
+import {
+  approvalRiskQuestions,
+  extractApprovalRisk,
+} from '@/modules/ai-hub/quick-judge/judge-scenarios';
 
 export interface CreateApprovalRequestDto {
   executionRunId: string;
@@ -41,6 +46,7 @@ export class ApprovalService {
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
     private readonly messageBus: MessageBusService,
+    private readonly quickJudge: QuickJudgeService,
   ) {
     this.logger.setContext('ApprovalService');
   }
@@ -98,7 +104,74 @@ export class ApprovalService {
       requestedAction: dto.requestedAction,
     });
 
+    // AI 风险定级初审（CAP-A-27，advisory）：fire-and-forget，结果回写 metadata.aiJudge
+    // 仅供审批界面展示——**不改变 riskLevel 落库值，不触发任何自动批准**；
+    // 通道未启用/失败时静默跳过（quick-judge 内部已降级为 null）。
+    void this.reviewApprovalRisk(approval.id, dto, executionRun.goal).catch(
+      () => {},
+    );
+
     return approval;
+  }
+
+  /** AI 风险定级 advisory：判断结果并入审批单 metadata（供前端展示），失败零影响。 */
+  private async reviewApprovalRisk(
+    approvalId: string,
+    dto: Pick<
+      CreateApprovalRequestDto,
+      'requestedAction' | 'actionType' | 'reason'
+    >,
+    goal?: string | null,
+  ): Promise<void> {
+    // 防操纵边界：state 只含系统结构化字段（动作描述/类型/目标），reason 是人填的
+    // 提交说明、被排除在外。
+    const state = [
+      `审批请求：${dto.requestedAction}`,
+      `操作类型：${dto.actionType}`,
+      ...(goal ? [`关联目标：${goal}`] : []),
+    ].join('\n');
+
+    const result = await this.quickJudge.judge(
+      'approval_risk',
+      state,
+      approvalRiskQuestions(),
+    );
+    if (!result) return;
+    const judgement = extractApprovalRisk(result.answers);
+    if (!judgement.riskLevel && judgement.safeToAutoApprove === null) return;
+
+    try {
+      const current = await this.prisma.approvalRequest.findUnique({
+        where: { id: approvalId },
+        select: { metadata: true },
+      });
+      if (!current) return;
+      await this.prisma.approvalRequest.update({
+        where: { id: approvalId },
+        data: {
+          metadata: {
+            ...((current.metadata as Record<string, unknown> | null) ?? {}),
+            aiJudge: {
+              riskLevel: judgement.riskLevel,
+              confidence: judgement.confidence,
+              probabilities: judgement.probabilities,
+              safeToAutoApprove: judgement.safeToAutoApprove,
+              model: result.model,
+              judgedAt: new Date().toISOString(),
+              advisory: true,
+            },
+          },
+        },
+      });
+      this.logger.log(`AI risk judgement attached to approval ${approvalId}`, {
+        riskLevel: judgement.riskLevel,
+        confidence: judgement.confidence,
+      });
+    } catch (err) {
+      this.logger.warn(
+        `AI risk judgement write-back failed for ${approvalId}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 
   async getApprovalRequest(id: string, _userId: string) {

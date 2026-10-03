@@ -7,6 +7,8 @@ import {
 import {
   ArrayNotEmpty,
   IsArray,
+  IsIn,
+  IsISO8601,
   IsOptional,
   IsString,
   MaxLength,
@@ -14,6 +16,20 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+/**
+ * 发布平台封闭枚举（CAP-K-03 批三）：列表徽标/筛选与交付物 platform 槽共用。
+ * 渠道级状态（外部 CI/CD 回流）待真需求另立子表，本枚举只做「发到哪些端」口径。
+ */
+export const RELEASE_PLATFORM_VALUES = [
+  'android',
+  'ios',
+  'windows',
+  'macos',
+  'linux',
+  'web',
+] as const;
+export type ReleasePlatform = (typeof RELEASE_PLATFORM_VALUES)[number];
 
 export class CreateReleaseDto {
   @ApiProperty({ description: '项目 ID' })
@@ -54,6 +70,40 @@ export class CreateReleaseDto {
   @IsOptional()
   @IsString()
   milestoneId?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      '计划发版时间（ISO；挂里程碑时由 targetDate 预填，传 null 清除）',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsISO8601()
+  plannedAt?: string | null;
+
+  @ApiPropertyOptional({
+    description: '发布平台（封闭枚举 android/ios/windows/macos/linux/web）',
+    type: [String],
+    enum: RELEASE_PLATFORM_VALUES,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsIn(RELEASE_PLATFORM_VALUES as unknown as string[], { each: true })
+  platforms?: string[] | null;
+
+  @ApiPropertyOptional({
+    description: '升级/迁移注意事项（markdown；major 版本门禁注记要求补充）',
+  })
+  @IsOptional()
+  @IsString()
+  upgradeNotes?: string;
+
+  @ApiPropertyOptional({
+    description: '热修复基线发版 ID（须存在/同项目/已发布；传 null 清除）',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  hotfixOfId?: string | null;
 }
 
 export class UpdateReleaseDto extends PartialType(
@@ -90,6 +140,15 @@ export class ReleaseDeliverableItemDto {
   @IsOptional()
   @IsString()
   receiver?: string;
+
+  @ApiPropertyOptional({
+    description:
+      '所属发布平台（RELEASE_PLATFORM_VALUES 枚举内；产物为全端时省略）',
+    enum: RELEASE_PLATFORM_VALUES,
+  })
+  @IsOptional()
+  @IsIn(RELEASE_PLATFORM_VALUES as unknown as string[])
+  platform?: string;
 }
 
 /** 交付成果清单（Release.deliverables Json 列的存储形状：items + 最后更新溯源） */
@@ -205,6 +264,33 @@ export class ReleaseDto {
     nullable: true,
   })
   milestone?: { id: string; name: string; status: string } | null;
+
+  @ApiPropertyOptional({
+    description: '计划发版时间（批三；挂里程碑时由 targetDate 预填）',
+    nullable: true,
+  })
+  plannedAt?: string | null;
+
+  @ApiPropertyOptional({
+    description: '发布平台（批三；封闭枚举数组）',
+    type: [String],
+    enum: RELEASE_PLATFORM_VALUES,
+  })
+  platforms?: string[] | null;
+
+  @ApiPropertyOptional({
+    description: '升级/迁移注意事项（批三；major 版本门禁注记要求）',
+  })
+  upgradeNotes?: string | null;
+
+  @ApiPropertyOptional({ description: '热修基线发版 ID（批三血缘）' })
+  hotfixOfId?: string | null;
+
+  @ApiPropertyOptional({
+    description: '热修基线轻量投影（批三；详情「修复自 vX.Y.Z」数据源）',
+    nullable: true,
+  })
+  hotfixOf?: { id: string; version: string; name?: string | null } | null;
 
   @ApiProperty({
     description: '状态',

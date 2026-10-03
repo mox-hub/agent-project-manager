@@ -628,6 +628,8 @@ export class GitHubClient {
     tagName: string;
     name: string;
     body?: string;
+    /** 预发布标志（CAP-K-03 批三：semver 后缀推导 alpha/beta/rc 通道） */
+    prerelease?: boolean;
   }): Promise<{ id: number; htmlUrl: string }> {
     try {
       const res = (await this.withRetry(() =>
@@ -637,6 +639,7 @@ export class GitHubClient {
           tag_name: opts.tagName,
           name: opts.name,
           body: opts.body,
+          prerelease: opts.prerelease ?? false,
         }),
       )) as { data: { id: number; html_url: string } };
       return { id: res.data.id, htmlUrl: res.data.html_url };

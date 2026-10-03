@@ -13,11 +13,11 @@
  * 目标锚点缺失时点击为 no-op（消费方保证 sections 与页面锚点一致）。
  * props 面封闭（G8）：不接 className、不透传样式。
  */
-import { useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import { RawButton } from '@/components/raw/raw-button';
-import { cn } from '@/lib/utils';
+import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { RawButton } from "@/components/raw/raw-button";
+import { cn } from "@/lib/utils";
 
 export interface ScrubberSection {
   /** 目标锚点 id（= SettingsSectionCard 的 id prop） */
@@ -28,15 +28,22 @@ export interface ScrubberSection {
 export interface SectionScrubberProps {
   /** 栏目清单（声明顺序即展示顺序）；建议模块级常量，避免每次渲染重建 observer */
   sections: ScrubberSection[];
+  /** 形态：horizontal（缺省，横排 chips，设置页吸顶槽）/ vertical（详情页左侧栏竖排） */
+  orientation?: "horizontal" | "vertical";
 }
 
-export function SectionScrubber({ sections }: SectionScrubberProps) {
+export function SectionScrubber({
+  sections,
+  orientation = "horizontal",
+}: SectionScrubberProps) {
   const { t } = useTranslation();
   const [activeId, setActiveId] = useState(sections[0]?.id);
   const visibleRef = useRef(new Set<string>());
+  const vertical = orientation === "vertical";
 
   useEffect(() => {
-    if (typeof IntersectionObserver === 'undefined' || sections.length === 0) return;
+    if (typeof IntersectionObserver === "undefined" || sections.length === 0)
+      return;
     visibleRef.current = new Set();
     const io = new IntersectionObserver(
       (entries) => {
@@ -45,10 +52,12 @@ export function SectionScrubber({ sections }: SectionScrubberProps) {
           if (entry.isIntersecting) visibleRef.current.add(id);
           else visibleRef.current.delete(id);
         }
-        const next = sections.find((section) => visibleRef.current.has(section.id));
+        const next = sections.find((section) =>
+          visibleRef.current.has(section.id),
+        );
         if (next) setActiveId((prev) => (prev === next.id ? prev : next.id));
       },
-      { rootMargin: '-20% 0px -60% 0px' },
+      { rootMargin: "-20% 0px -60% 0px" },
     );
     for (const section of sections) {
       const el = document.getElementById(section.id);
@@ -59,9 +68,13 @@ export function SectionScrubber({ sections }: SectionScrubberProps) {
 
   return (
     <nav
-      aria-label={t('settings.sectionNav')}
+      aria-label={t("settings.sectionNav")}
       data-slot="section-scrubber"
-      className="flex min-w-0 items-center gap-1 overflow-x-auto"
+      data-orientation={orientation}
+      className={cn(
+        "min-w-0 items-center gap-1",
+        vertical ? "flex flex-col items-stretch" : "flex overflow-x-auto",
+      )}
     >
       {sections.map((section) => {
         const active = section.id === activeId;
@@ -72,14 +85,15 @@ export function SectionScrubber({ sections }: SectionScrubberProps) {
               setActiveId(section.id);
               document
                 .getElementById(section.id)
-                ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
             }}
-            aria-current={active ? 'true' : undefined}
+            aria-current={active ? "true" : undefined}
             className={cn(
-              'shrink-0 rounded-full px-2.5 py-1 text-xs transition-colors duration-fast',
+              "shrink-0 truncate rounded-full px-2.5 py-1 text-xs transition-colors duration-fast",
+              vertical && "text-left",
               active
-                ? 'bg-muted font-medium text-foreground'
-                : 'text-content-text-muted hover:bg-muted/60 hover:text-content-text-secondary',
+                ? "bg-muted font-medium text-foreground"
+                : "text-content-text-muted hover:bg-muted/60 hover:text-content-text-secondary",
             )}
           >
             {section.label}

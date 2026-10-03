@@ -25,7 +25,10 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
 import { AiHubService } from './ai-hub.service';
+import { QuickJudgeSettingsService } from './quick-judge/quick-judge-settings.service';
 import { ProviderConfigService } from './services/provider-config.service';
 import { ModelsDevService } from './services/models-dev.service';
 import { AiWorkerCoordinatorService } from './services/ai-worker-coordinator.service';
@@ -46,6 +49,10 @@ import {
   DefaultModelResponseDto,
   ProviderBalanceResponseDto,
 } from './dto/provider-config.dto';
+import {
+  QuickJudgeSettingsResponseDto,
+  UpdateQuickJudgeSettingsDto,
+} from './dto/quick-judge-settings.dto';
 import {
   AIModelDto,
   AssignIssueResponseDto,
@@ -68,6 +75,7 @@ export class AiHubController {
     private readonly providerConfigService: ProviderConfigService,
     private readonly modelsDevService: ModelsDevService,
     private readonly coordinator: AiWorkerCoordinatorService,
+    private readonly quickJudgeSettings: QuickJudgeSettingsService,
   ) {}
 
   @Post('chat')
@@ -295,6 +303,34 @@ export class AiHubController {
   @ApiStandardErrors()
   async getPricingSourceStatus() {
     return this.modelsDevService.getStatus();
+  }
+
+  @Get('quick-judge/settings')
+  @ApiOperation({ summary: 'Get quick-judge channel settings (CAP-A-27)' })
+  @ApiOkResponse({
+    type: QuickJudgeSettingsResponseDto,
+    description:
+      'AI 快速判断通道设置 { enabled, provider, model, baseUrl, timeoutMs }——advisory 判断通道（审批风险定级/证据预审）的启停与指向',
+  })
+  @ApiStandardErrors()
+  async getQuickJudgeSettings() {
+    return this.quickJudgeSettings.getSettings();
+  }
+
+  @Put('quick-judge/settings')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Update quick-judge channel settings (admin only)' })
+  @ApiOkResponse({
+    type: QuickJudgeSettingsResponseDto,
+    description: '更新后的通道设置（null/空串字段回落缺省）',
+  })
+  @ApiStandardErrors()
+  async updateQuickJudgeSettings(
+    @Body() dto: UpdateQuickJudgeSettingsDto,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.quickJudgeSettings.updateSettings(dto, req.user.id);
   }
 
   @Post('pricing-source/refresh')

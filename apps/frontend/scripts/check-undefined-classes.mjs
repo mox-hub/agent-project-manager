@@ -69,6 +69,11 @@ const IGNORED_CANDIDATES = new Set([
   // 是分组标识而非可应用的类；Tailwind 里也没有 font-size / text-color 这两个工具类。
   "font-size",
   "text-color",
+  // CSS 属性名误报（startup-failure.ts 的 inline style 字符串里 `text-align:center;`
+  // `font-family:system-ui` 被 CANDIDATE 当成 text-*/font-* 刻度类）；Tailwind 里
+  // 没有 text-align / font-family 工具类，对齐走 text-left/center 与 font-sans 族。
+  "text-align",
+  "font-family",
 ]);
 
 function walk(dir) {

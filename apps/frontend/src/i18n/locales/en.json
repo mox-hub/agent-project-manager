@@ -453,7 +453,20 @@
       "pickProject": "Pick a project…",
       "searchPlaceholder": "Search version/name/tag…",
       "projectGroup": "Project",
-      "statusGroup": "Status"
+      "statusGroup": "Status",
+      "platformGroup": "Platform",
+      "channelGroup": "Channel"
+    },
+    "upcoming": {
+      "title": "Upcoming releases",
+      "overdue": "{{days}}d overdue",
+      "inDays": "in {{days}}d",
+      "today": "today",
+      "unnamed": "Unnamed release"
+    },
+    "list": {
+      "pendingApproval": "Pending approval",
+      "gateFailed": "{{count}} gate check(s) failed"
     },
     "table": {
       "version": "Version",
@@ -520,8 +533,18 @@
       "nameLabel": "Release name (optional)",
       "milestoneLabel": "Milestone (optional)",
       "milestoneNone": "No milestone",
+      "plannedAt": "Planned release date",
+      "plannedAtPlaceholder": "Pick a date (prefilled from milestone)",
+      "hotfixOf": "Hotfix baseline",
+      "hotfixNone": "Not a hotfix",
+      "platforms": "Platforms",
       "submit": "Create draft",
       "created": "Release draft created"
+    },
+    "meta": {
+      "edit": "Edit info",
+      "saved": "Release info updated",
+      "tagAuto": "Auto-created as v{{version}} on publish"
     },
     "gate": {
       "title": "Release gate",
@@ -547,6 +570,12 @@
       "aiDraft": "AI draft",
       "notesSaved": "Release notes saved",
       "noNotes": "No notes yet — try AI draft and refine manually",
+      "notesPlaceholder": "Write release notes in Markdown: highlights, known issues, upgrade tips…",
+      "secStatus": "Status",
+      "secMeta": "Info",
+      "secNotes": "Notes",
+      "secDeliverables": "Deliverables",
+      "secTrace": "Trace",
       "notesDraft": {
         "title": "AI-draft release notes",
         "description": "AI drafts beta-user-facing notes from the scoped issues and deliverables; nothing is saved until you review and confirm — cancelling leaves the current notes untouched",
@@ -570,9 +599,20 @@
         "sourceCurrentNotesNone": "No existing notes"
       },
       "tag": "Git Tag",
-      "tagPending": "created on publish",
       "project": "Project",
       "milestone": "Milestone",
+      "planned": "Planned",
+      "hotfixOf": "Hotfix for",
+      "upgradeNotes": "Upgrade notes",
+      "upgradeNotesAdd": "Add upgrade notes",
+      "upgradeNotesEdit": "Edit",
+      "upgradeNotesSaved": "Upgrade notes saved",
+      "upgradeNotesEmpty": "No upgrade notes — major/breaking releases should document upgrade and migration steps here",
+      "upgradeNotesPlaceholder": "Upgrade & migration notes for major/breaking changes (migration steps, config changes, compatibility breaks)",
+      "changelogPreview": "Preview CHANGELOG",
+      "changelogTitle": "CHANGELOG preview",
+      "changelogHint": "Read-only preview of the full text regenerated from the Release entity (written to the workspace file on publish; nothing is written here)",
+      "changelogLoadFailed": "Failed to load preview",
       "github": "GitHub Release",
       "yes": "Created",
       "no": "Not created",
@@ -595,7 +635,9 @@
         "location": "Where to get it",
         "howToVerify": "How to verify",
         "limitations": "Limitations / known issues (optional)",
-        "receiver": "Receiver (optional)"
+        "receiver": "Receiver (optional)",
+        "platform": "Platform (optional)",
+        "platformNone": "All platforms"
       }
     }
   },
@@ -888,6 +930,22 @@
       "escalateDraft": "You just answered \"{{question}}\" with: {{answer}}. I'd like to go deeper.",
       "escalatePlain": "I'd like to go deeper on this task."
     }
+  },
+  "runApprovals": {
+    "title": "Acceptance approvals",
+    "risk": {
+      "read": "Read",
+      "write": "Write",
+      "high_risk": "High risk"
+    },
+    "statusPending": "Pending",
+    "statusApproved": "Approved",
+    "statusRejected": "Rejected",
+    "statusAutoApproved": "Auto-approved",
+    "statusExpired": "Expired",
+    "statusCancelled": "Cancelled",
+    "aiJudgeTitle": "AI risk judgement (advisory, for reference only)",
+    "lowConfidence": "low confidence"
   },
   "runDetails": {
     "title": "Run details",
@@ -4620,6 +4678,13 @@
     "defaultModelNoProviders": "No model provider configured yet",
     "selectModelHint": "Pick a provider and model, then save",
     "providerToggles": "Model Providers",
+    "quickJudge": "AI Quick Judge",
+    "quickJudgeToggle": "Enable judgement channel (advisory)",
+    "quickJudgeLoading": "Loading channel settings…",
+    "quickJudgeOnHint": "Enabled: approval risk grading and evidence precheck will carry AI pre-judgements (current model {{model}})",
+    "quickJudgeOffHint": "Disabled: approvals and acceptance keep pure rule-based behaviour, unaffected",
+    "quickJudgeAdminOnly": "Admin only",
+    "quickJudgeNote": "AI conclusions are advisory only and never change approval or acceptance authority; low-confidence results are explicitly flagged",
     "detectModels": "Query Models",
     "detectModelsHint": "Fetch the real model list from the provider's models endpoint",
     "detectModelsSuccess": "Found {{count}} models",
@@ -5606,7 +5671,9 @@
       },
       "list": {
         "toggle": "Toggle evidence details"
-      }
+      },
+      "aiPrecheckTitle": "AI evidence precheck (advisory, for reference only)",
+      "lowConfidence": "low confidence"
     },
     "evidenceType": {
       "ci_result": "CI result",

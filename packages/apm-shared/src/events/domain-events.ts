@@ -67,6 +67,7 @@ export const DomainEventTypes = {
   // 发版门禁
   ReleaseCreated: 'release.created',
   ReleaseApproved: 'release.approved',
+  ReleaseStatusChanged: 'release.status.changed',
 
   // 运行时（本地执行节点）
   RuntimeConnected: 'runtime.connected',
@@ -414,6 +415,23 @@ export const ReleaseApprovedPayloadSchema = z.object({
 });
 export type ReleaseApprovedPayload = z.infer<
   typeof ReleaseApprovedPayloadSchema
+>;
+
+/**
+ * release.status.changed：发版状态机任意跃迁广播（CAP-K-03 批四，
+ * release.service/release-publish.service 七个跃迁点发布）——列表页实时失效、
+ * 详情页由轮询兜底升级为事件驱动。
+ */
+export const ReleaseStatusChangedPayloadSchema = z.object({
+  releaseId: z.string(),
+  projectId: z.string(),
+  version: z.string(),
+  from: z.string(),
+  to: z.string(),
+  at: z.string(),
+});
+export type ReleaseStatusChangedPayload = z.infer<
+  typeof ReleaseStatusChangedPayloadSchema
 >;
 
 /** ai.workflow.update：workflow.service.publishUpdate 发布 */

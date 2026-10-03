@@ -453,7 +453,20 @@
       "pickProject": "选择项目…",
       "searchPlaceholder": "搜索版本/名称/Tag…",
       "projectGroup": "项目",
-      "statusGroup": "状态"
+      "statusGroup": "状态",
+      "platformGroup": "平台",
+      "channelGroup": "通道"
+    },
+    "upcoming": {
+      "title": "即将发版",
+      "overdue": "逾期 {{days}} 天",
+      "inDays": "{{days}} 天后",
+      "today": "今天",
+      "unnamed": "未命名发版"
+    },
+    "list": {
+      "pendingApproval": "待审批",
+      "gateFailed": "门禁 {{count}} 项未过"
     },
     "table": {
       "version": "版本",
@@ -520,8 +533,18 @@
       "nameLabel": "发版名称（可选）",
       "milestoneLabel": "所属里程碑（可选）",
       "milestoneNone": "不关联里程碑",
+      "plannedAt": "计划发版时间",
+      "plannedAtPlaceholder": "选择日期（选里程碑自动预填）",
+      "hotfixOf": "热修基线",
+      "hotfixNone": "非热修",
+      "platforms": "发布平台",
       "submit": "创建草案",
       "created": "发版草案已创建"
+    },
+    "meta": {
+      "edit": "编辑信息",
+      "saved": "发版信息已更新",
+      "tagAuto": "发布时自动创建 v{{version}}"
     },
     "gate": {
       "title": "发布门禁",
@@ -547,6 +570,12 @@
       "aiDraft": "AI 起草",
       "notesSaved": "发版说明已保存",
       "noNotes": "暂无发版说明——可用 AI 起草后人工修订",
+      "notesPlaceholder": "用 Markdown 记录发版说明：版本亮点、已知问题、升级提示…",
+      "secStatus": "状态",
+      "secMeta": "信息",
+      "secNotes": "发版说明",
+      "secDeliverables": "交付成果",
+      "secTrace": "前因后果",
       "notesDraft": {
         "title": "AI 起草发版说明",
         "description": "AI 按范围工单与交付物清单起草面向内测用户的发版说明；您编辑确认后才保存，取消不会改动现有说明",
@@ -570,9 +599,20 @@
         "sourceCurrentNotesNone": "无已有说明"
       },
       "tag": "Git Tag",
-      "tagPending": "发布时创建",
       "project": "所属项目",
       "milestone": "所属里程碑",
+      "planned": "计划发版",
+      "hotfixOf": "修复自",
+      "upgradeNotes": "升级注意事项",
+      "upgradeNotesAdd": "补充升级说明",
+      "upgradeNotesEdit": "编辑",
+      "upgradeNotesSaved": "升级注意事项已保存",
+      "upgradeNotesEmpty": "暂无升级注意事项——major/破坏性变更建议在此写明升级与迁移要点",
+      "upgradeNotesPlaceholder": "major/破坏性变更的升级与迁移注意事项（如：迁移步骤、配置变更、兼容性断点）",
+      "changelogPreview": "预览 CHANGELOG",
+      "changelogTitle": "CHANGELOG 预览",
+      "changelogHint": "由 Release 实体集合单向再生的全文预览（发布时写入工作区文件，此处只读不改文件）",
+      "changelogLoadFailed": "预览加载失败",
       "github": "GitHub Release",
       "yes": "已创建",
       "no": "未创建",
@@ -595,7 +635,9 @@
         "location": "在哪拿",
         "howToVerify": "怎么验证可用",
         "limitations": "限制/已知问题（可选）",
-        "receiver": "接收人（可选）"
+        "receiver": "接收人（可选）",
+        "platform": "所属平台（可选）",
+        "platformNone": "不限平台"
       }
     }
   },
@@ -888,6 +930,22 @@
       "escalateDraft": "刚才就「{{question}}」你回答过：{{answer}}。我想继续深入聊聊。",
       "escalatePlain": "想继续深入聊聊这个任务。"
     }
+  },
+  "runApprovals": {
+    "title": "验收审批",
+    "risk": {
+      "read": "只读",
+      "write": "写操作",
+      "high_risk": "高风险"
+    },
+    "statusPending": "待审",
+    "statusApproved": "已通过",
+    "statusRejected": "已驳回",
+    "statusAutoApproved": "自动通过",
+    "statusExpired": "已过期",
+    "statusCancelled": "已取消",
+    "aiJudgeTitle": "AI 风险定级（advisory，仅供决策参考）",
+    "lowConfidence": "低置信"
   },
   "runDetails": {
     "title": "运行详情",
@@ -4620,6 +4678,13 @@
     "defaultModelNoProviders": "尚未配置任何模型服务厂家",
     "selectModelHint": "选择厂家与模型后保存",
     "providerToggles": "模型服务厂家",
+    "quickJudge": "AI 快速判断",
+    "quickJudgeToggle": "启用判断通道（advisory）",
+    "quickJudgeLoading": "读取通道设置中…",
+    "quickJudgeOnHint": "已启用：审批风险定级与验收证据预审将附 AI 初审结论（当前模型 {{model}}）",
+    "quickJudgeOffHint": "未启用：审批与验收保持纯规则行为，不受影响",
+    "quickJudgeAdminOnly": "仅管理员可修改",
+    "quickJudgeNote": "AI 结论仅作初审参考展示，不改变审批与验收判定权；低置信结论会显式标注",
     "detectModels": "查询模型",
     "detectModelsHint": "从厂家模型查询端点拉取真实模型清单",
     "detectModelsSuccess": "查询到 {{count}} 个模型",
@@ -5606,7 +5671,9 @@
       },
       "list": {
         "toggle": "展开/收起证据明细"
-      }
+      },
+      "aiPrecheckTitle": "AI 证据预审（advisory，仅供决策参考）",
+      "lowConfidence": "低置信"
     },
     "evidenceType": {
       "ci_result": "CI 结果",

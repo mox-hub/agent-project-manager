@@ -393,12 +393,29 @@ export function AcceptanceDetailPage() {
                           typeof ev.metadata?.htmlUrl === 'string'
                             ? ev.metadata.htmlUrl
                             : ev.storageRef;
+                        // CAP-A-27：AI 预审证据（advisory）展示置信度，低置信显式标注
+                        const aiConfidence =
+                          ev.metadata?.advisory === true && typeof ev.metadata?.confidence === 'number'
+                            ? ev.metadata.confidence
+                            : null;
                         return (
                           <li key={ev.id} className="flex items-center gap-1.5 text-3xs text-muted-foreground">
                             <Badge variant="outline" className="text-3xs py-0">
                               {t(`acceptanceDetail.evidenceType.${ev.evidenceType}`, ev.evidenceType)}
                             </Badge>
                             <span className="truncate">{ev.content ?? ev.evidenceType}</span>
+                            {aiConfidence !== null && (
+                              <span
+                                className={cn(
+                                  'shrink-0 font-medium',
+                                  aiConfidence >= 0.7 ? 'text-accent-blue' : 'text-accent-yellow',
+                                )}
+                                title={t('acceptanceDetail.evidence.aiPrecheckTitle')}
+                              >
+                                {`AI ${Math.round(aiConfidence * 100)}%`}
+                                {aiConfidence < 0.7 ? ` · ${t('acceptanceDetail.evidence.lowConfidence')}` : ''}
+                              </span>
+                            )}
                             {prUrl && /^https?:\/\//.test(prUrl) && (
                               <a
                                 href={prUrl}

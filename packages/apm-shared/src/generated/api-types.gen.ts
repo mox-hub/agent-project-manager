@@ -5410,6 +5410,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/workspaces/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 公开工作区名单（CAP-A-26；可配置，默认关闭，仅 id/名称） */
+        get: operations["WorkspaceController_publicList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/workspaces/public-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 设置是否向未认证方公开工作区名单（管理员；默认关） */
+        put: operations["WorkspaceController_setPublicList"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/workspaces/{id}/activate": {
         parameters: {
             query?: never;
@@ -6990,7 +7024,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水） */
+        /** 发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水；瘦身投影+卡点摘要） */
         get: operations["ReleaseController_list"];
         put?: never;
         /** 创建发版草案（版本号须合法 semver、项目内唯一、大于基线） */
@@ -7218,6 +7252,23 @@ export interface paths {
         put?: never;
         /** 跳过阶段（放行但记事件，验收可查） */
         post: operations["PlaybookController_skipStage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/releases/{id}/changelog-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 预览 CHANGELOG 再生文本（Release 实体单向投影，只读不写文件） */
+        get: operations["ReleaseController_changelogPreview"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -13740,6 +13791,24 @@ export interface components {
             /** @description 当前请求的工作区 ID（x-workspace-id 决定，缺省 default） */
             workspaceId: string;
         };
+        PublicWorkspaceDto: {
+            /** @description 工作区 ID（default 为内置默认工作区） */
+            id: string;
+            /** @description 工作区名称 */
+            name: string;
+            /** @description 是否默认工作区 */
+            isDefault?: boolean;
+        };
+        PublicWorkspaceListResponseDto: {
+            /** @description 是否向未认证方公开工作区名单（管理员开关，默认关；关闭时 workspaces 为空） */
+            enabled: boolean;
+            /** @description 公开的工作区名单（enabled=false 时为空数组） */
+            workspaces: components["schemas"]["PublicWorkspaceDto"][];
+        };
+        SetPublicWorkspaceListDto: {
+            /** @description 是否向未认证方公开工作区名单 */
+            enabled: boolean;
+        };
         CreateWorkspaceDto: {
             /** @description 工作区名称 */
             name: string;
@@ -15800,6 +15869,14 @@ export interface components {
             scopeIssueIds?: string[];
             /** @description 所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除） */
             milestoneId?: Record<string, never> | null;
+            /** @description 计划发版时间（ISO；挂里程碑时由 targetDate 预填，传 null 清除） */
+            plannedAt?: Record<string, never> | null;
+            /** @description 发布平台（封闭枚举 android/ios/windows/macos/linux/web） */
+            platforms?: ("android" | "ios" | "windows" | "macos" | "linux" | "web")[];
+            /** @description 升级/迁移注意事项（markdown；major 版本门禁注记要求补充） */
+            upgradeNotes?: string;
+            /** @description 热修复基线发版 ID（须存在/同项目/已发布；传 null 清除） */
+            hotfixOfId?: Record<string, never> | null;
         };
         VersionRecommendRequestDto: {
             /** @description 项目 ID */
@@ -15816,6 +15893,14 @@ export interface components {
             scopeIssueIds?: string[];
             /** @description 所属里程碑 ID（CAP-A-16 计划-交付轴整合；须属于同项目，传 null 清除） */
             milestoneId?: Record<string, never> | null;
+            /** @description 计划发版时间（ISO；挂里程碑时由 targetDate 预填，传 null 清除） */
+            plannedAt?: Record<string, never> | null;
+            /** @description 发布平台（封闭枚举 android/ios/windows/macos/linux/web） */
+            platforms?: ("android" | "ios" | "windows" | "macos" | "linux" | "web")[];
+            /** @description 升级/迁移注意事项（markdown；major 版本门禁注记要求补充） */
+            upgradeNotes?: string;
+            /** @description 热修复基线发版 ID（须存在/同项目/已发布；传 null 清除） */
+            hotfixOfId?: Record<string, never> | null;
         };
         ReleaseDeliverableItemDto: {
             /** @description 成果名称（交付了什么） */
@@ -15828,6 +15913,11 @@ export interface components {
             limitations?: string;
             /** @description 接收人（由谁接收） */
             receiver?: string;
+            /**
+             * @description 所属发布平台（RELEASE_PLATFORM_VALUES 枚举内；产物为全端时省略）
+             * @enum {string}
+             */
+            platform?: "android" | "ios" | "windows" | "macos" | "linux" | "web";
         };
         UpdateReleaseDeliverablesDto: {
             /** @description 交付成果清单（全量替换；元素必填 name/location/howToVerify） */
@@ -41317,6 +41407,105 @@ export interface operations {
             };
         };
     };
+    WorkspaceController_publicList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 开关状态与（开启时的）脱敏工作区名单 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicWorkspaceListResponseDto"];
+                };
+            };
+        };
+    };
+    WorkspaceController_setPublicList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPublicWorkspaceListDto"];
+            };
+        };
+        responses: {
+            /** @description 写入后的开关状态与（开启时的）脱敏工作区名单 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicWorkspaceListResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
     WorkspaceController_activate: {
         parameters: {
             query?: never;
@@ -49808,6 +49997,74 @@ export interface operations {
                     "application/json": components["schemas"]["SkipStageResponseDto"];
                 };
             };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_changelogPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
             /** @description 请求参数错误 */
             400: {
                 headers: {

@@ -106,6 +106,13 @@ export class NotificationEventSubscriber implements OnModuleInit {
       this.handleDecisionProposalCreated.bind(this),
     );
 
+    // 发版完成（CAP-K-03 批三：release.created 此前零消费，
+    // 「发布广播」止步 message-bus——项目成员不再知道「项目出新版了」）
+    this.messageBus.subscribe(
+      DomainEventTypes.ReleaseCreated,
+      this.handleReleaseCreated.bind(this),
+    );
+
     // 执行状态变更（失败感知：failed/blocked 定向通知发起人与负责人）
     this.messageBus.subscribe(
       DomainEventTypes.ExecutionRunUpdated,
@@ -840,6 +847,49 @@ export class NotificationEventSubscriber implements OnModuleInit {
     } catch (error) {
       this.logger.error(
         'Error handling approval.requested event',
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
+
+  // ─── 发版完成广播（CAP-K-03 批三通知接线）──────────────
+
+  /**
+   * release.created（release-publish.service 发布成功后广播）→
+   * 通知项目全员。发布是系统动作（决策卡 accept 触发），payload 无操作者，
+   * 广播语义下不排除任何人；无项目/无成员诚实降级不发。
+   */
+  private async handleReleaseCreated(payload: any) {
+    try {
+      const release = await this.prisma.release.findUnique({
+        where: { id: payload.releaseId },
+        include: { project: { include: { members: true } } },
+      });
+      if (!release?.project) return;
+
+      const userIds = [
+        ...new Set(
+          release.project.members
+            .map((m) => m.userId)
+            .filter((v): v is string => !!v),
+        ),
+      ];
+      if (userIds.length === 0) return;
+
+      await this.notificationService.createNotificationFromEvent(
+        DomainEventTypes.ReleaseCreated,
+        {
+          releaseId: release.id,
+          version: release.version,
+          releaseName: release.name,
+          projectId: release.projectId,
+          projectName: release.project.name,
+        },
+        userIds,
+      );
+    } catch (error) {
+      this.logger.error(
+        'Error handling release.created event',
         error instanceof Error ? error.stack : String(error),
       );
     }

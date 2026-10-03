@@ -1,11 +1,24 @@
 import { BadRequestException } from '@nestjs/common';
+import { vi } from 'vitest';
 import { ReleasePublishService } from '../release-publish.service';
 
 /**
  * 发布执行（approved → publishing → released / failed）行为锚点：
  * 仅 approved 可发布（状态机 + CAS 抢占）；成功经 message-bus 发出
- * release.created；无工作区时三步骤诚实跳过。
+ * release.created；无工作区时三步骤诚实跳过；
+ * GitHub Release 按版本通道设 prerelease（alpha/beta/rc → true，批三）。
  */
+
+// GitHub 路径需要工作区 + git；simple-git 全文件桩（只服务本 spec 的 github 用例，
+// 无工作区用例根本不会触达）
+vi.mock('simple-git', () => ({
+  default: () => ({
+    tags: async () => ({ all: [] }),
+    addTag: async () => {},
+    pushTags: async () => {},
+    remote: async () => 'https://github.com/mox-hub/apm.git',
+  }),
+}));
 
 interface ReleaseRow {
   id: string;
@@ -128,12 +141,26 @@ describe('ReleasePublishService（发布执行状态机）', () => {
       'github-release',
     ]);
     expect(log.every((l) => l.status === 'skipped')).toBe(true);
-    expect(bus.events).toEqual([
-      {
-        type: 'release.created',
-        payload: { projectId: 'proj-1', releaseId: 'r2' },
-      },
+    // 事件序列：抢占 publishing → status.changed；发布成 → status.changed + release.created
+    expect(bus.events.map((e) => e.type)).toEqual([
+      'release.status.changed',
+      'release.status.changed',
+      'release.created',
     ]);
+    expect(bus.events[0].payload).toMatchObject({
+      releaseId: 'r2',
+      from: 'approved',
+      to: 'publishing',
+    });
+    expect(bus.events[1].payload).toMatchObject({
+      releaseId: 'r2',
+      from: 'publishing',
+      to: 'released',
+    });
+    expect(bus.events[2].payload).toEqual({
+      projectId: 'proj-1',
+      releaseId: 'r2',
+    });
   });
 
   it('CAS 抢占失败（approved 被并发迁移，读到与抢占间状态漂移）→ 400，不发事件', async () => {
@@ -147,4 +174,50 @@ describe('ReleasePublishService（发布执行状态机）', () => {
     expect(bus.events).toHaveLength(0);
     expect(prisma.releases.get('r3')!.status).toBe('approved');
   });
+
+  it.each([
+    { version: '2.0.0-beta.1', expectedPrerelease: true },
+    { version: '1.0.0', expectedPrerelease: false },
+  ])(
+    'GitHub Release prerelease 标志随版本通道（$version → $expectedPrerelease，批三）',
+    async ({ version, expectedPrerelease }) => {
+      const prisma = new StubPrisma();
+      const bus = new StubBus();
+      prisma.seed({ id: 'rg', status: 'approved', version });
+      const createReleaseSpy = vi.fn(async () => ({
+        id: 1,
+        htmlUrl: 'https://github.com/mox-hub/apm/releases/tag/x',
+      }));
+      const service = new ReleasePublishService(
+        {
+          release: prisma.release,
+          integrationConfig: {
+            findFirst: async () => ({ id: 'int-1', provider: 'github' }),
+          },
+        } as never,
+        bus as never,
+        { exportChangelog: async () => ({ exported: false }) } as never,
+        { resolveRoot: async () => 'C:/ws/apm' } as never,
+        {
+          getClientForIntegration: async () => ({
+            createTagRef: async () => ({}),
+            createRelease: createReleaseSpy,
+          }),
+        } as never,
+      );
+
+      const published = await service.publish('rg');
+      expect(published.status).toBe('released');
+      const githubStep = (
+        published.executionLog as {
+          step: string;
+          status: string;
+        }[]
+      ).find((l) => l.step === 'github-release');
+      expect(githubStep?.status).toBe('ok');
+      expect(createReleaseSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ prerelease: expectedPrerelease }),
+      );
+    },
+  );
 });
