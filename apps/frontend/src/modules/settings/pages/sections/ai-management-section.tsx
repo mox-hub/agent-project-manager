@@ -26,6 +26,7 @@ import { OverviewTab } from '../../components/ai/overview-tab';
 import { ToolsTab } from '../../components/ai/tools-tab';
 import { McpTab } from '../../components/ai/mcp-tab';
 import { SkillsTab } from '../../components/ai/skills-tab';
+import { JudgmentTab } from '../../components/ai/judgment-tab';
 
 export function AiManagementSection() {
   const { t } = useTranslation();
@@ -123,6 +124,9 @@ export function AiManagementSection() {
             </TabsContent>
             <TabsContent value="skills">
               <SkillsTab />
+            </TabsContent>
+            <TabsContent value="judgment">
+              <JudgmentTab />
             </TabsContent>
       </Tabs>
     </PageShell>

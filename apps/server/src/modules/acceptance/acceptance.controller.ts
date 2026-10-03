@@ -10,6 +10,8 @@ import {
   BadRequestException,
   ParseArrayPipe,
   Request,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiExtraModels,
@@ -25,6 +27,11 @@ import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { AcceptanceService } from './acceptance.service';
 import { AcceptanceCriteriaService } from './acceptance-criteria.service';
+import { AcceptanceProbabilityService } from './acceptance-probability.service';
+import {
+  AcceptanceProbabilityResponseDto,
+  JudgeAcceptanceProbabilityDto,
+} from './dto/acceptance-probability.dto';
 import { CompletenessChecklistService } from './completeness-checklist.service';
 import { CompletenessAuditService } from './completeness-audit.service';
 import {
@@ -55,6 +62,7 @@ export class AcceptanceController {
   constructor(
     private readonly acceptanceService: AcceptanceService,
     private readonly criteriaService: AcceptanceCriteriaService,
+    private readonly probabilityService: AcceptanceProbabilityService,
     private readonly checklistService: CompletenessChecklistService,
     private readonly auditService: CompletenessAuditService,
   ) {}
@@ -176,6 +184,28 @@ export class AcceptanceController {
     return this.criteriaService.createMany(id, criteria);
   }
 
+  @Post(':id/criteria/probability')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'AI 预估验收标准达成概率（CAP-A-27 扩展批，advisory）',
+  })
+  @ApiParam({ name: 'id', description: '契约 ID' })
+  @ApiOkResponse({
+    type: AcceptanceProbabilityResponseDto,
+    description:
+      '逐标准预估达成概率（0-100）——只写 metadata 供展示，不改标准状态；内容指纹命中缓存不重复调用；通道不可用时项内 probability=null',
+  })
+  @ApiStandardErrors()
+  async judgeCriteriaProbability(
+    @Param('id') id: string,
+    @Body() dto: JudgeAcceptanceProbabilityDto,
+  ) {
+    return this.probabilityService.judgeAcceptance({
+      acceptanceId: id,
+      criteriaIds: dto.criteriaIds,
+    });
+  }
+
   @Get(':id/criteria')
   @ApiOperation({ summary: '获取验收标准列表' })
   @ApiParam({ name: 'id', description: '契约 ID' })
@@ -256,7 +286,9 @@ export class AcceptanceController {
   })
   @ApiStandardErrors()
   async audit(@Param('id') id: string, @Body() dto: AuditRequestDto) {
-    return this.auditService.auditAcceptance(id, dto.checklistId);
+    return this.auditService.auditAcceptance(id, dto.checklistId, {
+      withAiHints: true,
+    });
   }
 
   @Get(':id/audit-report')

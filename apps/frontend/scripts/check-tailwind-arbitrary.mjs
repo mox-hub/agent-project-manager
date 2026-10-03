@@ -18,6 +18,7 @@ const ALLOWED_TOKENS = new Set([
   "transition-[color,box-shadow]",
   "transition-[color,background-color,border-color,box-shadow,transform,opacity]",
   "transition-[height]",
+  "transition-[width]",
   "transition-[background-color,border-color,color,transform]",
   "transition-[color,background-color]",
   "transition-[border-radius]",

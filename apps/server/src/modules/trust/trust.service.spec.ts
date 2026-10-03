@@ -446,3 +446,132 @@ describe('evaluateAutoDispatchPermission（P2-21 三级授权门禁判定）', (
     expect(normalizeTrustLevel(2.5)).toBe(2.5); // 1-3 区间原样（不取整，仅门禁比较）
   });
 });
+
+/** CAP-A-27 批二 P1-E：quick-judge 四维双轨——只落 SystemEvent，不动信任档案 */
+describe('TrustService.evaluateExecution 的 AI 双轨留痕（CAP-A-27 P1-E）', () => {
+  const JUDGE_ANSWERS = {
+    score_correctness: { type: 'score', score: 8.1, confidence: 0.91 },
+    score_efficiency: { type: 'score', score: 6.3, confidence: 0.72 },
+    score_safety: { type: 'score', score: 8.9, confidence: 0.95 },
+    score_collaboration: { type: 'score', score: 6.9, confidence: 0.66 },
+  };
+
+  const makeService = (judgeImpl: unknown) => {
+    const prisma = {
+      appConfig: {
+        findFirst: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockResolvedValue({}),
+        update: vi.fn().mockResolvedValue({}),
+      },
+      execution: {
+        findUnique: vi.fn().mockResolvedValue({
+          title: '完成登录链路回归',
+          goal: '完成登录链路回归',
+          output: { summary: '修复了 token 过期问题' },
+        }),
+      },
+      systemEvent: { create: vi.fn().mockResolvedValue({}) },
+      remotePullRequest: { findFirst: vi.fn().mockResolvedValue(null) },
+    };
+    // 建档返回完整 value（recentEvaluations 等字段被滚动评估读取）
+    (prisma.appConfig.create as ReturnType<typeof vi.fn>).mockImplementation(
+      async ({ data }: { data: { value: Record<string, unknown> } }) => ({
+        id: 'cfg1',
+        ...data,
+      }),
+    );
+    const service = new TrustService(
+      prisma as never,
+      { publish: vi.fn() } as never,
+      { judge: vi.fn(judgeImpl) } as never,
+    );
+    return {
+      prisma,
+      service: service as unknown as {
+        evaluateExecution: (dto: unknown) => Promise<unknown>;
+      },
+    };
+  };
+
+  it('judge 成功 → 落 trust.dualtrack 事件（四维折算 0-100 + 查表对照），档案照旧走查表', async () => {
+    const { prisma, service } = makeService(async () => ({
+      scenario: 'trust_evaluation',
+      model: 'jev-1.13-free',
+      answers: JUDGE_ANSWERS,
+      usage: { inputTokens: 400, outputTokens: 50 },
+    }));
+
+    await service.evaluateExecution({
+      executionRunId: 'run1',
+      agentId: 'a1',
+      projectId: 'p1',
+      criteria: {
+        correctness: 90,
+        efficiency: 70,
+        safety: 90,
+        collaboration: 70,
+      },
+      outcome: 'success',
+    });
+    // 双轨 fire-and-forget：等微任务排空
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(prisma.systemEvent.create).toHaveBeenCalledTimes(1);
+    const ev = prisma.systemEvent.create.mock.calls[0][0].data;
+    expect(ev.category).toBe('trust.dualtrack');
+    expect(ev.context.judge).toEqual({
+      correctness: 90, // 8.1 × 100/9 ≈ 90
+      efficiency: 70, // 6.3 × 100/9 = 70
+      safety: 99, // 8.9 × 100/9 ≈ 98.9 → round 99
+      collaboration: 77, // 6.9 × 100/9 ≈ 76.7 → 77
+    });
+    expect(ev.context.dualTrack).toBe(true);
+    expect(ev.context.lookupTable).toMatchObject({ correctness: 90 });
+    // 信任档案照旧写入（查表口径不受 judge 影响）
+    expect(prisma.appConfig.create).toHaveBeenCalled();
+  });
+
+  it('judge 返回 null（未启用/失败）→ 零事件、零影响', async () => {
+    const { prisma, service } = makeService(async () => null);
+
+    await service.evaluateExecution({
+      executionRunId: 'run1',
+      agentId: 'a1',
+      projectId: 'p1',
+      criteria: {
+        correctness: 90,
+        efficiency: 70,
+        safety: 90,
+        collaboration: 70,
+      },
+      outcome: 'failure',
+    });
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(prisma.systemEvent.create).not.toHaveBeenCalled();
+    expect(prisma.appConfig.create).toHaveBeenCalled(); // 查表评估照旧
+  });
+
+  it('judge 抛异常 → 双轨静默吞错，主流程不受影响', async () => {
+    const { prisma, service } = makeService(async () => {
+      throw new Error('boom');
+    });
+
+    await service.evaluateExecution({
+      executionRunId: 'run1',
+      agentId: 'a1',
+      projectId: 'p1',
+      criteria: {
+        correctness: 90,
+        efficiency: 70,
+        safety: 90,
+        collaboration: 70,
+      },
+      outcome: 'success',
+    });
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(prisma.systemEvent.create).not.toHaveBeenCalled();
+    expect(prisma.appConfig.create).toHaveBeenCalled();
+  });
+});

@@ -12,6 +12,13 @@ import { ApprovalService } from './approval.service';
 import { Prisma } from '@prisma/client';
 import { inferCompletionType } from '@/modules/cli-dispatch/adapters/test-report.schema';
 import { classifyExecutionFailure } from './failure-classifier';
+import { QuickJudgeService } from '../ai-hub/quick-judge/quick-judge.service';
+import {
+  FAILURE_CLASSIFY_HINTS,
+  extractFailureClassify,
+  failureClassifyQuestions,
+  type FailureClassifyCategory,
+} from '../ai-hub/quick-judge/judge-scenarios';
 import {
   CommitAuthor,
   ExecutionIsolationMetadata,
@@ -119,6 +126,7 @@ export class ExecutionService {
     private readonly proposalService: ProposalService,
     private readonly approvalService: ApprovalService,
     private readonly worktree: ExecutionWorktreeService,
+    private readonly quickJudge: QuickJudgeService,
   ) {
     this.logger.setContext('ExecutionService');
   }
@@ -286,7 +294,22 @@ export class ExecutionService {
     // 失败诊断·机械归类（批一 P0 切片 3，裁决 D 零 token 半）：仅在失败类
     // 终态计算，纯函数零成本，前端直接渲染不复制规则
     const failureClassification = ['failed', 'blocked'].includes(run.status)
-      ? classifyExecutionFailure(run)
+      ? (() => {
+          const ruled = classifyExecutionFailure(run);
+          // JEV 中间层补位：规则 unknown 且 AI 判定已落账时用 AI 类别（模板 hint）
+          if (ruled?.category === 'unknown') {
+            const ai = (run.metadata as Record<string, unknown> | null)
+              ?.aiFailureClassify as
+              { category?: FailureClassifyCategory } | undefined;
+            if (ai?.category && ai.category in FAILURE_CLASSIFY_HINTS) {
+              return {
+                category: ai.category,
+                hint: FAILURE_CLASSIFY_HINTS[ai.category],
+              };
+            }
+          }
+          return ruled;
+        })()
       : null;
     return { ...withNames, failureClassification };
   }
@@ -888,7 +911,7 @@ export class ExecutionService {
     errorDetail: Record<string, unknown>,
     opts?: { force?: boolean },
   ) {
-    return this.updateExecutionRun(
+    const run = await this.updateExecutionRun(
       id,
       {
         status: 'failed',
@@ -897,6 +920,55 @@ export class ExecutionService {
       },
       opts,
     );
+    // JEV 失败归类中间层（CAP-A-27 扩展批，advisory）：规则层未命中时补充判定，
+    // 结果写 metadata.aiFailureClassify 供详情投影消费；fire-and-forget 静默降级
+    void this.judgeFailureClassify(id, errorDetail).catch(() => {});
+    return run;
+  }
+
+  /**
+   * 失败归类三层之二（规则 → JEV → LLM 深诊）：规则已命中时无需 JEV（零增量信息）；
+   * 规则 unknown 时错误留痕判四类。错误留痕可能含被执行 AI 输出，但判定结果仅影响
+   * 展示文案（无自动动作面），防操纵约束放宽至此。
+   */
+  private async judgeFailureClassify(
+    runId: string,
+    errorDetail: Record<string, unknown>,
+  ): Promise<void> {
+    const ruleResult = classifyExecutionFailure({ errorDetail });
+    if (ruleResult && ruleResult.category !== 'unknown') return;
+
+    const state = `执行失败的错误信息：
+${JSON.stringify(errorDetail).slice(0, 4000)}`;
+    const result = await this.quickJudge.judge(
+      'failure_classify',
+      state,
+      failureClassifyQuestions(),
+    );
+    if (!result) return;
+    const judgement = extractFailureClassify(result.answers);
+    if (!judgement.category) return;
+
+    const current = await this.prisma.execution.findUnique({
+      where: { id: runId },
+      select: { metadata: true },
+    });
+    if (!current) return;
+    await this.prisma.execution.update({
+      where: { id: runId },
+      data: {
+        metadata: {
+          ...((current.metadata as Record<string, unknown> | null) ?? {}),
+          aiFailureClassify: {
+            category: judgement.category,
+            confidence: judgement.confidence,
+            model: result.model,
+            judgedAt: new Date().toISOString(),
+            advisory: true,
+          },
+        },
+      },
+    });
   }
 
   async addExecutionStep(executionRunId: string, dto: AddExecutionStepDto) {

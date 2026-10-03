@@ -1,3 +1,4 @@
+import { parseQuickJudgeMeta } from '@/modules/intake/hooks/use-readiness-review';
 import { useMutation } from '@tanstack/react-query';
 import { assistantApi } from '@/modules/assistant/api/assistant-api';
 
@@ -25,6 +26,8 @@ export interface DecompositionReviewResult {
   coverage: DecompCoverage;
   verdict: 'healthy' | 'needs-review' | 'rework';
   summary: string;
+  /** JEV 快筛档元数据（CAP-A-27 扩展批） */
+  quickJudge?: import('@/modules/intake/hooks/use-readiness-review').QuickJudgeMeta;
 }
 
 const GRANULARITIES = ['ok', 'too-big', 'too-small'];
@@ -87,7 +90,8 @@ export function parseDecompositionReview(
   if (tasks.length === 0 && coverage.uncovered.length === 0 && coverage.orphans.length === 0 && !summary) {
     return null;
   }
-  return { tasks, coverage, verdict, summary };
+  const quickJudge = parseQuickJudgeMeta(data.quickJudge);
+  return { tasks, coverage, verdict, summary, quickJudge };
 }
 
 export function useDecompositionReview() {

@@ -3,6 +3,14 @@ import { PrismaService } from '../../../core/database/prisma.service';
 import { AdapterRegistryService } from './adapter-registry.service';
 import { UsagePricingService } from './usage-pricing.service';
 import { listWorkflowActions } from '../../workflow/workflow-actions';
+import { QuickJudgeService } from '../quick-judge/quick-judge.service';
+import { QuickJudgeSettingsService } from '../quick-judge/quick-judge-settings.service';
+import {
+  intakeReadinessQuestions,
+  extractIntakeReadiness,
+  intakeDecompositionQuestions,
+  extractIntakeDecomposition,
+} from '../quick-judge/judge-scenarios';
 
 /**
  * 统一后台静默 AI 机制 —— 各页面「预留 AI 接口」的单一接入协议。
@@ -1379,6 +1387,8 @@ export class AssistantSilentService {
     private readonly prisma: PrismaService,
     private readonly adapterRegistry: AdapterRegistryService,
     private readonly usagePricing: UsagePricingService,
+    private readonly quickJudge: QuickJudgeService,
+    private readonly quickJudgeSettings: QuickJudgeSettingsService,
   ) {}
 
   /** 场景目录（可暴露给前端/文档） */
@@ -1387,6 +1397,142 @@ export class AssistantSilentService {
       scenario,
       description: def.description,
     }));
+  }
+
+  /**
+   * P1-C：intake 两评估场景的 quick-judge「枚举快筛」档。
+   * 双闸（通道总开关 + intakeReviewViaJudge）任一不满足、或 judge 失败/结果
+   * 畸形 → 返回 null 由调用方回落大模型全量通道。快筛产物对齐原场景 data
+   * 形状，文本字段（evidence/缺口账/summary）模板化合成——JEV 不产文本，
+   * 完整评估走原通道；附加 quickJudge 字段（model/confidence/judgedAt）。
+   */
+  private async tryIntakeQuickJudge(
+    scenario: 'readiness-review' | 'decomposition-review',
+    ctx: Record<string, unknown>,
+  ): Promise<SilentRunResult | null> {
+    try {
+      const settings = await this.quickJudgeSettings.getSettings();
+      if (!settings.enabled || !settings.intakeReviewViaJudge) return null;
+
+      const startedAt = Date.now();
+      if (scenario === 'readiness-review') {
+        const docs = Array.isArray(ctx.documents) ? ctx.documents : [];
+        if (docs.length === 0) return null;
+        const state = `需求承接工件（调研/澄清/分析）：\n${docs
+          .map((d) => {
+            const doc = d as Record<string, unknown>;
+            return `【${String(doc.title ?? '未命名')}】\n${String(doc.content ?? '').slice(0, 4000)}`;
+          })
+          .join('\n\n')}`;
+        const result = await this.quickJudge.judge(
+          'intake_readiness',
+          state,
+          intakeReadinessQuestions(),
+        );
+        if (!result) return null;
+        const j = extractIntakeReadiness(result.answers);
+        if (!j.verdict || j.dimensions.some((d) => !d.status)) return null;
+        const counts = j.dimensions.reduce<Record<string, number>>((acc, d) => {
+          acc[d.status as string] = (acc[d.status as string] ?? 0) + 1;
+          return acc;
+        }, {});
+        return {
+          scenario,
+          data: {
+            dimensions: j.dimensions.map((d) => ({
+              key: d.key,
+              status: d.status,
+              evidence: '',
+              gap: '',
+            })),
+            missingInfo: [],
+            verdict: j.verdict,
+            summary: `快筛结论（${Object.entries(counts)
+              .map(([k, v]) => `${k} ${v} 项`)
+              .join(
+                '、',
+              )}）：判定 ${j.verdict}。快速档不含缺口账与证据引用，需要完整评估请关闭快筛档重跑。`,
+            quickJudge: {
+              model: result.model,
+              confidence: j.confidence,
+              judgedAt: new Date().toISOString(),
+              mode: 'quick',
+            },
+          },
+          usage: {
+            promptTokens: result.usage.inputTokens,
+            completionTokens: result.usage.outputTokens,
+            totalTokens: result.usage.inputTokens + result.usage.outputTokens,
+            costUsd: null,
+            model: result.model,
+            durationMs: Date.now() - startedAt,
+          },
+        };
+      }
+
+      // decomposition-review
+      const tasks = Array.isArray(ctx.tasks) ? ctx.tasks : [];
+      if (tasks.length === 0 || tasks.length > 40) return null; // 问题数上限护栏（2*40+1=81 问）
+      const state = `拆解任务族：\n${JSON.stringify(
+        tasks.map((t) => {
+          const task = t as Record<string, unknown>;
+          return {
+            title: String(task.title ?? ''),
+            estimate: task.estimate ?? null,
+            criteria: Array.isArray(task.criteria)
+              ? (task.criteria as unknown[])
+                  .map((c) =>
+                    String((c as Record<string, unknown>).content ?? c ?? ''),
+                  )
+                  .slice(0, 5)
+              : [],
+          };
+        }),
+      ).slice(0, 16000)}`;
+      const result = await this.quickJudge.judge(
+        'intake_decomposition',
+        state,
+        intakeDecompositionQuestions(tasks.length),
+      );
+      if (!result) return null;
+      const j = extractIntakeDecomposition(result.answers);
+      if (!j.verdict || j.tasks.length !== tasks.length) return null;
+      return {
+        scenario,
+        data: {
+          tasks: j.tasks.map((t) => ({
+            index: t.index,
+            granularity: t.granularity,
+            reason: '',
+            suggestion: '',
+            testability: t.testability,
+            confidence: t.confidence,
+          })),
+          coverage: { uncovered: [], orphans: [] },
+          verdict: j.verdict,
+          summary: `快筛结论：判定 ${j.verdict}。快速档不含逐条依据与覆盖度对照，需要完整评估请关闭快筛档重跑。`,
+          quickJudge: {
+            model: result.model,
+            confidence: j.confidence,
+            judgedAt: new Date().toISOString(),
+            mode: 'quick',
+          },
+        },
+        usage: {
+          promptTokens: result.usage.inputTokens,
+          completionTokens: result.usage.outputTokens,
+          totalTokens: result.usage.inputTokens + result.usage.outputTokens,
+          costUsd: null,
+          model: result.model,
+          durationMs: Date.now() - startedAt,
+        },
+      };
+    } catch (err) {
+      this.logger.warn(
+        `intake quick-judge fast path failed, falling back to LLM: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return null;
+    }
   }
 
   /**
@@ -1421,6 +1567,16 @@ export class AssistantSilentService {
     const effectiveContext = def.prepareContext
       ? await def.prepareContext(rawContext, { prisma: this.prisma })
       : rawContext;
+
+    // P1-C：intake 两评估场景可配「枚举快筛」档（judge 三态+verdict，无缺口账文本）；
+    // 未启用/失败一律回落下方大模型全量通道，绝不因此失败。
+    if (
+      scenario === 'readiness-review' ||
+      scenario === 'decomposition-review'
+    ) {
+      const quick = await this.tryIntakeQuickJudge(scenario, effectiveContext);
+      if (quick) return quick;
+    }
 
     const instructions = def.buildInstructions(effectiveContext);
     const startedAt = Date.now();

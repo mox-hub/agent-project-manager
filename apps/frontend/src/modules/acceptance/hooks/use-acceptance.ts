@@ -182,7 +182,15 @@ export function useAudit(id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (checklistId?: string) =>
-      api.post(`/acceptance/${id}/audit`, { checklistId }),
+      api.post<{
+        report: unknown;
+        result: {
+          aiCoverageHints?: Record<
+            string,
+            { covered: number; confidence: number | null }
+          >;
+        };
+      }>(`/acceptance/${id}/audit`, { checklistId }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: acceptanceKeys.detail(id) });
     },

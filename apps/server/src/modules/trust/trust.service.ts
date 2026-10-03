@@ -9,6 +9,11 @@ import {
   PR_OUTCOME_DELTAS,
   type GitHubPrState,
 } from '@/modules/integration/providers/github/github.constants';
+import { QuickJudgeService } from '@/modules/ai-hub/quick-judge/quick-judge.service';
+import {
+  trustEvaluationQuestions,
+  extractTrustEvaluation,
+} from '@/modules/ai-hub/quick-judge/judge-scenarios';
 
 // ==================== CAP-B-07 三级授权口径（P2-21 门禁共用） ====================
 
@@ -90,7 +95,71 @@ export class TrustService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
+    private readonly quickJudge: QuickJudgeService,
   ) {}
+
+  /**
+   * P1-E（CAP-A-27 批二）：执行评估 quick-judge 双轨。四维 Score 只落 SystemEvent
+   * （category=trust.dualtrack）供对比期分析，**不写信任档案、不改信任分**；
+   * 任何失败静默（通道未启用/超时/解析畸形 → 无痕，查表评估不受影响）。
+   * 防操纵说明：state 含被执行 AI 的输出摘要——双轨期结论无生效面，攻击无收益；
+   * 未来若切换生效必须先收窄 state 为系统结构化字段（调研报告 §四.1）。
+   */
+  private async dualTrackJudge(dto: {
+    executionRunId: string;
+    agentId: string;
+    projectId: string;
+    criteria: {
+      correctness: number;
+      efficiency: number;
+      safety: number;
+      collaboration: number;
+    };
+    outcome: 'success' | 'partial' | 'failure';
+  }): Promise<void> {
+    const run = await this.prisma.execution.findUnique({
+      where: { id: dto.executionRunId },
+      select: { title: true, goal: true, output: true },
+    });
+    if (!run) return;
+    const outputSummary = JSON.stringify(run.output ?? null).slice(0, 3000);
+    const state = [
+      `执行目标：${run.title ?? run.goal ?? '(未记录)'}`,
+      `执行结论：${dto.outcome}`,
+      `执行输出摘要：${outputSummary}`,
+    ].join('\n');
+    const result = await this.quickJudge.judge(
+      'trust_evaluation',
+      state,
+      trustEvaluationQuestions(),
+    );
+    if (!result) return;
+    const j = extractTrustEvaluation(result.answers);
+    if (Object.values(j.scores).every((v) => v === null || v === undefined))
+      return;
+    await this.prisma.systemEvent.create({
+      data: {
+        level: 'info',
+        category: 'trust.dualtrack',
+        message: `trust.dualtrack (${dto.executionRunId})`,
+        context: {
+          executionRunId: dto.executionRunId,
+          agentId: dto.agentId,
+          projectId: dto.projectId,
+          outcome: dto.outcome,
+          lookupTable: dto.criteria,
+          judge: j.scores,
+          judgeConfidence: j.confidences,
+          model: result.model,
+          judgedAt: new Date().toISOString(),
+          dualTrack: true,
+        },
+      },
+    });
+    this.logger.log(
+      `trust 双轨 judge 留痕 ${dto.executionRunId}: ${JSON.stringify(j.scores)}`,
+    );
+  }
 
   /**
    * FR-TRUST-01: 获取或创建信任档案
@@ -182,6 +251,10 @@ export class TrustService {
     };
     outcome: 'success' | 'partial' | 'failure';
   }) {
+    // CAP-A-27 P1-E：quick-judge 四维打分双轨——fire-and-forget 只记账（SystemEvent
+    // 留痕），**不改信任档案**；judge 失败/未启用零影响，下方查表评估照旧。
+    void this.dualTrackJudge(dto).catch(() => {});
+
     const profile = (await this.getOrCreateProfile(
       dto.agentId,
       dto.projectId,

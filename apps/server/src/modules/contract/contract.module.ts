@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { QuickJudgeModule } from '../ai-hub/quick-judge/quick-judge.module';
 import { ContractEngineService } from './contract-engine.service';
 import { ContractBindingService } from './contract-binding.service';
 import { ContractSeedService } from './contract-seed.service';
@@ -18,6 +19,7 @@ import {
  * 种生、对齐检查与三态切换；冲突裁决仍走 DecisionProposal 收件箱。
  */
 @Module({
+  imports: [QuickJudgeModule],
   controllers: [ContractController],
   providers: [
     ContractEngineService,

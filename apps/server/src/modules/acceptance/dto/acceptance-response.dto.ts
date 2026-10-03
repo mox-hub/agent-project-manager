@@ -137,8 +137,32 @@ export class AcceptanceEvidenceDto {
   createdAt: string;
 }
 
+/** AI 预估达成概率（CAP-A-27 扩展批，advisory 展示位——只展示不改判定） */
+export class AcceptanceProbabilityMetaDto {
+  @ApiProperty({
+    type: String,
+    description: '内容指纹（内容/版本/证据签名任一变化即失效）',
+  })
+  fingerprint!: string;
+  @ApiProperty({ type: Number, description: '预估达成概率 0-100' })
+  probability!: number;
+  @ApiProperty({ type: Number, nullable: true, description: '判定置信度 0-1' })
+  confidence!: number | null;
+  @ApiPropertyOptional({ type: String, description: '判定模型' })
+  model?: string;
+  @ApiProperty({ type: String, format: 'date-time' })
+  judgedAt!: string;
+}
+
 /** 带证据的验收标准（GET :id/criteria / apply 返回项） */
 export class AcceptanceCriteriaWithEvidenceDto extends AcceptanceCriteriaDto {
+  @ApiPropertyOptional({
+    type: AcceptanceProbabilityMetaDto,
+    nullable: true,
+    description:
+      'AI 预估达成概率（metadata.acceptanceProbability 投影；未判定时缺省）',
+  })
+  acceptanceProbability?: AcceptanceProbabilityMetaDto | null;
   @ApiPropertyOptional({
     type: [AcceptanceEvidenceDto],
     description: '证据列表（按时间倒序）',

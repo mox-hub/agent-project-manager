@@ -1,3 +1,4 @@
+import { AiVerdictPill } from '@/components/semantic/ai-verdict-pill';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -110,6 +111,13 @@ export function ReadinessDialog({
               >
                 {t(`intake.readiness.verdict.${result.verdict}`)}
               </span>
+              {result.quickJudge && (
+                <AiVerdictPill
+                  size="xs"
+                  label={t('aiJudge.quickMode')}
+                  confidence={result.quickJudge.confidence ?? null}
+                />
+              )}
             </div>
             {result.summary && (
               <p className="leading-relaxed text-content-text-secondary">{result.summary}</p>

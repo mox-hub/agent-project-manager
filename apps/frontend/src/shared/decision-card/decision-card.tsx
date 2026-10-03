@@ -26,6 +26,7 @@ import {
   Rocket,
   ScrollText,
   ShieldCheck,
+  Sparkles,
   TrendingUp,
   Unlink,
   User,
@@ -158,6 +159,12 @@ interface ContractConflictPayload {
     fileSide?: string | null;
     dbSide?: string | null;
   }>;
+  /** CAP-A-27 P2-G：AI 漂移语义判定（advisory 参考槽，非 benign 高置信时不建卡故此处多为低置信或负面判定） */
+  aiSuggestion?: {
+    impact?: string;
+    confidence?: number | null;
+    model?: string;
+  };
 }
 
 /** integration 提案 payload（G5-b 成果合入，与服务端 IntegrationProposalPayload 对齐） */
@@ -1110,6 +1117,22 @@ function buildContractConflictSlots(decision: Decision, t: TFunc): DecisionSlots
               </div>
             );
           })}
+        </div>
+      ) : null}
+
+      {/* AI 参考槽（CAP-A-27 P2-G）：有 AI 漂移判定时展示，仅参考不暗示裁决 */}
+      {p.aiSuggestion?.impact ? (
+        <div className="flex items-center gap-2 rounded-lg border border-accent-purple/30 bg-accent-purple-light/20 px-2.5 py-1.5 text-2xs">
+          <Sparkles className="size-3.5 shrink-0 text-accent-purple" />
+          <span className="min-w-0 flex-1 text-content-text-secondary">
+            {t('decision.conflict.aiSuggestion', {
+              impact: p.aiSuggestion.impact,
+              confidence:
+                typeof p.aiSuggestion.confidence === 'number'
+                  ? `${Math.round(p.aiSuggestion.confidence * 100)}%`
+                  : '—',
+            })}
+          </span>
         </div>
       ) : null}
 

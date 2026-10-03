@@ -50,9 +50,12 @@ import {
   ProviderBalanceResponseDto,
 } from './dto/provider-config.dto';
 import {
+  ListQuickJudgeLogsQueryDto,
+  QuickJudgeLogsResponseDto,
   QuickJudgeSettingsResponseDto,
   UpdateQuickJudgeSettingsDto,
 } from './dto/quick-judge-settings.dto';
+import { QuickJudgeService } from './quick-judge/quick-judge.service';
 import {
   AIModelDto,
   AssignIssueResponseDto,
@@ -76,6 +79,7 @@ export class AiHubController {
     private readonly modelsDevService: ModelsDevService,
     private readonly coordinator: AiWorkerCoordinatorService,
     private readonly quickJudgeSettings: QuickJudgeSettingsService,
+    private readonly quickJudge: QuickJudgeService,
   ) {}
 
   @Post('chat')
@@ -323,7 +327,8 @@ export class AiHubController {
   @ApiOperation({ summary: 'Update quick-judge channel settings (admin only)' })
   @ApiOkResponse({
     type: QuickJudgeSettingsResponseDto,
-    description: '更新后的通道设置（null/空串字段回落缺省）',
+    description:
+      '更新后的通道设置（null/空串字段回落缺省；scenarios 增量合并）',
   })
   @ApiStandardErrors()
   async updateQuickJudgeSettings(
@@ -331,6 +336,24 @@ export class AiHubController {
     @Request() req: { user: { id: string } },
   ) {
     return this.quickJudgeSettings.updateSettings(dto, req.user.id);
+  }
+
+  @Get('quick-judge/logs')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'List quick-judge decision logs (admin only)' })
+  @ApiOkResponse({
+    type: QuickJudgeLogsResponseDto,
+    description:
+      '判定记录流水（AIUsageLog kind=judge 倒序分页）：场景/模型/tokens/答案摘要（值+置信度）——「判断介入」设置页与审计用',
+  })
+  @ApiStandardErrors()
+  async listQuickJudgeLogs(@Query() query: ListQuickJudgeLogsQueryDto) {
+    return this.quickJudge.listLogs({
+      scenario: query.scenario,
+      page: query.page ?? 1,
+      pageSize: query.pageSize ?? 20,
+    });
   }
 
   @Post('pricing-source/refresh')

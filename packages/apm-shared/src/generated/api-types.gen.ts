@@ -2719,6 +2719,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/acceptance/{id}/criteria/probability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** AI 预估验收标准达成概率（CAP-A-27 扩展批，advisory） */
+        post: operations["AcceptanceController_judgeCriteriaProbability"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/acceptance/criteria/{criteriaId}": {
         parameters: {
             query?: never;
@@ -3533,6 +3550,41 @@ export interface paths {
         };
         /** Get models.dev pricing source status */
         get: operations["AiHubController_getPricingSourceStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/quick-judge/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get quick-judge channel settings (CAP-A-27) */
+        get: operations["AiHubController_getQuickJudgeSettings"];
+        /** Update quick-judge channel settings (admin only) */
+        put: operations["AiHubController_updateQuickJudgeSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/ai/quick-judge/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List quick-judge decision logs (admin only) */
+        get: operations["AiHubController_listQuickJudgeLogs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7053,6 +7105,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/releases/{id}/changelog-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 预览 CHANGELOG 再生文本（Release 实体单向投影，只读不写文件） */
+        get: operations["ReleaseController_changelogPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/releases/{id}": {
         parameters: {
             query?: never;
@@ -7252,23 +7321,6 @@ export interface paths {
         put?: never;
         /** 跳过阶段（放行但记事件，验收可查） */
         post: operations["PlaybookController_skipStage"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/_api/releases/{id}/changelog-preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 预览 CHANGELOG 再生文本（Release 实体单向投影，只读不写文件） */
-        get: operations["ReleaseController_changelogPreview"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9850,14 +9902,26 @@ export interface components {
             /** @enum {string} */
             state: "equal" | "file_differs" | "missing_in_file";
         };
+        ContractDriftAiImpactDto: {
+            /**
+             * @description AI 漂移语义判定（CAP-A-27 P1-D advisory）
+             * @enum {string}
+             */
+            impact: "benign" | "semantic-break" | "formatting-only";
+            confidence?: number | null;
+            /** @description 判断模型版本 */
+            model: string;
+        };
         ContractAlignmentReportDto: {
             /** @enum {string} */
             fileType: "agents" | "claude_alias" | "changelog" | "readme" | "docs_dir";
             /** @enum {string} */
-            state: "aligned" | "conflicted" | "skipped_detached" | "missing_file";
+            state: "aligned" | "conflicted" | "skipped_detached" | "missing_file" | "aligned_with_drift";
             diffs?: components["schemas"]["AlignmentDiffDto"][];
             /** @description 升级出的冲突提案 id */
             proposalId?: string;
+            /** @description AI 漂移语义判定（benign 降级时不建卡仅记事件） */
+            aiImpact?: components["schemas"]["ContractDriftAiImpactDto"];
         };
         UpdateContractBindingDto: {
             /**
@@ -11194,6 +11258,38 @@ export interface components {
             /** @description 排序 */
             order?: number;
         };
+        JudgeAcceptanceProbabilityDto: {
+            /** @description 只判这些标准（缺省判整张验收单的全部标准） */
+            criteriaIds?: string[];
+        };
+        CriteriaProbabilityItemDto: {
+            criteriaId: string;
+            /** @description 预估达成概率 0-100；判断通道不可用/场景禁用时 null（前端整块隐藏） */
+            probability: Record<string, never> | null;
+            /** @description 判定置信度 0-1；noul/score 无置信字段时 null */
+            confidence: Record<string, never> | null;
+            /** @description 是否命中内容指纹缓存（未重复调用判断通道） */
+            cached: boolean;
+            /** @description 判定模型（缓存命中时为落账版本） */
+            model: string | null;
+        };
+        AcceptanceProbabilityResponseDto: {
+            items: components["schemas"]["CriteriaProbabilityItemDto"][];
+            /** @description 本次判定模型（全部命中缓存时缺省） */
+            model: string | null;
+        };
+        AcceptanceProbabilityMetaDto: {
+            /** @description 内容指纹（内容/版本/证据签名任一变化即失效） */
+            fingerprint: string;
+            /** @description 预估达成概率 0-100 */
+            probability: number;
+            /** @description 判定置信度 0-1 */
+            confidence: number | null;
+            /** @description 判定模型 */
+            model?: string;
+            /** Format: date-time */
+            judgedAt: string;
+        };
         AcceptanceEvidenceDto: {
             id: string;
             /** @description 所属标准 ID */
@@ -11249,6 +11345,8 @@ export interface components {
             createdAt: string;
             /** @description 更新时间（ISO） */
             updatedAt: string;
+            /** @description AI 预估达成概率（metadata.acceptanceProbability 投影；未判定时缺省） */
+            acceptanceProbability?: components["schemas"]["AcceptanceProbabilityMetaDto"] | null;
             /** @description 证据列表（按时间倒序） */
             evidences?: components["schemas"]["AcceptanceEvidenceDto"][];
         };
@@ -12162,6 +12260,55 @@ export interface components {
             source: string;
             /** @description 最近一次拉取失败原因（成功后清空） */
             error?: string | null;
+        };
+        QuickJudgeSettingsResponseDto: {
+            /** @description 是否启用 AI 快速判断通道（默认关） */
+            enabled: boolean;
+            /** @description AIProviderConfig 槽位名（key 解密来源） */
+            provider: string;
+            /** @description 判断模型固定版本号（忌 latest 别名漂移） */
+            model: string;
+            /** @description System One 网关 base URL */
+            baseUrl: string;
+            /** @description 单次判断超时（毫秒） */
+            timeoutMs: number;
+            /** @description 每场景介入开关（扩展批）：键=场景 ID，值仅认显式 false=用户禁用该介入点；未配置=true 均视为跟随总开关 */
+            scenarios: Record<string, never>;
+        };
+        UpdateQuickJudgeSettingsDto: {
+            /** @description 是否启用（缺省不改） */
+            enabled?: boolean;
+            /** @description 每场景介入开关（增量合并：传键覆盖、未传键保留；仅布尔值键生效） */
+            scenarios?: Record<string, never>;
+            /** @description AIProviderConfig 槽位名（空串回落缺省） */
+            provider?: string;
+            /** @description 判断模型版本（空串回落缺省） */
+            model?: string;
+            /** @description 网关 base URL（空串回落缺省） */
+            baseUrl?: string;
+        };
+        QuickJudgeLogItemDto: {
+            id: string;
+            /** @description 判断场景 ID */
+            scenario: string;
+            /** @description 判定模型（响应回显版本） */
+            model: string;
+            provider: string;
+            promptTokens: number;
+            completionTokens: number;
+            totalTokens: number;
+            /** @description 本次调用的问题数 */
+            questions: number;
+            /** @description 答案摘要：问题 ID → { value, confidence }（noul/score 为数值，choice 为选项 ID） */
+            answers: Record<string, never>;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        QuickJudgeLogsResponseDto: {
+            items: components["schemas"]["QuickJudgeLogItemDto"][];
+            total: number;
+            page: number;
+            pageSize: number;
         };
         DefaultModelResponseDto: {
             /**
@@ -29086,6 +29233,88 @@ export interface operations {
             };
         };
     };
+    AcceptanceController_judgeCriteriaProbability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 契约 ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JudgeAcceptanceProbabilityDto"];
+            };
+        };
+        responses: {
+            /** @description 逐标准预估达成概率（0-100）——只写 metadata 供展示，不改标准状态；内容指纹命中缓存不重复调用；通道不可用时项内 probability=null */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcceptanceProbabilityResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
     AcceptanceController_deleteCriteria: {
         parameters: {
             query?: never;
@@ -32240,6 +32469,242 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PricingSourceStatusDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_getQuickJudgeSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description AI 快速判断通道设置 { enabled, provider, model, baseUrl, timeoutMs }——advisory 判断通道（审批风险定级/证据预审）的启停与指向 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickJudgeSettingsResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_updateQuickJudgeSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateQuickJudgeSettingsDto"];
+            };
+        };
+        responses: {
+            /** @description 更新后的通道设置（null/空串字段回落缺省；scenarios 增量合并） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickJudgeSettingsResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    AiHubController_listQuickJudgeLogs: {
+        parameters: {
+            query?: {
+                /** @description 按场景过滤 */
+                scenario?: string;
+                /** @description 页码（从 1 起） */
+                page?: number;
+                /** @description 每页条数（1-100） */
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 判定记录流水（AIUsageLog kind=judge 倒序分页）：场景/模型/tokens/答案摘要（值+置信度）——「判断介入」设置页与审计用 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickJudgeLogsResponseDto"];
                 };
             };
             /** @description 请求参数错误 */
@@ -49097,6 +49562,74 @@ export interface operations {
             };
         };
     };
+    ReleaseController_changelogPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
     ReleaseController_detail: {
         parameters: {
             query?: never;
@@ -49997,74 +50530,6 @@ export interface operations {
                     "application/json": components["schemas"]["SkipStageResponseDto"];
                 };
             };
-            /** @description 请求参数错误 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 未登录或登录已过期 */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 无权限访问 */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 资源不存在 */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-            /** @description 服务器内部错误 */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiResponseDto"] & {
-                        error?: components["schemas"]["ErrorPayloadDto"];
-                    };
-                };
-            };
-        };
-    };
-    ReleaseController_changelogPreview: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
             /** @description 请求参数错误 */
             400: {
                 headers: {

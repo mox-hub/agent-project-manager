@@ -6,6 +6,7 @@ import { AcceptanceService } from './acceptance.service';
 import { AcceptanceCriteriaService } from './acceptance-criteria.service';
 import { CompletenessChecklistService } from './completeness-checklist.service';
 import { CompletenessAuditService } from './completeness-audit.service';
+import { AcceptanceProbabilityService } from './acceptance-probability.service';
 import { GithubEvidenceSubscriber } from './github-evidence.subscriber';
 import { AcceptanceController } from './acceptance.controller';
 
@@ -16,6 +17,7 @@ import { AcceptanceController } from './acceptance.controller';
     // 此处不可重复声明，否则覆盖为直连默认库的裸实例
     AcceptanceService,
     AcceptanceCriteriaService,
+    AcceptanceProbabilityService,
     CompletenessChecklistService,
     CompletenessAuditService,
     GithubEvidenceSubscriber,
@@ -24,6 +26,7 @@ import { AcceptanceController } from './acceptance.controller';
   exports: [
     AcceptanceService,
     AcceptanceCriteriaService,
+    AcceptanceProbabilityService,
     CompletenessChecklistService,
     CompletenessAuditService,
   ],

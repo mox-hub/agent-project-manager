@@ -69,7 +69,9 @@
     "download": "Download",
     "export": "Export",
     "grid": "Grid",
-    "cards": "Cards"
+    "cards": "Cards",
+    "prevPage": "Previous page",
+    "nextPage": "Next page"
   },
   "workspace": {
     "backups": {
@@ -551,7 +553,8 @@
       "submit": "Run gate",
       "ranAt": "Last checked:",
       "notRun": "Gate not run yet — checks scope ownership, acceptance, CI evidence, contract bindings and completeness audit",
-      "skippedEmptyScope": "Nothing in scope, skipped"
+      "skippedEmptyScope": "Nothing in scope, skipped",
+      "aiReadiness": "AI readiness"
     },
     "action": {
       "title": "Approval & publish",
@@ -945,7 +948,9 @@
     "statusExpired": "Expired",
     "statusCancelled": "Cancelled",
     "aiJudgeTitle": "AI risk judgement (advisory, for reference only)",
-    "lowConfidence": "low confidence"
+    "lowConfidence": "low confidence",
+    "riskMismatch": "AI says {{ai}} (differs from self-reported)",
+    "riskMismatchTitle": "Risk level is self-reported by the requester; AI grades independently. Disagreement shown during dual-track; humans decide"
   },
   "runDetails": {
     "title": "Run details",
@@ -1254,6 +1259,7 @@
       "managedHint": "A managed block was edited directly in the file. Keep file adopts the file as-is; keep platform writes managed content back.",
       "derivedHint": "This platform-derived file was hand-edited. Keep the file as the new baseline, or re-export to restore platform truth.",
       "blockDiff": "Conflicted blocks ({{n}})",
+      "aiSuggestion": "AI pre-judgement: {{impact}} (confidence {{confidence}}) — advisory only, inspect the blocks and decide yourself",
       "actionAcceptFile": "Keep file: the file becomes the new baseline; managed content adopts it",
       "actionAcceptDb": "Keep platform: write managed content back to the file (derived files must be re-exported)",
       "actionDetach": "Unbind: stop managed alignment; file and platform evolve independently (can re-bind later)",
@@ -1403,6 +1409,14 @@
     "empty": {
       "title": "Nothing awaits your decision",
       "description": "Decisions that need your call will arrive here as cards"
+    },
+    "aiJudge": {
+      "approve": "Suggest approve",
+      "accept": "Suggest pass",
+      "reject": "Suggest reject",
+      "needs_more_info": "Needs more info",
+      "cancel": "Suggest cancel",
+      "waive": "Suggest waive"
     }
   },
   "boot": {
@@ -1600,11 +1614,10 @@
     "errors": {
       "invalidCredentials": "Invalid username or password",
       "workspaceSubjectMissing": "Your account does not belong to the current workspace. Switch back to your own workspace, or ask an administrator to invite you into this one.",
-      "emailAlreadyRegistered": "This email is already registered. Please sign in instead",
+      "emailAlreadyRegistered": "This email is already registered, please sign in",
       "userInactive": "Account has been disabled, please contact administrator",
       "loginFailed": "Login failed, please try again later",
-      "sessionExpired": "Session expired, please login again",
-      "emailAlreadyRegistered": "This email is already registered, please sign in"
+      "sessionExpired": "Session expired, please login again"
     }
   },
   "contextMenu": {
@@ -2518,57 +2531,150 @@
         "linear": {
           "desc": "Sync issues, cycles, and projects from Linear into AgentPM tasks.",
           "longDesc": "Connect your Linear workspace to import and two-way sync issues as tasks. AI agents can create Linear issues directly, and acceptance results are posted back as issue comments.",
-          "f1": { "label": "Issue sync", "desc": "Import and sync Linear issues as AgentPM tasks" },
-          "f2": { "label": "Two-way sync", "desc": "Changes in either system propagate automatically" },
-          "f3": { "label": "AI issue creation", "desc": "Agents can create Linear issues directly" },
-          "f4": { "label": "Comment sync", "desc": "Acceptance results posted as Linear comments" },
-          "f5": { "label": "Member mapping", "desc": "Map Linear members to AgentPM team members" },
-          "f6": { "label": "Cycle tracking", "desc": "Import cycle progress into milestone view" }
+          "f1": {
+            "label": "Issue sync",
+            "desc": "Import and sync Linear issues as AgentPM tasks"
+          },
+          "f2": {
+            "label": "Two-way sync",
+            "desc": "Changes in either system propagate automatically"
+          },
+          "f3": {
+            "label": "AI issue creation",
+            "desc": "Agents can create Linear issues directly"
+          },
+          "f4": {
+            "label": "Comment sync",
+            "desc": "Acceptance results posted as Linear comments"
+          },
+          "f5": {
+            "label": "Member mapping",
+            "desc": "Map Linear members to AgentPM team members"
+          },
+          "f6": {
+            "label": "Cycle tracking",
+            "desc": "Import cycle progress into milestone view"
+          }
         },
         "jira": {
           "desc": "Import Jira tickets and epics; push AI-generated work back to your board.",
           "longDesc": "Use your Jira Cloud or Data Center instance as a task source. Import epics, stories, and bugs. AI agents execute work tracked in Jira and post results as comments.",
-          "f1": { "label": "Ticket import", "desc": "Import Jira epics, stories, and bugs as tasks" },
-          "f2": { "label": "Status sync", "desc": "Sync Jira workflow statuses to AgentPM" },
-          "f3": { "label": "AI ticket creation", "desc": "Agents can create and update Jira tickets" },
-          "f4": { "label": "Comment sync", "desc": "Post acceptance results as Jira issue comments" },
-          "f5": { "label": "Assignee mapping", "desc": "Map Jira users to AgentPM team members" },
-          "f6": { "label": "Bug tracking", "desc": "Import Jira bug reports into AgentPM bug list" }
+          "f1": {
+            "label": "Ticket import",
+            "desc": "Import Jira epics, stories, and bugs as tasks"
+          },
+          "f2": {
+            "label": "Status sync",
+            "desc": "Sync Jira workflow statuses to AgentPM"
+          },
+          "f3": {
+            "label": "AI ticket creation",
+            "desc": "Agents can create and update Jira tickets"
+          },
+          "f4": {
+            "label": "Comment sync",
+            "desc": "Post acceptance results as Jira issue comments"
+          },
+          "f5": {
+            "label": "Assignee mapping",
+            "desc": "Map Jira users to AgentPM team members"
+          },
+          "f6": {
+            "label": "Bug tracking",
+            "desc": "Import Jira bug reports into AgentPM bug list"
+          }
         },
         "github": {
           "desc": "Sync repositories, pull requests, and CI status. Link PRs to tasks automatically.",
           "longDesc": "Connect GitHub to track pull requests, code reviews, and CI/CD runs. AI agents can open PRs, request reviews, and monitor build status in real time.",
-          "f1": { "label": "PR sync", "desc": "Link pull requests to tasks automatically" },
-          "f2": { "label": "AI PR creation", "desc": "Agents can open and update pull requests" },
-          "f3": { "label": "Branch rules", "desc": "Enforce branch protection via AgentPM policies" },
-          "f4": { "label": "CI status", "desc": "Show CI/CD build status on task cards" },
-          "f5": { "label": "Webhooks", "desc": "Real-time push events via GitHub webhook" },
-          "f6": { "label": "Review comments", "desc": "Post acceptance audit results as PR comments" }
+          "f1": {
+            "label": "PR sync",
+            "desc": "Link pull requests to tasks automatically"
+          },
+          "f2": {
+            "label": "AI PR creation",
+            "desc": "Agents can open and update pull requests"
+          },
+          "f3": {
+            "label": "Branch rules",
+            "desc": "Enforce branch protection via AgentPM policies"
+          },
+          "f4": {
+            "label": "CI status",
+            "desc": "Show CI/CD build status on task cards"
+          },
+          "f5": {
+            "label": "Webhooks",
+            "desc": "Real-time push events via GitHub webhook"
+          },
+          "f6": {
+            "label": "Review comments",
+            "desc": "Post acceptance audit results as PR comments"
+          }
         },
         "gitlab": {
           "desc": "Sync GitLab MRs and pipelines. Works with self-hosted and GitLab.com.",
           "longDesc": "Integrate GitLab to manage merge requests, monitor pipelines, and keep your code and tasks in sync. Supports GitLab.com and self-hosted instances.",
-          "f1": { "label": "MR sync", "desc": "Sync merge requests to AgentPM task timeline" },
-          "f2": { "label": "AI MR creation", "desc": "Agents can open and update merge requests" },
-          "f3": { "label": "Pipeline status", "desc": "Track GitLab CI/CD pipeline status on tasks" },
-          "f4": { "label": "Webhooks", "desc": "Real-time push events via GitLab webhook" },
-          "f5": { "label": "Self-hosted", "desc": "Connect your GitLab CE/EE instance via PAT" },
-          "f6": { "label": "MR discussions", "desc": "Post acceptance results as MR discussion threads" }
+          "f1": {
+            "label": "MR sync",
+            "desc": "Sync merge requests to AgentPM task timeline"
+          },
+          "f2": {
+            "label": "AI MR creation",
+            "desc": "Agents can open and update merge requests"
+          },
+          "f3": {
+            "label": "Pipeline status",
+            "desc": "Track GitLab CI/CD pipeline status on tasks"
+          },
+          "f4": {
+            "label": "Webhooks",
+            "desc": "Real-time push events via GitLab webhook"
+          },
+          "f5": {
+            "label": "Self-hosted",
+            "desc": "Connect your GitLab CE/EE instance via PAT"
+          },
+          "f6": {
+            "label": "MR discussions",
+            "desc": "Post acceptance results as MR discussion threads"
+          }
         },
         "slack": {
           "desc": "Send task updates, AI execution alerts, and acceptance results to Slack channels.",
           "longDesc": "Post notifications to your Slack workspace when tasks change status, AI agents complete runs, or acceptances are approved or rejected.",
-          "f1": { "label": "Task notifications", "desc": "Post task status changes to chosen channels" },
-          "f2": { "label": "AI run alerts", "desc": "Alert when AI agents start or complete runs" },
-          "f3": { "label": "Acceptance alerts", "desc": "Post approval/rejection to a review channel" },
-          "f4": { "label": "Daily digest", "desc": "Send a morning digest of project activity" }
+          "f1": {
+            "label": "Task notifications",
+            "desc": "Post task status changes to chosen channels"
+          },
+          "f2": {
+            "label": "AI run alerts",
+            "desc": "Alert when AI agents start or complete runs"
+          },
+          "f3": {
+            "label": "Acceptance alerts",
+            "desc": "Post approval/rejection to a review channel"
+          },
+          "f4": {
+            "label": "Daily digest",
+            "desc": "Send a morning digest of project activity"
+          }
         },
         "sentry": {
           "desc": "Turn Sentry error alerts into AgentPM bugs automatically.",
           "longDesc": "Connect Sentry to automatically create bug reports from error events. AI agents can investigate stack traces and propose fixes.",
-          "f1": { "label": "Auto bug creation", "desc": "Create bugs from Sentry error events automatically" },
-          "f2": { "label": "AI diagnosis", "desc": "Agents analyze stack traces and suggest root causes" },
-          "f3": { "label": "Error trends", "desc": "Surface error frequency on project health dashboard" }
+          "f1": {
+            "label": "Auto bug creation",
+            "desc": "Create bugs from Sentry error events automatically"
+          },
+          "f2": {
+            "label": "AI diagnosis",
+            "desc": "Agents analyze stack traces and suggest root causes"
+          },
+          "f3": {
+            "label": "Error trends",
+            "desc": "Surface error frequency on project health dashboard"
+          }
         }
       },
       "githubIntegration": {
@@ -2867,8 +2973,8 @@
     "profileDesc": "Manage your profile and sign-in security.",
     "tokensDesc": "Create and manage personal access tokens (PAT).",
     "shortcutsDesc": "Customize global and context keyboard shortcuts.",
-    "issueTypesDesc": "Issue type icons, colors and availability.",
-    "checklistsDesc": "Manage acceptance checklist templates.",
+    "issueTypesDesc": "Single source of truth for type metadata: icon, name and color are configured here. Built-in 'task' type cannot be deleted; migrate its tasks before deleting a type.",
+    "checklistsDesc": "Checklists for completeness audits: system presets are read-only while team checklists can be created and maintained. Matched by project type and tech stack during audits.",
     "shortIdDesc": "Issue short-id stats, backfill and prefix config.",
     "templatesDesc": "Issue templates for projects and tasks.",
     "promptsDesc": "Prompt injection toggles, usage stats and layered editing.",
@@ -2876,7 +2982,7 @@
     "gitPageDesc": "Default Git provider, commit identity and sync behavior.",
     "terminalPageDesc": "Default shell, working directory and terminal preferences.",
     "runtimeDesc": "Register and manage local runtime machines.",
-    "storageDesc": "Workspace storage usage and synced files.",
+    "storageDesc": "Configure a local file system path to automatically sync document content to disk.",
     "unsavedChanges": "You have unsaved changes",
     "discardChanges": "Discard changes",
     "language": {
@@ -2974,7 +3080,7 @@
     "addStatus": "New Status",
     "editStatus": "Edit Status",
     "statusFormDesc": "Define workflow statuses, ordering and transitions.",
-    "statusName": "Status Name",
+    "statusName": "Name",
     "statusKeyPlaceholder": "e.g. in_progress",
     "statusType": "Type",
     "statusOrder": "Order",
@@ -3090,7 +3196,6 @@
     "defaultPathDetectFailed": "Failed to detect default path",
     "storageLoading": "Loading storage config...",
     "storageTitle": "Local File Storage",
-    "storageDesc": "Configure a local file system path to automatically sync document content to disk.",
     "storagePathLabel": "Storage Path",
     "storagePathPlaceholder": "e.g. C:\\Users\\you\\Documents\\APM-Documents",
     "detectDefault": "Detect Default",
@@ -3155,16 +3260,46 @@
       "other": "Other"
     },
     "recommendedTypes": {
-      "requirement": { "name": "Requirement", "desc": "Track product requirements and specs" },
-      "story": { "name": "User Story", "desc": "Describe requirements from the end user's perspective" },
-      "request": { "name": "Request", "desc": "Handle requests or tasks from customers or teammates" },
-      "asset": { "name": "Asset", "desc": "Track and manage physical or digital assets" },
-      "campaign": { "name": "Campaign", "desc": "Plan and monitor marketing or promotion campaigns" },
-      "content": { "name": "Content", "desc": "Manage content creation and publishing" },
-      "deal": { "name": "Deal", "desc": "Track the progress of business deals and negotiations" },
-      "client": { "name": "Client", "desc": "Manage client account details and interactions" },
-      "plan": { "name": "Plan", "desc": "Organize work toward larger business goals" },
-      "goal": { "name": "Goal", "desc": "Track strategic goals and progress" }
+      "requirement": {
+        "name": "Requirement",
+        "desc": "Track product requirements and specs"
+      },
+      "story": {
+        "name": "User Story",
+        "desc": "Describe requirements from the end user's perspective"
+      },
+      "request": {
+        "name": "Request",
+        "desc": "Handle requests or tasks from customers or teammates"
+      },
+      "asset": {
+        "name": "Asset",
+        "desc": "Track and manage physical or digital assets"
+      },
+      "campaign": {
+        "name": "Campaign",
+        "desc": "Plan and monitor marketing or promotion campaigns"
+      },
+      "content": {
+        "name": "Content",
+        "desc": "Manage content creation and publishing"
+      },
+      "deal": {
+        "name": "Deal",
+        "desc": "Track the progress of business deals and negotiations"
+      },
+      "client": {
+        "name": "Client",
+        "desc": "Manage client account details and interactions"
+      },
+      "plan": {
+        "name": "Plan",
+        "desc": "Organize work toward larger business goals"
+      },
+      "goal": {
+        "name": "Goal",
+        "desc": "Track strategic goals and progress"
+      }
     },
     "addField": "Add Custom Field",
     "editField": "Edit Custom Field",
@@ -3182,9 +3317,7 @@
     "issueTypesFieldTypesMember": "Member picker",
     "issueTypesFieldTypesUrl": "URL",
     "statusGroupsHint": "Set the statuses available in this space; statuses are grouped for display.",
-    "addStatus": "New Status",
     "addStatusDesc": "New statuses apply to all task types in this space.",
-    "statusName": "Name",
     "statusKey": "Key (lowercase slug)",
     "statusGroupLabel": "Group",
     "statusFinalLabel": "Final state (work is completed or closed)",
@@ -3223,7 +3356,6 @@
     },
     "checklists": "Completeness Checklists",
     "checklistsTitle": "Completeness Checklists",
-    "checklistsDesc": "Checklists for completeness audits: system presets are read-only while team checklists can be created and maintained. Matched by project type and tech stack during audits.",
     "checklistsCreate": "New Checklist",
     "checklistsEdit": "Edit Checklist",
     "checklistsDialogDesc": "Checklist items are judged by severity: critical/high become blockers, medium/low become suggestions.",
@@ -3250,7 +3382,6 @@
     "checklistsDeleteConfirmTitle": "Delete Checklist",
     "checklistsDeleteConfirm": "Delete checklist \"{{name}}\"? This cannot be undone.",
     "issueTypesTitle": "Issue Type Management",
-    "issueTypesDesc": "Single source of truth for type metadata: icon, name and color are configured here. Built-in 'task' type cannot be deleted; migrate its tasks before deleting a type.",
     "issueTypesRequired": "Key and name are required",
     "issueTypesCreated": "Type created",
     "issueTypesUpdated": "Type updated",
@@ -3951,16 +4082,16 @@
       "projects": "Projects"
     },
     "acceptance": {
-    "draft": {
-      "title": "AI-draft acceptance criteria",
-      "description": "AI drafts checkable acceptance criteria from the issue. Review and confirm to apply (existing criteria are never overwritten)",
-      "generating": "AI is drafting acceptance criteria…",
-      "button": "AI-draft acceptance criteria",
-      "apply": "Apply",
-      "functional": "Functional",
-      "technical": "Technical",
-      "applied": "Applied {{added}} criteria{{skipped}}"
-    },
+      "draft": {
+        "title": "AI-draft acceptance criteria",
+        "description": "AI drafts checkable acceptance criteria from the issue. Review and confirm to apply (existing criteria are never overwritten)",
+        "generating": "AI is drafting acceptance criteria…",
+        "button": "AI-draft acceptance criteria",
+        "apply": "Apply",
+        "functional": "Functional",
+        "technical": "Technical",
+        "applied": "Applied {{added}} criteria{{skipped}}"
+      },
       "task": "Task",
       "project": "Project"
     },
@@ -4046,69 +4177,69 @@
     "remainingTokens": "Remaining Tokens",
     "bugsThisWeek": "Bugs This Week",
     "askAi": "Ask AI...",
- "shortcuts": {
-  "close": "Close",
-  "switchType": "Switch Type",
-  "submit": "Submit"
- },
- "cancel": "Cancel",
- "createMore": "Create more",
- "properties": "Properties",
- "severity": {
-  "critical": "S0 Critical",
-  "high": "S1 Major",
-  "medium": "S2 Normal",
-  "low": "S3 Minor"
- },
- "iconTips": {
-  "hideProps": "Hide properties panel",
-  "showProps": "Show properties panel",
-  "maximize": "Maximize",
-  "restore": "Restore",
-  "close": "Close"
- },
- "aiDraft": "AI Draft",
+    "shortcuts": {
+      "close": "Close",
+      "switchType": "Switch Type",
+      "submit": "Submit"
+    },
+    "cancel": "Cancel",
+    "createMore": "Create more",
+    "properties": "Properties",
+    "severity": {
+      "critical": "S0 Critical",
+      "high": "S1 Major",
+      "medium": "S2 Normal",
+      "low": "S3 Minor"
+    },
+    "iconTips": {
+      "hideProps": "Hide properties panel",
+      "showProps": "Show properties panel",
+      "maximize": "Maximize",
+      "restore": "Restore",
+      "close": "Close"
+    },
+    "aiDraft": "AI Draft",
     "aiDraftComing": "AI Draft feature coming soon",
     "creating": "Creating...",
     "create": "Create",
- "applied": "Suggestion applied",
- "success": "{{type}} created successfully",
- "placeholder": {
-  "task": "Task title",
-  "bug": "Bug title",
-  "doc": "Document title",
-  "project": "Project name",
-  "milestone": "Milestone name"
- },
- "descHint": {
-  "task": "Add a description…",
-  "bug": "Steps to reproduce, expected vs actual…",
-  "doc": "Add a summary or initial content…",
-  "project": "Goals, scope and success criteria…",
-  "milestone": "Key deliverables…"
- },
- "field": {
-  "status": "Status",
-  "priority": "Priority",
-  "severity": "Severity",
-  "assignee": "Assignee",
-  "project": "Project",
-  "author": "Author",
-  "dueDate": "Due date",
-  "targetDate": "Target date",
-  "type": "Type",
-  "me": "Me",
-  "none": "None",
-  "clearDueDate": "Clear due date"
- },
- "error": {
-  "taskTitle": "Please enter a task title",
-  "bugTitle": "Please enter a bug title",
-  "docTitle": "Please enter a document title",
-  "projectName": "Please enter a project name",
-  "milestoneName": "Please enter a milestone name",
-  "projectRequired": "Please select a project",
-  "prompt": "Please describe what to create",
+    "applied": "Suggestion applied",
+    "success": "{{type}} created successfully",
+    "placeholder": {
+      "task": "Task title",
+      "bug": "Bug title",
+      "doc": "Document title",
+      "project": "Project name",
+      "milestone": "Milestone name"
+    },
+    "descHint": {
+      "task": "Add a description…",
+      "bug": "Steps to reproduce, expected vs actual…",
+      "doc": "Add a summary or initial content…",
+      "project": "Goals, scope and success criteria…",
+      "milestone": "Key deliverables…"
+    },
+    "field": {
+      "status": "Status",
+      "priority": "Priority",
+      "severity": "Severity",
+      "assignee": "Assignee",
+      "project": "Project",
+      "author": "Author",
+      "dueDate": "Due date",
+      "targetDate": "Target date",
+      "type": "Type",
+      "me": "Me",
+      "none": "None",
+      "clearDueDate": "Clear due date"
+    },
+    "error": {
+      "taskTitle": "Please enter a task title",
+      "bugTitle": "Please enter a bug title",
+      "docTitle": "Please enter a document title",
+      "projectName": "Please enter a project name",
+      "milestoneName": "Please enter a milestone name",
+      "projectRequired": "Please select a project",
+      "prompt": "Please describe what to create",
       "createFailed": "Failed to create",
       "noDraft": "AI could not produce a usable draft — try adding the type or more keywords",
       "aiFailed": "AI generation failed",
@@ -4135,25 +4266,25 @@
     "preview": "Preview",
     "previewEmpty": "No description yet. Switch to edit mode to write Markdown.",
     "aiPanel": {
-  "hint": "Describe what you want to create in one sentence; the AI agent turns it into a structured draft. Confirm to create. Switch the type above to pin the target (auto-detected by default).",
-  "inputPlaceholder": "e.g. Create a task \"Login page redesign\", due Friday, high priority, tag frontend",
-  "generate": "Generate draft",
-  "parsing": "Parsing…",
-  "regen": "Regenerate",
-  "draftBadge": "Draft · {{type}}",
-  "fieldTitle": "Title",
-  "fieldDesc": "Description",
-  "fieldPriority": "Priority",
-  "fieldSeverity": "Severity",
-  "fieldDue": "Due",
-  "fieldCategory": "Category",
-  "fieldLabels": "Labels",
-  "confirm": "Confirm & create",
-  "editManually": "Edit manually",
-  "fallback": "Ask assistant",
-  "fallbackTitle": "Fallback when the AI agent fails: forward to the assistant chat",
-  "forwardedToast": "Forwarded to Xiao Zhou — send it in the chat at the bottom right"
- },
+      "hint": "Describe what you want to create in one sentence; the AI agent turns it into a structured draft. Confirm to create. Switch the type above to pin the target (auto-detected by default).",
+      "inputPlaceholder": "e.g. Create a task \"Login page redesign\", due Friday, high priority, tag frontend",
+      "generate": "Generate draft",
+      "parsing": "Parsing…",
+      "regen": "Regenerate",
+      "draftBadge": "Draft · {{type}}",
+      "fieldTitle": "Title",
+      "fieldDesc": "Description",
+      "fieldPriority": "Priority",
+      "fieldSeverity": "Severity",
+      "fieldDue": "Due",
+      "fieldCategory": "Category",
+      "fieldLabels": "Labels",
+      "confirm": "Confirm & create",
+      "editManually": "Edit manually",
+      "fallback": "Ask assistant",
+      "fallbackTitle": "Fallback when the AI agent fails: forward to the assistant chat",
+      "forwardedToast": "Forwarded to Xiao Zhou — send it in the chat at the bottom right"
+    },
     "agentPresence": {
       "immediate": "After creation, {{agent}} starts working immediately.",
       "approval": "After creation, {{agent}} starts once the request is approved.",
@@ -4182,36 +4313,36 @@
       "testing": "Test plan",
       "guide": "How-to guide"
     },
- "discard": {
-  "title": "Discard unsaved input?",
-  "desc": "The panel has unsubmitted input that will be lost when closed.",
-  "keep": "Keep editing",
-  "discard": "Discard & close"
- },
- "docCategory": {
-  "requirement": "Requirement",
-  "analysis": "Analysis",
-  "design": "Design",
-  "api": "API",
-  "testing": "Testing",
-  "guide": "Guide"
- },
- "projectSource": {
-  "label": "Project source",
-  "scratch": "Start from scratch",
-  "existing": "Import existing project",
-  "ai": "AI agent · conversational",
-  "existingHint": "Project already in progress? After creation you'll enter the onboarding wizard: AI scans the repo read-only and drafts a project profile for you to review.",
-  "grillHint": "Confirm the summary in the conversation above to create"
- },
- "suggestions": {
-  "title": "Suggestions",
-  "generating": "Generating…",
-  "regen": "Regenerate",
-  "empty": "No suggestions yet",
-  "emptyHint": "Tap \"AI suggestions\" above to generate completions from what you've filled in",
-  "appliedToast": "Applied: {{label}}"
- },
+    "discard": {
+      "title": "Discard unsaved input?",
+      "desc": "The panel has unsubmitted input that will be lost when closed.",
+      "keep": "Keep editing",
+      "discard": "Discard & close"
+    },
+    "docCategory": {
+      "requirement": "Requirement",
+      "analysis": "Analysis",
+      "design": "Design",
+      "api": "API",
+      "testing": "Testing",
+      "guide": "Guide"
+    },
+    "projectSource": {
+      "label": "Project source",
+      "scratch": "Start from scratch",
+      "existing": "Import existing project",
+      "ai": "AI agent · conversational",
+      "existingHint": "Project already in progress? After creation you'll enter the onboarding wizard: AI scans the repo read-only and drafts a project profile for you to review.",
+      "grillHint": "Confirm the summary in the conversation above to create"
+    },
+    "suggestions": {
+      "title": "Suggestions",
+      "generating": "Generating…",
+      "regen": "Regenerate",
+      "empty": "No suggestions yet",
+      "emptyHint": "Tap \"AI suggestions\" above to generate completions from what you've filled in",
+      "appliedToast": "Applied: {{label}}"
+    },
     "linear": {
       "new": "New",
       "description": "Description",
@@ -4923,7 +5054,8 @@
     "skillUpdatedToast": "Skill \"{{name}}\" saved",
     "skillDeleteTitle": "Delete skill \"{{name}}\"?",
     "skillDeleteDesc": "This cannot be undone; builtin skills cannot be deleted, only disabled.",
-    "skillDeletedToast": "Skill \"{{name}}\" deleted"
+    "skillDeletedToast": "Skill \"{{name}}\" deleted",
+    "tabJudgment": "Judgment"
   },
   "shell": {
     "mainNav": "Main",
@@ -5293,7 +5425,9 @@
       "aligned": "Aligned",
       "conflicted": "Conflicted",
       "skipped_detached": "Skipped (detached)",
-      "missing_file": "File missing"
+      "missing_file": "File missing",
+      "aligned_with_drift": "Drift (AI: benign)",
+      "aiImpactTitle": "AI drift impact judgement (advisory): judged benign so not escalated to a decision card; the drift keeps being tracked"
     },
     "result": {
       "seedTitle": "Last seed result",
@@ -6176,5 +6310,76 @@
       "enterApp": "Enter APM directly",
       "viewDocs": "View documentation"
     }
+  },
+  "aiJudge": {
+    "advisoryTooltip": "AI quick judgment · advisory only, never overrides human decisions",
+    "lowConfidence": "Low conf.",
+    "estimatedProbability": "AI est.",
+    "matrixTitle": "Scenario matrix",
+    "matrixDescOn": "Each scenario toggles independently; disabled spots fall back to rule-only behavior silently. Defaults follow the master switch",
+    "matrixDescOff": "Master switch is off — toggles below take effect once it is enabled",
+    "logsTitle": "Decision log",
+    "logsDesc": "Decision log across scenarios, newest first — verdicts and confidences are auditable",
+    "logsFilterAll": "All",
+    "logsEmpty": "No decisions yet — enable the channel and trigger a judged action",
+    "scenario": {
+      "approval_risk": {
+        "name": "Approval risk grading",
+        "desc": "When AI execution approvals are created"
+      },
+      "evidence_precheck": {
+        "name": "Evidence precheck",
+        "desc": "When CI/PR evidence reflows"
+      },
+      "intake_readiness": {
+        "name": "Requirement readiness",
+        "desc": "Requirement review (quick mode)"
+      },
+      "intake_decomposition": {
+        "name": "Decomposition check",
+        "desc": "Decomposition review (quick mode)"
+      },
+      "contract_drift": {
+        "name": "Contract drift triage",
+        "desc": "When alignment checks detect drift"
+      },
+      "trust_evaluation": {
+        "name": "Trust dual-track",
+        "desc": "Execution terminal states (log only)"
+      },
+      "decision_suggestion": {
+        "name": "Decision card suggestion",
+        "desc": "When decision cards are created"
+      },
+      "decision_option": {
+        "name": "Decision option odds",
+        "desc": "Decision cards with discrete options"
+      },
+      "acceptance_probability": {
+        "name": "Acceptance probability",
+        "desc": "Acceptance criteria panels (estimate)"
+      },
+      "workflow_judge": {
+        "name": "Workflow judge node",
+        "desc": "judge nodes in workflow definitions"
+      },
+      "failure_classify": {
+        "name": "Failure classification",
+        "desc": "On execution failure (after rules)"
+      },
+      "completion_type": {
+        "name": "Completion type",
+        "desc": "Completion artifact type inference"
+      },
+      "audit_coverage": {
+        "name": "Audit coverage",
+        "desc": "Completeness audit coverage checks"
+      }
+    },
+    "quickMode": "JEV quick",
+    "estimateAction": "AI estimate",
+    "estimateHint": "Estimate each criterion success probability from current evidence (AI quick judgment, advisory only)",
+    "completionTypeMismatch": "AI suggests {{type}}",
+    "coverageHint": "AI review: possibly already covered ({{pct}}%) — verify before applying"
   }
 }

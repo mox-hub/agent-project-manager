@@ -27,7 +27,9 @@ import type {
   CriterionStatus,
 } from '@/modules/acceptance/api/acceptance-api';
 import { cn } from '@/lib/utils';
+import { ConfidenceBar } from '@/components/semantic/confidence-bar';
 import { DetailSection } from '@/components/semantic/detail-section';
+import { readCriteriaProbability } from '@/modules/acceptance/api/acceptance-probability-api';
 
 /** 标准状态视觉：与 acceptance-detail-page 保持同口径（只读回显不引入新形态） */
 const CRITERION_ICON: Record<CriterionStatus, typeof Circle> = {
@@ -129,6 +131,15 @@ export function AcceptanceCriteriaPreview({
                   <span className="min-w-0 flex-1 break-words text-foreground">
                     {c.content}
                   </span>
+                  {(() => {
+                    const aiP = readCriteriaProbability(c);
+                    return aiP ? (
+                      <ConfidenceBar
+                        className="shrink-0 mt-0.5"
+                        value={aiP.probability / 100}
+                      />
+                    ) : null;
+                  })()}
                   <span className={cn('shrink-0 mt-0.5 text-3xs', tone)}>
                     {t(`acceptance.criterionStatus.${c.status}`)}
                   </span>

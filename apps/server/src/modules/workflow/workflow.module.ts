@@ -9,6 +9,7 @@
  */
 
 import { Module } from '@nestjs/common';
+import { QuickJudgeModule } from '../ai-hub/quick-judge/quick-judge.module';
 import { WorkflowController } from './workflow.controller';
 import { WorkflowService } from './workflow.service';
 import { WorkflowCompilerService } from './workflow-compiler.service';
@@ -18,7 +19,7 @@ import { CliDispatchModule } from '../cli-dispatch/cli-dispatch.module';
 import { MessageBusModule } from '../../core/message-bus/message-bus.module';
 
 @Module({
-  imports: [AiHubModule, CliDispatchModule, MessageBusModule],
+  imports: [AiHubModule, CliDispatchModule, MessageBusModule, QuickJudgeModule],
   controllers: [WorkflowController],
   providers: [
     WorkflowService,

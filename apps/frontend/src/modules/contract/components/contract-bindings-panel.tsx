@@ -283,6 +283,14 @@ export function ContractBindingsPanel({
               >
                 {t(`contract.checkState.${report.state}`)}
               </Badge>
+              {report.state === 'aligned_with_drift' && report.aiImpact && (
+                <span
+                  className="text-3xs text-accent-yellow"
+                  title={t('contract.checkState.aiImpactTitle')}
+                >
+                  {`AI ${report.aiImpact.impact}${typeof report.aiImpact.confidence === 'number' ? ` ${Math.round(report.aiImpact.confidence * 100)}%` : ''}`}
+                </span>
+              )}
               {report.state === 'conflicted' && (
                 <Link
                   to="/app/notifications"

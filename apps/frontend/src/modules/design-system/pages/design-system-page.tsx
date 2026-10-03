@@ -210,6 +210,8 @@ import {
 } from '@/components/ui/sortable'
 import { IconStack } from '@/components/semantic/icon-stack'
 import { StatusPill } from '@/components/semantic/status-pill'
+import { AiVerdictPill } from '@/components/semantic/ai-verdict-pill'
+import { ConfidenceBar } from '@/components/semantic/confidence-bar'
 import { SubtaskBadge } from '@/components/semantic/subtask-badge'
 import { StatusIconFrame } from '@/shared/status/status-icon-frame'
 import { PRIORITY_VISUALS, TASK_STATUS_VISUALS, type StatusIconComponent } from '@/shared/status/status-visuals'
@@ -421,7 +423,6 @@ const SECTIONS = [
   { id: 'entity-ref', label: 'Entity Ref System', group: 'Data Display' },
   { id: 'stat-tiles', label: 'Stat Tiles', group: 'Data Display' },
   { id: 'charts', label: 'Charts', group: 'Data Display' },
-  { id: 'stat-cards', label: 'Stat Cards', group: 'Data Display' },
   { id: 'alerts', label: 'Alerts', group: 'Feedback' },
   { id: 'toast', label: 'Toast', group: 'Feedback' },
   { id: 'spinner', label: 'Spinner', group: 'Feedback' },
@@ -452,7 +453,6 @@ const SECTIONS = [
   { id: 'chapter-scrubber', label: 'Chapter Scrubber', group: 'Layout & Shells' },
   { id: 'page-layout', label: 'Page Layout', group: 'Layout & Shells' },
   { id: 'sidebar-panel', label: 'Sidebar Panel', group: 'Layout & Shells' },
-  { id: 'detail-section', label: 'Detail Section', group: 'Layout & Shells' },
   { id: 'detail-page-frame', label: 'Detail Page Frame', group: 'Layout & Shells' },
   { id: 'ai-density-cards', label: 'AI High-Density Cards [AI]', group: 'AI Execution' },
   { id: 'page-header', label: 'Page Header', group: 'App Patterns' },
@@ -468,6 +468,29 @@ const SECTIONS = [
   { id: 'workflow-run-timeline', label: 'Workflow Run Timeline', group: 'App Patterns' },
   // G 类批 G0：语义组件分区框架（首批收录随批 G1 Chip 示范组件落地。raw 原语按裁决 G6 不出画廊。）
   { id: 'semantic-components', label: '语义组件', group: 'Semantic' },
+  // 语义组件逐件注册（2026-10-03）：正文各 demo 子段原位嵌套 SectionAnchor（无副作用
+  // <section> 包裹，零 JSX 搬移），与 registry section:'Semantic' 逐件对齐；
+  // status-definition-dialog 走 galleryExempt 不设条目（由 status-definition-list demo 间接覆盖）。
+  { id: 'chip', label: 'Chip', group: 'Semantic' },
+  { id: 'nav-status-dot', label: 'Nav Status Dot', group: 'Semantic' },
+  { id: 'theme-mode-card', label: 'Theme Mode Card', group: 'Semantic' },
+  { id: 'chart-card', label: 'Chart Card', group: 'Semantic' },
+  { id: 'stat-tile', label: 'Stat Tile', group: 'Semantic' },
+  { id: 'metric-row', label: 'Metric Row', group: 'Semantic' },
+  { id: 'subtask-badge', label: 'Subtask Badge', group: 'Semantic' },
+  { id: 'ai-verdict-pill', label: 'AI Verdict Pill', group: 'Semantic' },
+  { id: 'confidence-bar', label: 'Confidence Bar', group: 'Semantic' },
+  { id: 'settings-header', label: 'Settings Header', group: 'Semantic' },
+  { id: 'section-scrubber', label: 'Section Scrubber', group: 'Semantic' },
+  { id: 'settings-section-card', label: 'Settings Section Card', group: 'Semantic' },
+  { id: 'sticky-save-bar', label: 'Sticky Save Bar', group: 'Semantic' },
+  { id: 'settings-field-row', label: 'Settings Field Row', group: 'Semantic' },
+  { id: 'definition-row', label: 'Definition Row', group: 'Semantic' },
+  { id: 'status-definition-list', label: 'Status Definition List', group: 'Semantic' },
+  // registry 口径本就是 section:'Semantic' 的两件：侧边栏组从层组归位（锚块物理位不动，
+  // 数组顺序 ≠ 正文物理序的既定口径不受影响）
+  { id: 'stat-cards', label: 'Stat Cards', group: 'Semantic' },
+  { id: 'detail-section', label: 'Detail Section', group: 'Semantic' },
   { id: 'settings-patterns', label: 'Settings Patterns', group: 'App Patterns' },
 ]
 
@@ -5476,6 +5499,8 @@ export function DesignSystemPage() {
           <SectionAnchor id="settings-patterns">
             <SectionTitle>Settings Patterns</SectionTitle>
             <div className="space-y-5">
+              <SectionAnchor id="settings-header">
+              <SectionAnchor id="section-scrubber">
               <div>
                 <SubLabel>SettingsHeader + SectionScrubber — 设置页双态吸顶头（在下方盒子内滚动体验：常态大标题无框 → 吸顶毛玻璃卡 + 栏目跳转行）</SubLabel>
                 <div className="h-72 overflow-y-auto rounded-xl border border-border">
@@ -5520,6 +5545,9 @@ export function DesignSystemPage() {
                   </div>
                 </div>
               </div>
+              </SectionAnchor>
+              </SectionAnchor>
+              <SectionAnchor id="settings-section-card">
               <div>
                 <SubLabel>SettingsSectionCard · danger — Danger Zone 封闭档（红框红标题，置于页底，破坏性操作配确认弹窗）</SubLabel>
                 <SettingsSectionCard
@@ -5532,6 +5560,8 @@ export function DesignSystemPage() {
                   <p className="text-xs text-content-text-muted">破坏性操作占位。</p>
                 </SettingsSectionCard>
               </div>
+              </SectionAnchor>
+              <SectionAnchor id="sticky-save-bar">
               <div>
                 <SubLabel>StickySaveBar — 脏状态保存栏（dirty 时浮出，置内容流末尾：短页停尾部、长页滚动吸附视口底；此处静态 dirty 态演示）</SubLabel>
                 <div className="rounded-xl border border-border p-4">
@@ -5544,6 +5574,8 @@ export function DesignSystemPage() {
                   />
                 </div>
               </div>
+              </SectionAnchor>
+              <SectionAnchor id="settings-field-row">
               <div>
                 <SubLabel>SettingsFieldRow — 设置字段行（左说明右控件；立即生效型 Switch / 纯说明行）</SubLabel>
                 <div className="flex flex-col gap-2">
@@ -5555,6 +5587,8 @@ export function DesignSystemPage() {
                   <SettingsFieldRow title="仅说明行（无控件槽）" description="用于提示性条目" />
                 </div>
               </div>
+              </SectionAnchor>
+              <SectionAnchor id="definition-row">
               <div>
                 <SubLabel>DefinitionRow — 定义类管理页行骨架（补登记演示：前导底框图标 / 双行文本 / 尾部槽；拖拽形态须置于 Sortable 内，此处静态形态）</SubLabel>
                 <div className="overflow-hidden rounded-lg border border-border bg-card">
@@ -5579,10 +5613,13 @@ export function DesignSystemPage() {
                   </div>
                 </div>
               </div>
+              </SectionAnchor>
+              <SectionAnchor id="status-definition-list">
               <div>
                 <SubLabel>StatusDefinitionList — 状态定义分组列表（补登记演示：静态只读形态，无回调 = 无新建/编辑/拖拽提交）</SubLabel>
                 <StatusDefinitionList definitions={SETTINGS_DEMO_STATUSES} />
               </div>
+              </SectionAnchor>
             </div>
           </SectionAnchor>
 
@@ -5719,6 +5756,7 @@ export function DesignSystemPage() {
                 </div>
               </div>
 
+              <SectionAnchor id="subtask-badge">
               <div>
                 <SubLabel>SubtaskBadge — progress ring + count capsule（semantic/subtask-badge · 环与左/上/下边框等距）</SubLabel>
                 <div className="flex items-center gap-4">
@@ -5728,6 +5766,23 @@ export function DesignSystemPage() {
                   <SubtaskBadge done={0} total={2} />
                 </div>
               </div>
+              </SectionAnchor>
+              <SectionAnchor id="ai-verdict-pill">
+              <SectionAnchor id="confidence-bar">
+
+              <div>
+                <SubLabel>AiVerdictPill / ConfidenceBar — JEV 判断徽注与概率条（semantic/ai-verdict-pill · confidence-bar · 紫=AI 预估，黄=低置信）</SubLabel>
+                <div className="flex flex-wrap items-center gap-3">
+                  <AiVerdictPill label="建议批准" confidence={0.92} />
+                  <AiVerdictPill label="benign" confidence={0.55} size="xs" />
+                  <AiVerdictPill label="高风险" />
+                  <ConfidenceBar value={0.87} label="AI 预估达成" />
+                  <ConfidenceBar value={0.42} />
+                  <ConfidenceBar value={0.96} hidePercent />
+                </div>
+              </div>
+              </SectionAnchor>
+              </SectionAnchor>
 
               <div>
                 <SubLabel>MemberAvatar — 实体头像（sm 实档 24px）+ 空头像预设</SubLabel>
@@ -6701,7 +6756,10 @@ export function DesignSystemPage() {
               三件均 props 面封闭——不接 className / variant，判例见 semantic/README.md；
               raw 原语按裁决 G6 不出画廊（registry internal 态）。
               画廊分区已按组件类型分组（2026-09-29 重组：正文物理序未动，物理搬移登记为后续独立批）。
+              2026-10-03 起语义组件逐件注册侧边栏：各 demo 子段嵌套独立锚点，左侧 Semantic 组直达单件；
+              其余语义件的锚点分布在 settings-patterns / task-atoms 等块内（组内可达，物理位不动）。
             </p>
+            <SectionAnchor id="chip">
             <div className="mb-4">
               <SubLabel>Chip — 标签 / 胶囊 / 可关闭标签</SubLabel>
               <div className="flex flex-wrap items-center gap-2">
@@ -6721,6 +6779,8 @@ export function DesignSystemPage() {
                 </Chip>
               </div>
             </div>
+            </SectionAnchor>
+            <SectionAnchor id="nav-status-dot">
             <div className="mb-4">
               <SubLabel>NavStatusDot — 导航条目状态点（8px）</SubLabel>
               <div className="mb-2 flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -6747,6 +6807,8 @@ export function DesignSystemPage() {
                 负责（§19.5 上层），本件只做 tone → class。
               </p>
             </div>
+            </SectionAnchor>
+            <SectionAnchor id="theme-mode-card">
             <div className="mb-4">
               <SubLabel>ThemeModeCard — 主题模式卡片（日间 / 夜间 / 跟随系统）</SubLabel>
               {/* 静态陈列：本组件不碰 i18n 也不依赖 ThemeProvider，文案由调用方注入 */}
@@ -6771,6 +6833,8 @@ export function DesignSystemPage() {
                 非颜色信号（§8.5#4）。
               </p>
             </div>
+            </SectionAnchor>
+            <SectionAnchor id="chart-card">
             <div className="mb-4">
               <SubLabel>ChartCard — 图表卡壳（定高图表容器）</SubLabel>
               <div className="mb-2 grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -6799,6 +6863,8 @@ export function DesignSystemPage() {
                 图表实现留 children，内部用 h-full 填充。
               </p>
             </div>
+            </SectionAnchor>
+            <SectionAnchor id="stat-tile">
             <div className="mb-4">
               <SubLabel>StatTile — mini 统计块</SubLabel>
               <div className="mb-2 grid max-w-2xl grid-cols-3 gap-3">
@@ -6819,6 +6885,8 @@ export function DesignSystemPage() {
                 值语义色不设样式口子，由调用方包 span 注入（第二例 accent-purple）。
               </p>
             </div>
+            </SectionAnchor>
+            <SectionAnchor id="metric-row">
             <div className="mb-4">
               <SubLabel>MetricRow — 标签 + 进度条 + 数值行</SubLabel>
               <div className="mb-2 max-w-xl space-y-2.5">
@@ -6836,6 +6904,7 @@ export function DesignSystemPage() {
                 既有色档选择器；label 可选（表格进度列形态），trailing 放原文案附加。
               </p>
             </div>
+            </SectionAnchor>
           </SectionAnchor>
 
           <Separator />

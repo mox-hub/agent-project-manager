@@ -95,6 +95,130 @@ describe('QuickJudgeService（CAP-A-27 通道）', () => {
     expect(result).toBeNull();
   });
 
+  it('场景被用户显式禁用（scenarios false）→ null 且不发请求（扩展批介入矩阵）', async () => {
+    const { service } = buildDeps({
+      settings: { scenarios: { approval_risk: false } },
+    });
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+
+    const result = await service.judge('approval_risk', 'state', QUESTIONS);
+
+    expect(result).toBeNull();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('场景显式 true 或未配置 → 跟随总开关正常调用', async () => {
+    const fetchImpl = vi.fn(
+      async () => new Response(JSON.stringify(OK_RESPONSE), { status: 200 }),
+    );
+    const { service } = buildDeps({
+      fetchImpl,
+      settings: { scenarios: { evidence_precheck: true } },
+    });
+    vi.stubGlobal('fetch', fetchImpl);
+
+    const hit = await service.judge('evidence_precheck', 'state', QUESTIONS);
+    const follow = await service.judge('approval_risk', 'state', QUESTIONS);
+
+    expect(hit).not.toBeNull();
+    expect(follow).not.toBeNull();
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('记账 responseMetadata 带 answers 摘要（value+confidence，判定记录读侧依赖）', async () => {
+    const fetchImpl = vi.fn(
+      async () => new Response(JSON.stringify(OK_RESPONSE), { status: 200 }),
+    );
+    const { service, usageLogs } = buildDeps({ fetchImpl });
+    vi.stubGlobal('fetch', fetchImpl);
+
+    await service.judge('approval_risk', 'state', QUESTIONS);
+
+    expect(usageLogs).toHaveLength(1);
+    const meta = usageLogs[0].responseMetadata;
+    expect(meta.kind).toBe('judge');
+    expect(meta.scenario).toBe('approval_risk');
+    expect(meta.questions).toBe(2);
+    expect(meta.answers.risk_level).toEqual({
+      value: 'write',
+      confidence: 0.63,
+    });
+    expect(meta.answers.safe).toEqual({ value: 0.44, confidence: null });
+  });
+
+  it('listLogs → kind=judge 过滤 + scenario 过滤 + 读侧投影（answers 摘要透传）', async () => {
+    const rows = [
+      {
+        id: 'log1',
+        modelName: 'jev-1.13-free',
+        provider: 'opencode-go',
+        promptTokens: 10,
+        completionTokens: 0,
+        totalTokens: 10,
+        responseMetadata: {
+          kind: 'judge',
+          scenario: 'approval_risk',
+          questions: 2,
+          answers: { risk_level: { value: 'write', confidence: 0.8 } },
+        },
+        createdAt: new Date('2026-10-03T00:00:00Z'),
+      },
+      {
+        id: 'log2',
+        modelName: 'other',
+        provider: 'x',
+        promptTokens: 1,
+        completionTokens: 1,
+        totalTokens: 2,
+        responseMetadata: { kind: 'conversation' },
+        createdAt: new Date('2026-10-03T00:01:00Z'),
+      },
+    ];
+    const prisma = {
+      aIUsageLog: {
+        findMany: vi.fn(async ({ where }: any) =>
+          rows.filter((r) => {
+            const conds = where?.AND ?? [];
+            return conds.every((c: any) => {
+              const key = c.responseMetadata.path[0];
+              return c.responseMetadata.equals === r.responseMetadata[key];
+            });
+          }),
+        ),
+        count: vi.fn(async ({ where }: any) => 1),
+      },
+    };
+    const { service } = buildDeps();
+    // 覆写 prisma 只为 listLogs（buildDeps 的 prisma 无 findMany/count）
+    (service as any).prisma = prisma;
+
+    const page = await service.listLogs({
+      scenario: 'approval_risk',
+      page: 1,
+      pageSize: 20,
+    });
+
+    expect(page.total).toBe(1);
+    expect(page.items).toHaveLength(1);
+    expect(page.items[0]).toMatchObject({
+      id: 'log1',
+      scenario: 'approval_risk',
+      model: 'jev-1.13-free',
+      questions: 2,
+    });
+    expect(page.items[0].answers.risk_level).toEqual({
+      value: 'write',
+      confidence: 0.8,
+    });
+    // 无 scenario 过滤时只带 kind 条件 + 分页投影
+    await service.listLogs({ page: 2, pageSize: 5 });
+    const [whereArg] = prisma.aIUsageLog.findMany.mock.calls[1];
+    expect((whereArg?.AND ?? []).length).toBeLessThanOrEqual(1);
+    expect(whereArg?.skip ?? whereArg?.take).toBeDefined();
+    expect([whereArg.skip, whereArg.take]).toEqual([5, 5]);
+  });
+
   it('未注册场景 → null（场景注册表纪律）', async () => {
     const { service } = buildDeps();
     const fetchSpy = vi.fn();
@@ -153,7 +277,7 @@ describe('QuickJudgeService（CAP-A-27 通道）', () => {
       totalTokens: 534,
       estimatedCost: null,
     });
-    expect(usageLogs[0].responseMetadata).toEqual({
+    expect(usageLogs[0].responseMetadata).toMatchObject({
       kind: 'judge',
       scenario: 'approval_risk',
     });

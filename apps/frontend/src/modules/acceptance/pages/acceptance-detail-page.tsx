@@ -4,6 +4,11 @@
  * 右栏：操作组（删除）+ 属性卡 + 完成证据卡
  * 闭环动作：标准逐项判定（自动落证据）/ 运行审计 / 接收（聚合校验）/ 驳回 / 豁免
  */
+import { Spinner } from '@/components/ui/spinner';
+import { ConfidenceBar } from '@/components/semantic/confidence-bar';
+import { readCriteriaProbability } from '@/modules/acceptance/api/acceptance-probability-api';
+import { AiVerdictPill } from '@/components/semantic/ai-verdict-pill';
+import { useJudgeAcceptanceProbability } from '@/modules/acceptance/hooks/use-acceptance-probability';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -95,6 +100,14 @@ const STATUS_TONE: Record<AcceptanceStatus, string> = {
   waived: 'text-muted-foreground border-border',
 };
 
+/** AI 判定类型值 → 契约类型枚举键（completion_type 场景四态与规则同枚举） */
+const COMPLETION_TYPE_I18N = {
+  pr: 'pr',
+  test_report: 'test_report',
+  document: 'document',
+  artifact: 'artifact',
+} as const;
+
 const TYPE_ICON: Record<CompletionType, typeof GitPullRequest> = {
   pr: GitPullRequest,
   test_report: FileCode,
@@ -144,7 +157,15 @@ export function AcceptanceDetailPage() {
   const { t } = useTranslation();
   const confirmAction = useConfirm();
 
+  // JEV 覆盖复核提示（扩展批三，advisory）：跑审计响应附带，落库报告不含——
+  // 刷新后消失是有意行为（每次审计重判，快照不固化 AI 意见）
+  const [aiCoverageHints, setAiCoverageHints] = useState<Record<
+    string,
+    { covered: number; confidence: number | null }
+  > | null>(null);
+
   const { data: acceptance, isLoading } = useAcceptanceDetail(id);
+  const probability = useJudgeAcceptanceProbability(acceptance?.id);
   const auditMutation = useAudit(id!);
   const applySuggestionsMutation = useApplySuggestions(id!);
   const { data: checklists = [] } = useChecklists();
@@ -216,7 +237,18 @@ export function AcceptanceDetailPage() {
   const blockedCount = auditReport?.blockedItems?.length ?? 0;
   const suggestedCount = auditReport?.suggestedItems?.length ?? 0;
   const runAudit = () =>
-    auditMutation.mutateAsync(auditChecklistId === 'auto' ? undefined : auditChecklistId);
+    auditMutation
+      .mutateAsync(auditChecklistId === 'auto' ? undefined : auditChecklistId)
+      .then((res) => {
+        const hints = (
+          res?.result as
+            | { aiCoverageHints?: Record<string, { covered: number; confidence: number | null }> }
+            | null
+            | undefined
+        )?.aiCoverageHints;
+        setAiCoverageHints(hints && Object.keys(hints).length > 0 ? hints : null);
+      })
+      .catch(() => undefined);
 
   const TypeIcon = TYPE_ICON[acceptance.completionType];
   const canReview = acceptance.status === 'in_review' || acceptance.status === 'pending';
@@ -323,6 +355,22 @@ export function AcceptanceDetailPage() {
             total: items.length,
           })}
         </span>
+        {acceptance && (
+          <button
+            type="button"
+            className="ml-auto inline-flex items-center gap-1 text-3xs text-muted-foreground transition-colors hover:text-accent-purple disabled:opacity-50"
+            title={t('aiJudge.estimateHint')}
+            disabled={probability.isPending}
+            onClick={() => probability.mutate(items.map((c) => c.id))}
+          >
+            {probability.isPending ? (
+              <Spinner className="size-3" />
+            ) : (
+              <Sparkles className="size-3" />
+            )}
+            {t('aiJudge.estimateAction')}
+          </button>
+        )}
       </div>
       <div className="space-y-1.5">
         {items.map((c) => {
@@ -375,6 +423,12 @@ export function AcceptanceDetailPage() {
                         {t('acceptanceDetail.criteria.evidenceStale')}
                       </Badge>
                     )}
+                    {(() => {
+                      const aiP = readCriteriaProbability(c);
+                      return aiP ? (
+                        <ConfidenceBar value={aiP.probability / 100} />
+                      ) : null;
+                    })()}
                     {c.evidences && c.evidences.length > 0 && (
                       <button
                         className="flex items-center gap-0.5 hover:text-foreground"
@@ -539,6 +593,31 @@ export function AcceptanceDetailPage() {
                     <TypeIcon className="size-3.5" />
                     {t(`acceptance.completionType.${acceptance.completionType}`)}
                   </span>
+                  {(() => {
+                    // AI 完成类型对照（CAP-A-27 扩展批，advisory）：仅在不一致时提示，
+                    // 规则值照旧生效——人可改判（改 completionType 即走既有编辑入口）
+                    const ai = (acceptance.metadata as Record<string, unknown> | null)
+                      ?.aiCompletionType as
+                    | { type?: string; confidence?: number | null }
+                    | undefined;
+                    if (
+                      !ai?.type ||
+                      ai.type === acceptance.completionType ||
+                      !(ai.type in COMPLETION_TYPE_I18N)
+                    )
+                      return null;
+                    return (
+                      <AiVerdictPill
+                        size="xs"
+                        label={t('aiJudge.completionTypeMismatch', {
+                          type: t(
+                            `acceptance.completionType.${COMPLETION_TYPE_I18N[ai.type as keyof typeof COMPLETION_TYPE_I18N]}`,
+                          ),
+                        })}
+                        confidence={ai.confidence ?? null}
+                      />
+                    );
+                  })()}
                   {acceptance.issue && (
                     <Link
                       to={`/app/issues/${acceptance.issueId}`}
@@ -775,6 +854,7 @@ export function AcceptanceDetailPage() {
                 {auditReport ? (
                   <AuditReportPanel
                     report={auditReport}
+                    aiCoverageHints={aiCoverageHints}
                     onApplySuggestions={(itemIds) =>
                       applySuggestionsMutation.mutateAsync(itemIds)
                     }

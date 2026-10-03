@@ -1,3 +1,8 @@
+import { QuickJudgeService } from '@/modules/ai-hub/quick-judge/quick-judge.service';
+import {
+  auditCoverageQuestions,
+  extractAuditCoverage,
+} from '@/modules/ai-hub/quick-judge/judge-scenarios';
 import {
   Injectable,
   NotFoundException,
@@ -23,6 +28,15 @@ export interface AuditResult {
   suggestedItems: AuditItem[];
   passedItems: AuditItem[];
   summary: string;
+  /**
+   * JEV 覆盖复核提示（扩展批三，advisory）：键=finding id，值=现有标准已实质
+   * 覆盖该检查项的概率。仅手动跑审计（withAiHints）时返回；不改 findings 与
+   * riskLevel，采纳与否由人决定。
+   */
+  aiCoverageHints?: Record<
+    string,
+    { covered: number; confidence: number | null }
+  >;
 }
 
 /**
@@ -52,12 +66,18 @@ export class CompletenessAuditService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly checklistService: CompletenessChecklistService,
+    private readonly quickJudge: QuickJudgeService,
   ) {}
 
   /**
-   * 执行验收完整性审计
+   * 执行验收完整性审计。withAiHints=true（手动跑审计端点）时对规则判缺失的项
+   * 追加 JEV 覆盖复核（advisory）——规则 findings/riskLevel 绝不因 AI 改动。
    */
-  async auditAcceptance(acceptanceId: string, checklistId?: string) {
+  async auditAcceptance(
+    acceptanceId: string,
+    checklistId?: string,
+    opts?: { withAiHints?: boolean },
+  ) {
     const acceptance = await this.prisma.acceptance.findUnique({
       where: { id: acceptanceId },
       include: {
@@ -186,10 +206,64 @@ export class CompletenessAuditService {
       },
     });
 
+    // JEV 覆盖复核（扩展批三，advisory）：子串匹配漏检的兜底——仅提示不改判定
+    if (opts?.withAiHints) {
+      result.aiCoverageHints = await this.judgeCoverageHints(
+        acceptance.criteria as Array<{ content: string }>,
+        [...result.blockedItems, ...result.suggestedItems],
+      );
+    }
+
     return {
       report,
       result,
     };
+  }
+
+  /**
+   * 逐缺失项 Noul 复核「现有标准已实质覆盖」。同步执行（手动触发场景，
+   * JEV 毫秒级）；上限 20 项（一次审计的缺失项规模）。judge 失败返回空表——
+   * 审计主结论（规则层）不受影响。
+   */
+  private async judgeCoverageHints(
+    criteria: Array<{ content: string }>,
+    findings: AuditItem[],
+  ): Promise<Record<string, { covered: number; confidence: number | null }>> {
+    const hints: Record<
+      string,
+      { covered: number; confidence: number | null }
+    > = {};
+    if (findings.length === 0 || criteria.length === 0) return hints;
+    try {
+      const batch = findings.slice(0, 20);
+      const criteriaText = criteria
+        .map((c, i) => `${i + 1}. ${c.content}`)
+        .join('\n');
+      const result = await this.quickJudge.judge(
+        'audit_coverage',
+        `现有验收标准清单：\n${criteriaText}\n\n以下每个检查项由规则层判定为「标准未覆盖」，请逐项复核是否实际已被上述标准语义覆盖。`,
+        batch.map((f) => ({
+          id: f.id,
+          type: 'noul' as const,
+          instructions: `检查项「${f.content}」是否已被现有验收标准实质覆盖？`,
+        })),
+      );
+      if (!result) return hints;
+      for (const f of batch) {
+        const ans = result.answers[f.id];
+        if (!ans) continue;
+        const j = extractAuditCoverage({ [f.id]: ans });
+        if (j.covered === null) continue;
+        hints[f.id] = {
+          covered: j.covered,
+          confidence:
+            typeof ans.confidence === 'number' ? ans.confidence : null,
+        };
+      }
+    } catch {
+      // 判定层任何异常不影响审计主流程（ hints 保持空对象）
+    }
+    return hints;
   }
 
   /**

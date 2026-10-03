@@ -64,6 +64,8 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   { name: 'ai-context-summary', file: 'modules/project/components/ai-context-summary.tsx', section: 'AI Execution', status: 'canonical' },
   // G7 倒置收编迁出 ui/，保留登记保 LU（2026-09-29）
   { name: 'ai-execution-badge', file: 'modules/issue/components/ai-execution-badge.tsx', section: 'App Components', status: 'canonical' },
+  // JEV 快速判断徽注（CAP-A-27 扩展批）：离散判定+置信度统一呈现，advisory 声明恒挂
+  { name: 'ai-verdict-pill', file: 'semantic/ai-verdict-pill.tsx', section: 'Semantic', status: 'canonical' },
   { name: 'alert', file: 'ui/alert.tsx', section: 'Feedback', status: 'canonical' },
   { name: 'alert-dialog', file: 'ui/alert-dialog.tsx', section: 'Overlays', status: 'canonical' },
   { name: 'anchored-menu', file: 'ui/anchored-menu.tsx', section: 'Overlays', status: 'internal' },
@@ -186,6 +188,8 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   // （project-overview-charts 两块 / dashboard-page 弹窗 tile 簇 / team-stats-section 进度列），
   // 消费簇尚小，按 chip 先例留复核窗口观察泛化形态是否立得住。
   { name: 'chart-card', file: 'semantic/chart-card.tsx', section: 'Semantic', status: 'canonical' },
+  // JEV 概率条（CAP-A-27 扩展批）：0-100% 概率统一呈现，紫系=AI 预估与真实数据区分
+  { name: 'confidence-bar', file: 'semantic/confidence-bar.tsx', section: 'Semantic', status: 'canonical' },
   { name: 'stat-tile', file: 'semantic/stat-tile.tsx', section: 'Semantic', status: 'canonical' },
   { name: 'metric-row', file: 'semantic/metric-row.tsx', section: 'Semantic', status: 'canonical' },
   // 统计卡归一批（2026-09-29）：原 ui/stats-card 升格语义层标准件 + 原 ui/stat-card 收编为

@@ -1,3 +1,4 @@
+import { AiVerdictPill } from '@/components/semantic/ai-verdict-pill';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, CheckCircle2, ListChecks, Sparkles } from 'lucide-react';
@@ -66,6 +67,13 @@ export function DecompositionReviewPanel({ decision }: { decision: Decision }) {
             {t(`decision.decompReview.verdict.${result.verdict}`)}
           </span>
         ) : null}
+        {result?.quickJudge && (
+          <AiVerdictPill
+            size="xs"
+            label={t('aiJudge.quickMode')}
+            confidence={result.quickJudge.confidence ?? null}
+          />
+        )}
         <Button
           variant="ghost"
           size="sm"

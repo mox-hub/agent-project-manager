@@ -17,6 +17,13 @@ import {
   validateTestReport,
   inferCompletionType,
 } from '@/modules/cli-dispatch/adapters/test-report.schema';
+import { QuickJudgeService } from '@/modules/ai-hub/quick-judge/quick-judge.service';
+import {
+  completionTypeQuestions,
+  extractCompletionType,
+  decisionOptionQuestions,
+  extractDecisionOption,
+} from '@/modules/ai-hub/quick-judge/judge-scenarios';
 
 @Injectable()
 export class AcceptanceService {
@@ -27,6 +34,7 @@ export class AcceptanceService {
     private readonly executionService: ExecutionService,
     private readonly proposalService: ProposalService,
     private readonly messageBus: MessageBusService,
+    private readonly quickJudge: QuickJudgeService,
   ) {}
 
   /**
@@ -55,6 +63,51 @@ export class AcceptanceService {
         type: task.type,
         tags: task.issueTags.map((tt) => tt.tag.name),
       });
+    // JEV 完成类型判定（CAP-A-27 扩展批，advisory）：规则值照旧落库；AI 不一致时
+    // 落 metadata.aiCompletionType 供人对照改判。fire-and-forget 静默降级。
+    const ruleType = completionType;
+    const judgeInput = {
+      type: task.type,
+      tags: task.issueTags.map((tt) => tt.tag.name),
+      title: task.title,
+    };
+    void this.quickJudge
+      .judge(
+        'completion_type',
+        `任务交付形态判定。
+任务标题：${judgeInput.title}
+任务类型：${judgeInput.type ?? '未指定'}
+标签：${judgeInput.tags.join('、') || '无'}`,
+        completionTypeQuestions(),
+      )
+      .then(async (result) => {
+        if (!result) return;
+        const j = extractCompletionType(result.answers);
+        if (!j.type || j.type === ruleType) return;
+        const fresh = await this.prisma.acceptance.findUnique({
+          where: { id: (acceptance as { id: string }).id },
+          select: { metadata: true },
+        });
+        if (!fresh) return;
+        await this.prisma.acceptance.update({
+          where: { id: (acceptance as { id: string }).id },
+          data: {
+            metadata: {
+              ...((fresh.metadata as Record<string, unknown> | null) ?? {}),
+              aiCompletionType: {
+                type: j.type,
+                confidence: j.confidence,
+                ruleType,
+                agree: false,
+                model: result.model,
+                judgedAt: new Date().toISOString(),
+                advisory: true,
+              },
+            },
+          },
+        });
+      })
+      .catch(() => {});
 
     // 创建 Acceptance
     const acceptance = await this.prisma.acceptance.create({
@@ -270,10 +323,126 @@ export class AcceptanceService {
       });
     }
 
-    return this.prisma.acceptance.update({
+    const updated = await this.prisma.acceptance.update({
       where: { id },
       data: dto,
     });
+
+    // 决策卡选项倾向判定（CAP-A-27，advisory）：验收进入待决队列（pending/in_review）
+    // 时 fire-and-forget 出「通过/驳回/豁免」倾向分布，回写 metadata.aiJudge 供
+    // 决策卡按钮概率底色消费。失败零影响；存量卡无 aiJudge → 前端不渲染不阻断。
+    if (['pending', 'in_review'].includes(updated.status)) {
+      void this.judgeDecisionOptions(updated.id).catch(() => {});
+    }
+
+    return updated;
+  }
+
+  /**
+   * 决策卡选项倾向判定（CAP-A-27 扩展批，decision_option 场景，advisory）。
+   *
+   * 对待决队列中的验收出「通过/驳回/豁免」倾向分布，回写 metadata.aiJudge
+   * （消费方：决策卡按钮概率底色/徽注、收件箱 AI 预判 pill）。调用方一律
+   * fire-and-forget：通道未启用/失败/停用场景静默返回（quick-judge 已降级 null），
+   * 存量卡无 aiJudge 时前端不渲染——绝不阻断卡片加载。
+   *
+   * 防操纵边界：state 只含系统结构化字段（契约类型/优先级/证据结构摘要/标准
+   * 进度聚合）；标准内容、验收描述等用户自由文本不进 state。
+   */
+  async judgeDecisionOptions(acceptanceId: string): Promise<void> {
+    const acceptance = await this.prisma.acceptance.findUnique({
+      where: { id: acceptanceId },
+      select: {
+        status: true,
+        completionType: true,
+        priority: true,
+        completionEvidence: true,
+        issue: { select: { title: true } },
+        criteria: { select: { status: true, severity: true } },
+      },
+    });
+    if (!acceptance || !['pending', 'in_review'].includes(acceptance.status)) {
+      return;
+    }
+
+    const ev = (acceptance.completionEvidence ?? null) as Record<
+      string,
+      unknown
+    > | null;
+    const autoChecks = (ev?.autoChecks ?? null) as {
+      passed?: number;
+      total?: number;
+    } | null;
+    const artifactCount = Array.isArray(ev?.artifacts)
+      ? (ev?.artifacts as unknown[]).length
+      : 0;
+    const criteriaTotal = acceptance.criteria.length;
+    const passedCount = acceptance.criteria.filter(
+      (c) => c.status === 'passed',
+    ).length;
+    const failedCount = acceptance.criteria.filter(
+      (c) => c.status === 'failed',
+    ).length;
+    const openCritical = acceptance.criteria.filter(
+      (c) => c.severity === 'critical' && c.status !== 'passed',
+    ).length;
+    const openHigh = acceptance.criteria.filter(
+      (c) => c.severity === 'high' && c.status !== 'passed',
+    ).length;
+
+    const state = [
+      `验收主题：${acceptance.issue?.title ?? acceptanceId}`,
+      `完成契约类型：${acceptance.completionType}，优先级：${acceptance.priority}`,
+      `证据摘要：${artifactCount > 0 ? `产物 ${artifactCount} 项` : '无产物记录'}${
+        autoChecks
+          ? `，自动检查 ${autoChecks.passed ?? 0}/${autoChecks.total ?? 0} 通过`
+          : ''
+      }${typeof ev?.prUrl === 'string' ? `，PR ${String(ev?.prState ?? '状态未知')}` : ''}`,
+      `标准进度：${passedCount}/${criteriaTotal} 通过，${failedCount} 未通过${
+        openCritical > 0 ? `，critical 未过 ${openCritical}` : ''
+      }${openHigh > 0 ? `，high 未过 ${openHigh}` : ''}`,
+    ].join('\n');
+
+    const result = await this.quickJudge.judge(
+      'decision_option',
+      state,
+      decisionOptionQuestions({
+        accept: '证据充分，可以通过验收',
+        reject: '证据不足或未达成，应当驳回退回执行方',
+        waive: '可以豁免：不再要求证据直接放行',
+      }),
+    );
+    if (!result) return;
+    const j = extractDecisionOption(result.answers);
+    if (!j.options) return;
+
+    // 合并写回：re-judge 间隔内其他写方（aiCompletionType 等）可能已动过 metadata，
+    // 以判定发起时的 fresh 读为准合并不覆盖
+    const fresh = await this.prisma.acceptance.findUnique({
+      where: { id: acceptanceId },
+      select: { metadata: true },
+    });
+    if (!fresh) return;
+    await this.prisma.acceptance.update({
+      where: { id: acceptanceId },
+      data: {
+        metadata: {
+          ...((fresh.metadata as Record<string, unknown> | null) ?? {}),
+          aiJudge: {
+            confidence: j.confidence,
+            options: j.options,
+            optionsChoice: j.optionsChoice,
+            model: result.model,
+            judgedAt: new Date().toISOString(),
+            advisory: true,
+          },
+        },
+      },
+    });
+    this.logger.log(
+      `AI decision-option judgement attached to acceptance ${acceptanceId}`,
+      { optionsChoice: j.optionsChoice, confidence: j.confidence },
+    );
   }
 
   /**

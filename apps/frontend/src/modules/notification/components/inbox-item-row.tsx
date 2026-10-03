@@ -24,7 +24,37 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useTranslation } from 'react-i18next';
+import { AiVerdictPill } from '@/components/semantic/ai-verdict-pill';
 import type { ActionableInboxItem, ActionTone } from '../types/inbox';
+import type { Decision } from '@/shared/decision-card/types';
+
+/**
+ * 收件箱行内 AI 预判 pill（CAP-A-27 扩展批）：决策卡 payload.aiJudge 存在时
+ * 顶部选项倾向 + 置信度；无判定不渲染（零噪音纪律）。
+ */
+function AiInboxVerdict({ decision }: { decision?: Decision }) {
+  const { t } = useTranslation();
+  const judge = (decision?.payload as Record<string, unknown> | null)?.aiJudge as
+    | {
+        options?: Record<string, number>;
+        optionsChoice?: string;
+        confidence?: number;
+      }
+    | undefined;
+  if (!judge?.options || !judge.optionsChoice) return null;
+  const top = judge.options[judge.optionsChoice];
+  if (typeof top !== 'number') return null;
+  const labelKey = `decision.aiJudge.${judge.optionsChoice}`;
+  return (
+    <AiVerdictPill
+      size="xs"
+      label={t(labelKey)}
+      confidence={judge.confidence ?? top}
+      className="hidden md:inline-flex"
+    />
+  );
+}
 
 export interface InboxItemRowProps {
   item: ActionableInboxItem;
@@ -179,6 +209,9 @@ export function InboxItemRow({
             {item.actionTag.label}
           </span>
         )}
+
+        {/* AI 预判 pill（CAP-A-27 扩展批）：决策卡带 aiJudge 时显示倾向+置信（advisory） */}
+        <AiInboxVerdict decision={item.rawDecision} />
       </div>
 
       {/* 5. 触发者/Agent 身份与动态文字 */}
