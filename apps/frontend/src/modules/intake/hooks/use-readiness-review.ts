@@ -21,11 +21,20 @@ export interface ReadinessGap {
   blocking: boolean;
 }
 
+/** JEV 快筛档元数据（CAP-A-27 扩展批）：mode='quick' 表示本结果来自判断模型而非大模型 */
+export interface QuickJudgeMeta {
+  model: string;
+  confidence?: number;
+  judgedAt: string;
+  mode: 'quick';
+}
+
 export interface ReadinessReviewResult {
   dimensions: ReadinessDimension[];
   missingInfo: ReadinessGap[];
   verdict: 'ready' | 'needs-clarification' | 'blocked';
   summary: string;
+  quickJudge?: QuickJudgeMeta;
 }
 
 const DIMENSION_KEYS = ['goal', 'scope', 'scenario', 'acceptance', 'dependency', 'fallback'];
@@ -43,6 +52,19 @@ export const READINESS_DIMENSION_LABELS: Record<string, string> = {
 
 function asString(v: unknown): string {
   return typeof v === 'string' ? v.trim() : '';
+}
+
+/** 防御性解析 JEV 快筛元数据：形状不符返回 undefined（快筛是增量信息，缺失不影响主结果） */
+export function parseQuickJudgeMeta(v: unknown): QuickJudgeMeta | undefined {
+  if (typeof v !== 'object' || v === null) return undefined;
+  const m = v as Record<string, unknown>;
+  if (m.mode !== 'quick' || typeof m.model !== 'string' || !m.model) return undefined;
+  return {
+    model: m.model,
+    confidence: typeof m.confidence === 'number' ? m.confidence : undefined,
+    judgedAt: typeof m.judgedAt === 'string' ? m.judgedAt : '',
+    mode: 'quick',
+  };
 }
 
 /** 防御性收敛：key/status/verdict 不合法时降级为可渲染形态，绝不让 AI 脏数据炸 UI */
@@ -75,6 +97,7 @@ export function parseReadinessReview(
     .filter((g) => !!g.item);
 
   const summary = asString(data.summary);
+  const quickJudge = parseQuickJudgeMeta(data.quickJudge);
   // 垃圾数据判定：一条有效维度/缺口/摘要都没有才视为空形态（全 ready 是合法结果）
   if (dimensions.length === 0 && missingInfo.length === 0 && !summary) {
     return null;
@@ -91,7 +114,7 @@ export function parseReadinessReview(
     ? (data.verdict as ReadinessReviewResult['verdict'])
     : 'needs-clarification';
 
-  return { dimensions, missingInfo, verdict, summary };
+  return { dimensions, missingInfo, verdict, summary, quickJudge };
 }
 
 /** 缓存 key：评估结果按项目 + 触发纪要存取，管道卡徽章与对话框共享 */

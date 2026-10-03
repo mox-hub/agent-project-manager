@@ -23,17 +23,32 @@ export interface QuickJudgeSettings {
    * 关闭时照旧走原大模型通道出完整评估。
    */
   intakeReviewViaJudge: boolean;
+  /**
+   * 每场景用户开关（扩展批）：键=场景 ID，值仅认布尔——显式 `false` 表示用户禁用
+   * 该场景的判断介入；未配置或 true 均视为「跟随总开关」。缺省空对象（零行为变化）。
+   */
+  scenarios: Record<string, boolean>;
 }
 
 export const QUICK_JUDGE_DEFAULTS: Omit<
   QuickJudgeSettings,
-  'enabled' | 'intakeReviewViaJudge'
+  'enabled' | 'intakeReviewViaJudge' | 'scenarios'
 > = {
   provider: 'opencode-go',
   model: 'jev-1.13-free',
   baseUrl: 'https://opencode.ai/zen/v1',
   timeoutMs: 8000,
 };
+
+/** 只收布尔值键——畸形配置（非对象/含非布尔）静默丢弃，绝不因配置脏而抛错。 */
+function parseScenarioFlags(raw: unknown): Record<string, boolean> {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return {};
+  const out: Record<string, boolean> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof v === 'boolean') out[k] = v;
+  }
+  return out;
+}
 
 @Injectable()
 export class QuickJudgeSettingsService {
@@ -50,6 +65,7 @@ export class QuickJudgeSettingsService {
       return {
         enabled: value.enabled === true,
         intakeReviewViaJudge: value.intakeReviewViaJudge === true,
+        scenarios: parseScenarioFlags(value.scenarios),
         provider:
           typeof value.provider === 'string' && value.provider
             ? value.provider
@@ -71,17 +87,23 @@ export class QuickJudgeSettingsService {
       return {
         enabled: false,
         intakeReviewViaJudge: false,
+        scenarios: {},
         ...QUICK_JUDGE_DEFAULTS,
       };
     }
   }
 
-  /** 写入设置（管理员写路径）。null 字段表示回落缺省。 */
+  /** 写入设置（管理员写路径）。null 字段表示回落缺省；scenarios 增量合并（传键覆盖、未传键保留）。 */
   async updateSettings(
     patch: Partial<
       Pick<
         QuickJudgeSettings,
-        'enabled' | 'provider' | 'model' | 'baseUrl' | 'intakeReviewViaJudge'
+        | 'enabled'
+        | 'provider'
+        | 'model'
+        | 'baseUrl'
+        | 'intakeReviewViaJudge'
+        | 'scenarios'
       >
     >,
     actorId?: string,
@@ -92,6 +114,14 @@ export class QuickJudgeSettingsService {
       ...(patch.enabled !== undefined ? { enabled: patch.enabled } : {}),
       ...(patch.intakeReviewViaJudge !== undefined
         ? { intakeReviewViaJudge: patch.intakeReviewViaJudge }
+        : {}),
+      ...(patch.scenarios !== undefined
+        ? {
+            scenarios: {
+              ...current.scenarios,
+              ...parseScenarioFlags(patch.scenarios),
+            },
+          }
         : {}),
       ...(patch.provider !== undefined
         ? { provider: patch.provider || QUICK_JUDGE_DEFAULTS.provider }
@@ -111,6 +141,7 @@ export class QuickJudgeSettingsService {
       value: {
         enabled: next.enabled,
         intakeReviewViaJudge: next.intakeReviewViaJudge,
+        scenarios: next.scenarios,
         provider: next.provider,
         model: next.model,
         baseUrl: next.baseUrl,

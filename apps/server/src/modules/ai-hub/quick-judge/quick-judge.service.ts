@@ -59,6 +59,13 @@ export class QuickJudgeService {
     'trust_evaluation',
     'decision_suggestion',
     'workflow_judge',
+    // 扩展批二/批三新场景
+    'acceptance_probability',
+    'decision_option',
+    'release_readiness',
+    'failure_classify',
+    'completion_type',
+    'audit_coverage',
   ]);
 
   constructor(
@@ -88,6 +95,9 @@ export class QuickJudgeService {
     const config = await this.resolveChannel();
     if (!config) return null;
     const { settings: s, apiKey } = config;
+
+    // 场景级用户开关（扩展批）：显式 false=用户禁用该介入点，静默回落规则层
+    if (s.scenarios?.[scenario] === false) return null;
 
     const questionMap: Record<string, Omit<QuickJudgeQuestion, 'id'>> = {};
     for (const q of questions) {
@@ -140,7 +150,8 @@ export class QuickJudgeService {
     const outputTokens = payload.usage?.output_tokens ?? 0;
     const model = payload.model ?? s.model;
 
-    // 记账（对齐 assistant-silent 先例：失败仅告警不抛）
+    // 记账（对齐 assistant-silent 先例：失败仅告警不抛）。answers 摘要随账落库，
+    // 供「判定记录」观测面展示结论与置信度（判定流水=kind='judge' 的统一审计点）。
     try {
       await this.prisma.aIUsageLog.create({
         data: {
@@ -150,7 +161,12 @@ export class QuickJudgeService {
           completionTokens: outputTokens,
           totalTokens: inputTokens + outputTokens,
           estimatedCost: null, // judge 通道输入 $0.042/MTok、输出免费，价目源未覆盖前不估 0
-          responseMetadata: { kind: 'judge', scenario },
+          responseMetadata: {
+            kind: 'judge',
+            scenario,
+            questions: questions.length,
+            answers: summarizeAnswers(payload.answers),
+          },
         },
       });
     } catch (err) {
@@ -194,4 +210,112 @@ export class QuickJudgeService {
       return null;
     }
   }
+
+  /**
+   * 判定记录流水（「判断介入」设置页与审计用）：kind='judge' 的 AIUsageLog 倒序分页。
+   * 结论与置信度直接取记账时的 answers 摘要——本方法纯读，不补判定。
+   */
+  async listLogs(opts: {
+    scenario?: string;
+    page: number;
+    pageSize: number;
+  }): Promise<{
+    items: Array<{
+      id: string;
+      scenario: string;
+      model: string;
+      provider: string;
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+      questions: number;
+      answers: Record<
+        string,
+        { value: number | string | null; confidence: number | null }
+      >;
+      createdAt: Date;
+    }>;
+    total: number;
+    page: number;
+    pageSize: number;
+  }> {
+    const page = Math.max(1, Math.floor(opts.page) || 1);
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Math.floor(opts.pageSize) || 20),
+    );
+    // SQLite 走 json_extract 单键 equals（对象 path 数组过滤不受支持，勿用索引 path）
+    const metaFilters = [
+      { responseMetadata: { path: ['kind'], equals: 'judge' } },
+      ...(opts.scenario
+        ? [{ responseMetadata: { path: ['scenario'], equals: opts.scenario } }]
+        : []),
+    ];
+    const where = { AND: metaFilters };
+    const [rows, total] = await Promise.all([
+      this.prisma.aIUsageLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.aIUsageLog.count({ where }),
+    ]);
+    return {
+      items: rows.map((r) => {
+        const meta = (r.responseMetadata ?? {}) as Record<string, unknown>;
+        return {
+          id: r.id,
+          scenario: typeof meta.scenario === 'string' ? meta.scenario : '',
+          model: r.modelName,
+          provider: r.provider,
+          promptTokens: r.promptTokens,
+          completionTokens: r.completionTokens,
+          totalTokens: r.totalTokens,
+          questions: typeof meta.questions === 'number' ? meta.questions : 0,
+          answers:
+            typeof meta.answers === 'object' && meta.answers !== null
+              ? (meta.answers as Record<
+                  string,
+                  { value: number | string | null; confidence: number | null }
+                >)
+              : {},
+          createdAt: r.createdAt,
+        };
+      }),
+      total,
+      page,
+      pageSize,
+    };
+  }
+}
+
+/** answers → 轻量摘要（每问题取值+置信），控制 Json 列体积。 */
+function summarizeAnswers(
+  answers: Record<string, QuickJudgeAnswer>,
+): Record<
+  string,
+  { value: number | string | null; confidence: number | null }
+> {
+  const out: Record<
+    string,
+    { value: number | string | null; confidence: number | null }
+  > = {};
+  for (const [id, a] of Object.entries(answers)) {
+    const value =
+      a.type === 'noul'
+        ? typeof a.noul === 'number'
+          ? a.noul
+          : null
+        : a.type === 'choice'
+          ? (a.choice ?? null)
+          : typeof a.score === 'number'
+            ? a.score
+            : null;
+    out[id] = {
+      value,
+      confidence: typeof a.confidence === 'number' ? a.confidence : null,
+    };
+  }
+  return out;
 }

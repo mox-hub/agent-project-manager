@@ -210,6 +210,8 @@ import {
 } from '@/components/ui/sortable'
 import { IconStack } from '@/components/semantic/icon-stack'
 import { StatusPill } from '@/components/semantic/status-pill'
+import { AiVerdictPill } from '@/components/semantic/ai-verdict-pill'
+import { ConfidenceBar } from '@/components/semantic/confidence-bar'
 import { SubtaskBadge } from '@/components/semantic/subtask-badge'
 import { StatusIconFrame } from '@/shared/status/status-icon-frame'
 import { PRIORITY_VISUALS, TASK_STATUS_VISUALS, type StatusIconComponent } from '@/shared/status/status-visuals'
@@ -5726,6 +5728,18 @@ export function DesignSystemPage() {
                   <SubtaskBadge done={2} total={3} />
                   <SubtaskBadge done={1} total={4} />
                   <SubtaskBadge done={0} total={2} />
+                </div>
+              </div>
+
+              <div>
+                <SubLabel>AiVerdictPill / ConfidenceBar — JEV 判断徽注与概率条（semantic/ai-verdict-pill · confidence-bar · 紫=AI 预估，黄=低置信）</SubLabel>
+                <div className="flex flex-wrap items-center gap-3">
+                  <AiVerdictPill label="建议批准" confidence={0.92} />
+                  <AiVerdictPill label="benign" confidence={0.55} size="xs" />
+                  <AiVerdictPill label="高风险" />
+                  <ConfidenceBar value={0.87} label="AI 预估达成" />
+                  <ConfidenceBar value={0.42} />
+                  <ConfidenceBar value={0.96} hidePercent />
                 </div>
               </div>
 
