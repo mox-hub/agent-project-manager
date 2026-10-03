@@ -8,12 +8,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { List, Rocket, Sparkles } from 'lucide-react';
+import { DomainEventTypes } from '@apm/shared/events/domain-events';
 import { PageShell } from '@/components/semantic/page-shell';
 import { PageHeader, nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/semantic/header-action-button';
 import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
+import { useEventSubscription } from '@/infrastructure/hooks/use-event-subscription';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,7 +30,7 @@ import { IconStack } from '@/components/semantic/icon-stack';
 import { toast } from '@/components/ui/toast';
 import { useProjectList } from '@/modules/project/hooks/use-project-list';
 import { useProjectMilestones } from '@/modules/issue/hooks/use-project-tasks';
-import { useCreateRelease, useRecommendVersion, useReleases } from '../hooks/use-releases';
+import { useCreateRelease, useRecommendVersion, useReleases, releaseKeys } from '../hooks/use-releases';
 import {
   deriveReleaseChannel,
   RELEASE_PLATFORMS,
@@ -48,13 +51,33 @@ export function ReleaseListPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   // 本页自治的项目深链参数 ?project（CAP-A-15 遗产口径，参数名与各管道页一致）；无参 = 全部项目
+  // 批四：status/q 同入 URL（与 project 同真相源，深链/刷新不丢）
   const projectId = searchParams.get('project') ?? '';
+  const statusFilter = (searchParams.get('status') as ReleaseStatus | null) ?? 'all';
+  const search = searchParams.get('q') ?? '';
   const [createOpen, setCreateOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ReleaseStatus | 'all'>('all');
   const [platformFilter, setPlatformFilter] = useState<ReleasePlatform | 'all'>('all');
   const [channelFilter, setChannelFilter] = useState<ReleaseChannel | 'all'>('all');
+
+  // 筛选参数统一写回 URL（replace 不留历史；null = 删除该参数）
+  const patchParams = (patch: Record<string, string | null>) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        for (const [k, v] of Object.entries(patch)) {
+          if (v) next.set(k, v);
+          else next.delete(k);
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  };
+  const setSearch = (q: string) => patchParams({ q: q || null });
+  const setStatusFilter = (s: ReleaseStatus | 'all') =>
+    patchParams({ status: s === 'all' ? null : s });
 
   const projectsQuery = useProjectList();
   const projects = projectsQuery.data?.items ?? [];
@@ -63,6 +86,27 @@ export function ReleaseListPage() {
     () => releasesQuery.data ?? [],
     [releasesQuery.data],
   );
+
+  // 批四：发布状态变化实时失效（事件驱动，React Query 轮询兜底不存在——列表无轮询）
+  useEventSubscription(DomainEventTypes.ReleaseStatusChanged, () => {
+    queryClient.invalidateQueries({ queryKey: releaseKeys.all });
+  });
+
+  // 页头状态统计（批四）：全量客户端 reduce，零后端
+  const statusCounts = useMemo(() => {
+    const counts: Record<ReleaseStatus, number> = {
+      draft: 0,
+      gated: 0,
+      approved: 0,
+      publishing: 0,
+      released: 0,
+      failed: 0,
+    };
+    for (const r of releases) {
+      if (r.status in counts) counts[r.status] += 1;
+    }
+    return counts;
+  }, [releases]);
 
   // 客户端过滤（搜索 version/name/tag + 状态/平台/通道）
   const filtered = useMemo(
@@ -146,11 +190,8 @@ export function ReleaseListPage() {
 
   const hasActiveFilters =
     statusFilter !== 'all' || !!search || !!projectId || platformFilter !== 'all' || channelFilter !== 'all';
+  // 批四：项目闸放开——无 ?project 直开对话框（对话框内自选项目），不再 toast 拦截
   const openCreate = () => {
-    if (!projectId) {
-      toast.error(t('release.create.needProject'));
-      return;
-    }
     setCreateOpen(true);
   };
 
@@ -162,7 +203,14 @@ export function ReleaseListPage() {
         favorites={<FavoriteToggle label={nodeToText(t('release.title')).trim()} aiId="releases.list" />}
         icon={Rocket}
         iconColor="text-accent-green"
-        metrics={[{ id: 'total', label: t('release.title'), value: filtered.length }]}
+        metrics={[
+          { id: 'total', label: t('release.title'), value: filtered.length },
+          ...RELEASE_STATUSES.map((s) => ({
+            id: s,
+            label: t(statusLabelKey(s)),
+            value: statusCounts[s],
+          })),
+        ]}
         actions={
           <HeaderActionButton
             icon={Rocket}
@@ -315,12 +363,27 @@ export function ReleaseListPage() {
                       tone={visual.tone}
                       size="list"
                       spin={r.status === 'publishing'}
-                      title={t(statusLabelKey(r.status))}
+                      title={
+                        r.status === 'failed' && r.failureReason
+                          ? `${t(statusLabelKey(r.status))}：${r.failureReason}`
+                          : t(statusLabelKey(r.status))
+                      }
                     />
                     <span className="shrink-0 whitespace-nowrap font-mono text-sm font-medium text-muted-foreground/50">
                       v{r.version}
                     </span>
                     <ReleaseChannelChip channel={deriveReleaseChannel(r.version)} />
+                    {/* 行级卡点（批四）：待审批蓝 / 门禁未过红——流水线操作台一眼见卡在哪 */}
+                    {r.hasPendingApproval ? (
+                      <ListChip className="shrink-0 bg-accent-blue-light text-accent-blue">
+                        {t('release.list.pendingApproval')}
+                      </ListChip>
+                    ) : null}
+                    {r.gateFailedChecks ? (
+                      <ListChip className="shrink-0 bg-accent-red-light text-accent-red">
+                        {t('release.list.gateFailed', { count: r.gateFailedChecks })}
+                      </ListChip>
+                    ) : null}
                     <ListText className="min-w-0 flex-1 text-md font-medium">{r.name || '—'}</ListText>
                   </>
                 );

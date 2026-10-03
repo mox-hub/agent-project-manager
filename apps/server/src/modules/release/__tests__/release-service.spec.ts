@@ -293,20 +293,29 @@ describe('ReleaseService（1b：Release 实体 + CHANGELOG 单向导出）', () 
 
     expect(proposal.kind).toBe('release');
     expect(proposal.projectId).toBe('proj-1');
-    // 审批卡创建即广播，payload 与 ProposalService.create 同形态
-    expect(bus.events).toHaveLength(1);
-    expect(bus.events[0].type).toBe('decision.proposal.created');
+    // 事件序列：submitGate 过 → status.changed(draft→gated)；审批卡创建 → proposal.created
+    expect(bus.events.map((e) => e.type)).toEqual([
+      'release.status.changed',
+      'decision.proposal.created',
+    ]);
     expect(bus.events[0].payload).toMatchObject({
+      releaseId: r.id,
+      projectId: 'proj-1',
+      from: 'draft',
+      to: 'gated',
+    });
+    // 审批卡创建即广播，payload 与 ProposalService.create 同形态
+    expect(bus.events[1].payload).toMatchObject({
       proposalId: 'dp_1',
       kind: 'release',
       projectId: 'proj-1',
     });
-    expect((bus.events[0].payload as any).issueId).toBeUndefined();
+    expect((bus.events[1].payload as any).issueId).toBeUndefined();
     // 已有同发版待批卡 → 400（去重），且不重复广播
     await expect(
       releases.createApprovalProposal(r.id as string, 'user-2'),
     ).rejects.toThrow('待审批决策卡');
-    expect(bus.events).toHaveLength(1);
+    expect(bus.events).toHaveLength(2);
     expect(prisma.proposals).toHaveLength(1);
   });
 

@@ -83,12 +83,13 @@ export class ReleaseController {
 
   @Get()
   @ApiOperation({
-    summary: '发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水）',
+    summary:
+      '发版列表（可选 projectId 过滤；缺省返回全部=跨项目发版流水；瘦身投影+卡点摘要）',
   })
   @ApiQuery({ name: 'projectId', required: false, description: '项目 ID' })
   @ApiStandardErrors()
   async list(@Query('projectId') projectId?: string) {
-    return this.releases.listReleases(projectId);
+    return this.releases.listReleaseItems(projectId);
   }
 
   @Get('version-recommend')
@@ -113,6 +114,15 @@ export class ReleaseController {
   @ApiStandardErrors()
   async recommendPost(@Body() dto: VersionRecommendRequestDto) {
     return this.releases.recommendVersion(dto.projectId);
+  }
+
+  @Get(':id/changelog-preview')
+  @ApiOperation({
+    summary: '预览 CHANGELOG 再生文本（Release 实体单向投影，只读不写文件）',
+  })
+  @ApiStandardErrors()
+  async changelogPreview(@Param('id') id: string) {
+    return this.releases.previewChangelog(id);
   }
 
   @Get(':id')

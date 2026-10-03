@@ -1,6 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/core/database/prisma.service';
+import { LoggerService } from '@/core/logger/logger.service';
 import { CreateCriteriaDto } from './dto/acceptance.dto';
+import { QuickJudgeService } from '@/modules/ai-hub/quick-judge/quick-judge.service';
+import {
+  evidencePrecheckQuestions,
+  extractEvidencePrecheck,
+} from '@/modules/ai-hub/quick-judge/judge-scenarios';
 
 /**
  * 证据有效性判定（CAP-B-01 口径，唯一真相）：
@@ -16,7 +22,13 @@ export function isEvidenceCurrent(
 
 @Injectable()
 export class AcceptanceCriteriaService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: LoggerService,
+    private readonly quickJudge: QuickJudgeService,
+  ) {
+    this.logger.setContext('AcceptanceCriteriaService');
+  }
 
   /**
    * 为验收契约添加标准
@@ -184,6 +196,77 @@ export class AcceptanceCriteriaService {
         metadata: dto.metadata as any,
       },
     });
+  }
+
+  /**
+   * AI 证据预审（CAP-A-27，advisory）：对一条回流证据跑判断模型初审，
+   * 结论落 `model_evaluation` 类型证据（metadata.advisory=true）仅供验收面板
+   * 展示——**不改 acceptCompletion 判定权、不给标准打 passed/failed**。
+   * 防重键 = 证据类型+内容（回流有 content 级去重，同内容只预审一次）。
+   * 调用方（证据回流订阅器）以 fire-and-forget 挂载；judge 失败/未启用时静默返回。
+   */
+  async runAiEvidencePrecheck(
+    criteriaId: string,
+    sourceEvidence: { evidenceType: string; content: string },
+  ): Promise<void> {
+    const criteria = await this.prisma.acceptanceCriteria.findUnique({
+      where: { id: criteriaId },
+      select: { content: true, revision: true },
+    });
+    if (!criteria) return;
+
+    const precheckKey = `${sourceEvidence.evidenceType}:${sourceEvidence.content}`;
+    // SQLite 的 Prisma JSON path 数组过滤不可用，防重在内存做（单标准预审证据量小）
+    const prechecks = await this.prisma.acceptanceEvidence.findMany({
+      where: { criteriaId, evidenceType: 'model_evaluation' },
+      select: { metadata: true },
+    });
+    if (
+      prechecks.some(
+        (p) =>
+          (p.metadata as Record<string, unknown> | null)?.precheckKey ===
+          precheckKey,
+      )
+    ) {
+      return;
+    }
+
+    const state = [
+      `验收标准：${criteria.content}`,
+      `证据（${sourceEvidence.evidenceType}）：${sourceEvidence.content}`,
+    ].join('\n');
+
+    const result = await this.quickJudge.judge(
+      'evidence_precheck',
+      state,
+      evidencePrecheckQuestions(),
+    );
+    if (!result) return;
+    const judgement = extractEvidencePrecheck(result.answers);
+    if (!judgement.verdict) return;
+
+    await this.prisma.acceptanceEvidence.create({
+      data: {
+        criteriaId,
+        evidenceType: 'model_evaluation',
+        content: `AI 预审：${judgement.verdict}`,
+        submittedBy: 'system',
+        criteriaRevision: criteria.revision,
+        metadata: {
+          advisory: true,
+          precheckKey,
+          sourceEvidenceType: sourceEvidence.evidenceType,
+          confidence: judgement.confidence,
+          probabilities: judgement.probabilities,
+          evidenceSufficient: judgement.evidenceSufficient,
+          model: result.model,
+          judgedAt: new Date().toISOString(),
+        } as any,
+      },
+    });
+    this.logger.log(
+      `AI evidence precheck attached to criteria ${criteriaId} (verdict: ${judgement.verdict})`,
+    );
   }
 
   /**

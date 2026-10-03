@@ -464,6 +464,10 @@
       "today": "今天",
       "unnamed": "未命名发版"
     },
+    "list": {
+      "pendingApproval": "待审批",
+      "gateFailed": "门禁 {{count}} 项未过"
+    },
     "table": {
       "version": "版本",
       "name": "名称",
@@ -595,6 +599,10 @@
       "upgradeNotesSaved": "升级注意事项已保存",
       "upgradeNotesEmpty": "暂无升级注意事项——major/破坏性变更建议在此写明升级与迁移要点",
       "upgradeNotesPlaceholder": "major/破坏性变更的升级与迁移注意事项（如：迁移步骤、配置变更、兼容性断点）",
+      "changelogPreview": "预览 CHANGELOG",
+      "changelogTitle": "CHANGELOG 预览",
+      "changelogHint": "由 Release 实体集合单向再生的全文预览（发布时写入工作区文件，此处只读不改文件）",
+      "changelogLoadFailed": "预览加载失败",
       "github": "GitHub Release",
       "yes": "已创建",
       "no": "未创建",

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '@/core/database/prisma.service';
+import { AcceptanceCriteriaService } from './acceptance-criteria.service';
 
 /** 系统回流的证据提交者哨兵（submittedBy 为自由字符串，非 FK） */
 const SYSTEM_SUBMITTER = 'system:github-checks';
@@ -40,7 +41,36 @@ const ACCEPTANCE_TERMINAL_STATUSES: ReadonlySet<string> = new Set([
 export class GithubEvidenceSubscriber {
   private readonly logger = new Logger(GithubEvidenceSubscriber.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly criteriaService: AcceptanceCriteriaService,
+  ) {}
+
+  /**
+   * AI 证据预审（CAP-A-27 advisory）：回流证据落库后对每条标准 fire-and-forget
+   * 初审，结论落 model_evaluation 证据仅展示；失败静默（precheck 内部已降级）。
+   */
+  private precheck(
+    criteriaId: string,
+    evidenceType: string,
+    content: string,
+  ): void {
+    // 取方法引用必须在 try 内完成——criteriaService 缺失时属性访问同步抛，.catch 兜不住
+    try {
+      const run = this.criteriaService.runAiEvidencePrecheck.bind(
+        this.criteriaService,
+      );
+      void run(criteriaId, { evidenceType, content }).catch((err: unknown) => {
+        this.logger.warn(
+          `AI precheck skipped for ${criteriaId}: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      });
+    } catch (err) {
+      this.logger.warn(
+        `AI precheck unavailable for ${criteriaId}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
 
   @OnEvent('github.pull_request.updated')
   async onPullRequestUpdated(payload: {
@@ -171,6 +201,7 @@ export class GithubEvidenceSubscriber {
           submittedBy: SYSTEM_SUBMITTER,
         })),
       });
+      for (const c of ciCriteria) this.precheck(c.id, 'ci_result', content);
       this.logger.log(
         `check_run ${payload.checkName}=${payload.conclusion} 回流为验收 ${pr.acceptanceId} 的 ${ciCriteria.length} 条 CI 标准证据`,
       );
@@ -236,6 +267,7 @@ export class GithubEvidenceSubscriber {
           submittedBy: REVIEW_SUBMITTER,
         })),
       });
+      for (const c of reviewCriteria) this.precheck(c.id, 'pr_review', content);
       this.logger.log(
         `PR #${pr.number} review(${payload.reviewState} by ${payload.reviewerLogin}) 回流为验收 ${pr.acceptanceId} 的 ${reviewCriteria.length} 条 review 标准证据`,
       );

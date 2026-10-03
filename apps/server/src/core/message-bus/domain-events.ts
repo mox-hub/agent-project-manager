@@ -57,6 +57,7 @@ export const DomainEventTypes = {
   // 发版门禁
   ReleaseCreated: 'release.created',
   ReleaseApproved: 'release.approved',
+  ReleaseStatusChanged: 'release.status.changed',
 
   // 运行时（本地执行节点）
   RuntimeConnected: 'runtime.connected',

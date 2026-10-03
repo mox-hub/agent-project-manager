@@ -56,7 +56,11 @@ describe('AcceptanceCriteriaService.update 修订即失效（CAP-B-01）', () =>
   it('修改 content → revision+1、revisedAt 落时间、status 重置 pending、passedAt 清空', async () => {
     const { prisma, state } = buildPrisma();
     state.criteria = makeCriteria();
-    const service = new AcceptanceCriteriaService(prisma as any);
+    const service = new AcceptanceCriteriaService(
+      prisma as any,
+      { setContext: vi.fn() } as any,
+      { judge: vi.fn(async () => null) } as any,
+    );
 
     const updated = await service.update('c1', { content: '导出格式改为 csv' });
 
@@ -70,7 +74,11 @@ describe('AcceptanceCriteriaService.update 修订即失效（CAP-B-01）', () =>
   it('修改 content 时同请求携带 status → 修订失效优先，忽略状态直写且不落人工判定证据', async () => {
     const { prisma, state } = buildPrisma();
     state.criteria = makeCriteria();
-    const service = new AcceptanceCriteriaService(prisma as any);
+    const service = new AcceptanceCriteriaService(
+      prisma as any,
+      { setContext: vi.fn() } as any,
+      { judge: vi.fn(async () => null) } as any,
+    );
 
     const updated = await service.update('c1', {
       content: '修订后的标准',
@@ -85,7 +93,11 @@ describe('AcceptanceCriteriaService.update 修订即失效（CAP-B-01）', () =>
   it('传入相同 content → 不触发修订（revision 不变）', async () => {
     const { prisma, state } = buildPrisma();
     state.criteria = makeCriteria();
-    const service = new AcceptanceCriteriaService(prisma as any);
+    const service = new AcceptanceCriteriaService(
+      prisma as any,
+      { setContext: vi.fn() } as any,
+      { judge: vi.fn(async () => null) } as any,
+    );
 
     const updated = await service.update('c1', {
       content: '导出文件格式为 xlsx',
@@ -98,7 +110,11 @@ describe('AcceptanceCriteriaService.update 修订即失效（CAP-B-01）', () =>
   it('仅改 severity/order 等元属性 → 不触发修订', async () => {
     const { prisma, state } = buildPrisma();
     state.criteria = makeCriteria();
-    const service = new AcceptanceCriteriaService(prisma as any);
+    const service = new AcceptanceCriteriaService(
+      prisma as any,
+      { setContext: vi.fn() } as any,
+      { judge: vi.fn(async () => null) } as any,
+    );
 
     const updated = await service.update('c1', {
       severity: 'critical',
@@ -113,7 +129,11 @@ describe('AcceptanceCriteriaService.update 修订即失效（CAP-B-01）', () =>
   it('status=passed（无 content 修订）→ passedAt 落时间并自动落带版本快照的人工判定证据', async () => {
     const { prisma, state } = buildPrisma();
     state.criteria = makeCriteria({ status: 'pending', passedAt: null });
-    const service = new AcceptanceCriteriaService(prisma as any);
+    const service = new AcceptanceCriteriaService(
+      prisma as any,
+      { setContext: vi.fn() } as any,
+      { judge: vi.fn(async () => null) } as any,
+    );
 
     const updated = await service.update('c1', { status: 'passed' }, 'u1');
 
@@ -130,7 +150,11 @@ describe('AcceptanceCriteriaService.update 修订即失效（CAP-B-01）', () =>
 
   it('标准不存在 → NotFoundException', async () => {
     const { prisma } = buildPrisma();
-    const service = new AcceptanceCriteriaService(prisma as any);
+    const service = new AcceptanceCriteriaService(
+      prisma as any,
+      { setContext: vi.fn() } as any,
+      { judge: vi.fn(async () => null) } as any,
+    );
     await expect(service.update('missing', { content: 'x' })).rejects.toThrow(
       NotFoundException,
     );
@@ -141,7 +165,11 @@ describe('AcceptanceCriteriaService.addEvidence 证据版本快照（CAP-B-01）
   it('创建证据时快照当前标准 revision', async () => {
     const { prisma, state } = buildPrisma();
     state.criteria = makeCriteria({ revision: 3 });
-    const service = new AcceptanceCriteriaService(prisma as any);
+    const service = new AcceptanceCriteriaService(
+      prisma as any,
+      { setContext: vi.fn() } as any,
+      { judge: vi.fn(async () => null) } as any,
+    );
 
     await service.addEvidence(
       'c1',
@@ -163,5 +191,129 @@ describe('isEvidenceCurrent 有效性判定口径（CAP-B-01）', () => {
   it('快照与当前 revision 一致 → 有效；落后 → 待复核', () => {
     expect(isEvidenceCurrent({ criteriaRevision: 2 }, 2)).toBe(true);
     expect(isEvidenceCurrent({ criteriaRevision: 1 }, 2)).toBe(false);
+  });
+});
+
+/** CAP-A-27 P0-B：AI 证据预审 advisory——落 model_evaluation 证据、防重、降级零写入 */
+describe('AcceptanceCriteriaService.runAiEvidencePrecheck（CAP-A-27）', () => {
+  const JUDGE_OK = {
+    scenario: 'evidence_precheck',
+    model: 'jev-1.13-free',
+    answers: {
+      verdict: {
+        type: 'choice',
+        choice: 'passed',
+        confidence: 0.99,
+        probabilities: { passed: 0.9, failed: 0.05, unclear: 0.05 },
+      },
+      evidence_sufficient: { type: 'noul', noul: 0.88 },
+    },
+    usage: { inputTokens: 200, outputTokens: 30 },
+  };
+
+  function buildPrecheckPrisma(
+    opts: { existing?: Array<Record<string, any>> } = {},
+  ) {
+    const existingPrechecks = [...(opts.existing ?? [])];
+    const created: Array<Record<string, any>> = [];
+    const prisma = {
+      acceptanceCriteria: {
+        findUnique: vi.fn(async () =>
+          makeCriteria({ content: '关键接口响应时间 < 200ms', revision: 2 }),
+        ),
+      },
+      acceptanceEvidence: {
+        findMany: vi.fn(async () => existingPrechecks),
+        create: vi.fn(async ({ data }: any) => {
+          const row = { id: `ev-${created.length + 1}`, ...data };
+          created.push(row);
+          return row;
+        }),
+      },
+    };
+    const quickJudge = { judge: vi.fn(async () => JUDGE_OK) };
+    const service = new AcceptanceCriteriaService(
+      prisma as any,
+      { setContext: vi.fn(), log: vi.fn() } as any,
+      quickJudge as any,
+    );
+    return { service, prisma, created, quickJudge, existingPrechecks };
+  }
+
+  it('judge 成功 → 落 model_evaluation 证据（advisory + 版本快照 + 置信度 metadata）', async () => {
+    const { service, created } = buildPrecheckPrisma();
+
+    await service.runAiEvidencePrecheck('c1', {
+      evidenceType: 'ci_result',
+      content: 'build:success:abc123',
+    });
+
+    expect(created).toHaveLength(1);
+    expect(created[0]).toMatchObject({
+      criteriaId: 'c1',
+      evidenceType: 'model_evaluation',
+      content: 'AI 预审：passed',
+      criteriaRevision: 2,
+    });
+    expect(created[0].metadata).toMatchObject({
+      advisory: true,
+      precheckKey: 'ci_result:build:success:abc123',
+      confidence: 0.99,
+      evidenceSufficient: 0.88,
+      model: 'jev-1.13-free',
+    });
+  });
+
+  it('防重：已有同 precheckKey 的预审 → 跳过不重复落', async () => {
+    const { service, created } = buildPrecheckPrisma({
+      existing: [
+        {
+          id: 'ev0',
+          metadata: { precheckKey: 'ci_result:build:success:abc123' },
+        },
+      ],
+    });
+
+    await service.runAiEvidencePrecheck('c1', {
+      evidenceType: 'ci_result',
+      content: 'build:success:abc123',
+    });
+
+    expect(created).toHaveLength(0);
+  });
+
+  it('judge 返回 null（未启用/失败）→ 零写入不抛', async () => {
+    const { service, created, quickJudge } = buildPrecheckPrisma();
+    (quickJudge.judge as ReturnType<typeof vi.fn>).mockImplementation(
+      async () => null,
+    );
+
+    await expect(
+      service.runAiEvidencePrecheck('c1', {
+        evidenceType: 'ci_result',
+        content: 'x',
+      }),
+    ).resolves.toBeUndefined();
+    expect(created).toHaveLength(0);
+  });
+
+  it('judge 返回畸形 answers（verdict 无效）→ 零写入', async () => {
+    const { service, created, quickJudge } = buildPrecheckPrisma();
+    (quickJudge.judge as ReturnType<typeof vi.fn>).mockImplementation(
+      async () => ({
+        ...JUDGE_OK,
+        answers: {
+          verdict: { type: 'noul', noul: 0.5 },
+          evidence_sufficient: { type: 'noul', noul: 0.5 },
+        },
+      }),
+    );
+
+    await service.runAiEvidencePrecheck('c1', {
+      evidenceType: 'ci_result',
+      content: 'x',
+    });
+
+    expect(created).toHaveLength(0);
   });
 });

@@ -265,6 +265,33 @@ export class ReleaseDto {
   })
   milestone?: { id: string; name: string; status: string } | null;
 
+  @ApiPropertyOptional({
+    description: '计划发版时间（批三；挂里程碑时由 targetDate 预填）',
+    nullable: true,
+  })
+  plannedAt?: string | null;
+
+  @ApiPropertyOptional({
+    description: '发布平台（批三；封闭枚举数组）',
+    type: [String],
+    enum: RELEASE_PLATFORM_VALUES,
+  })
+  platforms?: string[] | null;
+
+  @ApiPropertyOptional({
+    description: '升级/迁移注意事项（批三；major 版本门禁注记要求）',
+  })
+  upgradeNotes?: string | null;
+
+  @ApiPropertyOptional({ description: '热修基线发版 ID（批三血缘）' })
+  hotfixOfId?: string | null;
+
+  @ApiPropertyOptional({
+    description: '热修基线轻量投影（批三；详情「修复自 vX.Y.Z」数据源）',
+    nullable: true,
+  })
+  hotfixOf?: { id: string; version: string; name?: string | null } | null;
+
   @ApiProperty({
     description: '状态',
     enum: ['draft', 'gated', 'approved', 'publishing', 'released', 'failed'],
@@ -321,3 +348,4 @@ export class ReleaseDto {
   @ApiProperty({ description: '更新时间' })
   updatedAt!: string;
 }
+

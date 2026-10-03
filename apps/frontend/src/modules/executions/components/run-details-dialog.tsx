@@ -43,6 +43,7 @@ import {
 } from './run-details-format';
 import { RunEventList } from './run-event-list';
 import { RunDiagnosisSection } from './run-diagnosis-section';
+import { RunApprovalsSection } from './run-approvals-section';
 import { RunInfoPanel } from './run-info-panel';
 import { RunIsolationBadgeFromMetadata } from './run-isolation-badge';
 import { RunTimeline } from './run-timeline';
@@ -306,6 +307,9 @@ export function RunDetailsDialog({
               classification={data.failureClassification ?? null}
               projectId={data.projectId ?? null}
             />
+
+            {/* 审批段（CAP-A-27）：人工执行验收流审批单 + AI 风险定级附注 */}
+            <RunApprovalsSection approvals={data.approvals} />
 
             {hasTimeline && windowStart && windowEnd ? (
               <div className="shrink-0 border-b px-4 py-3">

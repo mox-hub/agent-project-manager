@@ -7,6 +7,7 @@ import { GitHubSDKService } from '../integration/providers/github/github-sdk.ser
 import { ContractWorkspaceResolver } from '../contract/contract-workspace-fs';
 import { assertReleaseTransition } from './release-status';
 import { deriveReleaseChannel } from './release-version.service';
+import { DomainEventTypes } from '../../core/message-bus/domain-events';
 import { ReleaseService } from './release.service';
 
 export interface ExecutionStep {
@@ -66,6 +67,7 @@ export class ReleasePublishService {
         '发版状态已变化（可能正在发布），请刷新后重试',
       );
     }
+    this.emitStatusChanged(release, 'approved', 'publishing');
 
     const log: ExecutionStep[] = [];
     const pushLog = (entry: ExecutionStep) => {
@@ -214,6 +216,7 @@ export class ReleasePublishService {
       },
     });
     if (ok) {
+      this.emitStatusChanged(release, 'publishing', 'released');
       this.messageBus.publish('release.created', {
         projectId: release.projectId,
         releaseId,
@@ -222,6 +225,7 @@ export class ReleasePublishService {
         `发版完成: project=${release.projectId} version=${release.version}`,
       );
     } else {
+      this.emitStatusChanged(release, 'publishing', 'failed');
       this.logger.warn(
         `发版失败: release=${releaseId} ${log
           .filter((l) => l.status === 'failed')
@@ -254,5 +258,21 @@ export class ReleasePublishService {
     const m = remoteUrl.match(/github\.com[:/](.+?)\/(.+?)(?:\.git)?\/?$/i);
     if (!m) return null;
     return [m[1], m[2]];
+  }
+
+  /** 状态跃迁广播（CAP-K-03 批四，与 ReleaseService.emitStatusChanged 同构） */
+  private emitStatusChanged(
+    release: { id: string; projectId: string; version: string },
+    from: string,
+    to: string,
+  ): void {
+    this.messageBus.publish(DomainEventTypes.ReleaseStatusChanged, {
+      releaseId: release.id,
+      projectId: release.projectId,
+      version: release.version,
+      from,
+      to,
+      at: new Date().toISOString(),
+    });
   }
 }

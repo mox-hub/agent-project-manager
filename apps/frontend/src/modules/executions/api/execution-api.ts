@@ -123,6 +123,16 @@ export interface ExecutionRunDetail extends ExecutionRunRecord {
   steps: ExecutionStepRecord[];
   artifacts: ExecutionArtifactRecord[];
   bindings: CliExecutionBindingRecord[];
+  /** 审批单（人工执行验收流；metadata.aiJudge 为 CAP-A-27 AI 风险定级 advisory） */
+  approvals?: Array<{
+    id: string;
+    requestedAction: string;
+    actionType: string;
+    riskLevel: string;
+    status: string;
+    metadata?: Record<string, unknown> | null;
+    requestedAt: string;
+  }>;
 }
 
 /** 守护进程路径事件流水条目（SystemEvent runtime.execution.event 投影） */

@@ -464,6 +464,10 @@
       "today": "today",
       "unnamed": "Unnamed release"
     },
+    "list": {
+      "pendingApproval": "Pending approval",
+      "gateFailed": "{{count}} gate check(s) failed"
+    },
     "table": {
       "version": "Version",
       "name": "Name",
@@ -595,6 +599,10 @@
       "upgradeNotesSaved": "Upgrade notes saved",
       "upgradeNotesEmpty": "No upgrade notes — major/breaking releases should document upgrade and migration steps here",
       "upgradeNotesPlaceholder": "Upgrade & migration notes for major/breaking changes (migration steps, config changes, compatibility breaks)",
+      "changelogPreview": "Preview CHANGELOG",
+      "changelogTitle": "CHANGELOG preview",
+      "changelogHint": "Read-only preview of the full text regenerated from the Release entity (written to the workspace file on publish; nothing is written here)",
+      "changelogLoadFailed": "Failed to load preview",
       "github": "GitHub Release",
       "yes": "Created",
       "no": "Not created",

@@ -38,6 +38,8 @@ vi.mock('react-i18next', () => ({
         'release.status.released': '已发布',
         'release.upcoming.title': '即将发版',
         'release.upcoming.unnamed': '未命名发版',
+        'release.list.pendingApproval': '待审批',
+        'release.list.gateFailed': '门禁 {{count}} 项未过',
         'release.gate.title': '发布门禁',
         'release.gate.notRun': '尚未提交门禁',
         'release.gate.skippedEmptyScope': '范围内无内容，跳过',
@@ -67,7 +69,7 @@ vi.mock('react-i18next', () => ({
         'release.detail.project': '所属项目',
       };
       const base = translations[key] ?? key;
-      return base.replace('{{base}}', opts?.base ?? '');
+      return base.replace(/\{\{(\w+)\}\}/g, (_, k: string) => opts?.[k] ?? '');
     },
   }),
   // 真实 src/i18n 入口会 .use(initReactI18next)，mock 缺该导出会在模块加载期炸
@@ -75,7 +77,12 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('@/infrastructure/event-client', () => ({
-  eventClient: { on: vi.fn(), off: vi.fn() },
+  eventClient: {
+    on: vi.fn(),
+    off: vi.fn(),
+    isConnected: vi.fn(() => true),
+    connect: vi.fn(),
+  },
 }));
 
 vi.mock('@/modules/project/hooks/use-project-list', () => ({
@@ -266,6 +273,55 @@ describe('ReleaseListPage', () => {
     listState.releases = [baseRelease()];
     renderWithRouter(<ReleaseListPage />, '/');
     expect(screen.queryByText('即将发版')).toBeNull();
+  });
+
+  it('页头六态统计与行级卡点徽标（GAP-T-62 批四）', () => {
+    listState.releases = [
+      baseRelease({ status: 'released' }),
+      baseRelease({
+        id: 'r-5',
+        version: '1.1.0',
+        status: 'gated',
+        releasedAt: null,
+        gitTag: null,
+        hasPendingApproval: true,
+        gateFailedChecks: null,
+      }),
+      baseRelease({
+        id: 'r-6',
+        version: '1.2.0',
+        status: 'draft',
+        releasedAt: null,
+        gitTag: null,
+        gateFailedChecks: 2,
+        failureReason: null,
+      }),
+    ];
+    renderWithRouter(<ReleaseListPage />, '/');
+    // 页头六态计数（released 1 / gated 1 / draft 1）
+    expect(screen.getByText('已发布')).toBeTruthy();
+    expect(screen.getByText('草案')).toBeTruthy();
+    expect(screen.getByText('门禁通过')).toBeTruthy();
+    // 行级卡点徽标
+    expect(screen.getByText('待审批')).toBeTruthy();
+    expect(screen.getByText('门禁 2 项未过')).toBeTruthy();
+  });
+
+  it('状态筛选入 URL：?status=gated 深链只渲染对应状态（批四）', () => {
+    listState.releases = [
+      baseRelease(),
+      baseRelease({
+        id: 'r-7',
+        version: '1.3.0',
+        status: 'gated',
+        releasedAt: null,
+        gitTag: null,
+        name: 'gated 版本',
+      }),
+    ];
+    renderWithRouter(<ReleaseListPage />, '/?status=gated');
+    expect(screen.getByText('v1.3.0')).toBeTruthy();
+    expect(screen.queryByText('v1.0.0')).toBeNull();
   });
 
   it('创建对话框可选所属里程碑（CAP-A-16 计划-交付轴）', async () => {

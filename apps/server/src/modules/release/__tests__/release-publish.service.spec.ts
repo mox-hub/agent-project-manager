@@ -141,12 +141,26 @@ describe('ReleasePublishService（发布执行状态机）', () => {
       'github-release',
     ]);
     expect(log.every((l) => l.status === 'skipped')).toBe(true);
-    expect(bus.events).toEqual([
-      {
-        type: 'release.created',
-        payload: { projectId: 'proj-1', releaseId: 'r2' },
-      },
+    // 事件序列：抢占 publishing → status.changed；发布成 → status.changed + release.created
+    expect(bus.events.map((e) => e.type)).toEqual([
+      'release.status.changed',
+      'release.status.changed',
+      'release.created',
     ]);
+    expect(bus.events[0].payload).toMatchObject({
+      releaseId: 'r2',
+      from: 'approved',
+      to: 'publishing',
+    });
+    expect(bus.events[1].payload).toMatchObject({
+      releaseId: 'r2',
+      from: 'publishing',
+      to: 'released',
+    });
+    expect(bus.events[2].payload).toEqual({
+      projectId: 'proj-1',
+      releaseId: 'r2',
+    });
   });
 
   it('CAS 抢占失败（approved 被并发迁移，读到与抢占间状态漂移）→ 400，不发事件', async () => {

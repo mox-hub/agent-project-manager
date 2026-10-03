@@ -141,6 +141,10 @@ export interface ReleaseRecord {
   /** 热修基线发版 ID（批三） */
   hotfixOfId?: string | null;
   hotfixOf?: ReleaseHotfixOf | null;
+  /** 门禁未过检查项计数（批四列表卡点投影；未跑过门禁为 null；列表接口专属） */
+  gateFailedChecks?: number | null;
+  /** 是否有待审批发布决策卡（批四列表卡点投影；列表接口专属） */
+  hasPendingApproval?: boolean;
 }
 
 export interface VersionRecommendation {
@@ -187,6 +191,14 @@ export const releaseApi = {
   list: (projectId?: string) =>
     api.get<ReleaseRecord[]>('/releases', projectId ? { projectId } : undefined),
   detail: (id: string) => api.get<ReleaseRecord>(`/releases/${id}`),
+  // CHANGELOG 再生文本预览（批四：只读不写文件）
+  changelogPreview: (id: string) =>
+    api.get<{
+      releaseId: string;
+      projectId: string;
+      version: string;
+      content: string;
+    }>(`/releases/${id}/changelog-preview`),
   create: (data: CreateReleaseRequest) =>
     api.post<ReleaseRecord>('/releases', data),
   update: (id: string, data: UpdateReleaseRequest) =>

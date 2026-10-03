@@ -6,7 +6,7 @@
  * 同批追加（CAP-A-20）：快捷设置卡——工作区内置模型（provider+model 持久化，
  * AI 调用链无显式偏好时的默认目标）与模型服务厂家启停，一处配置。
  */
-import { AlertCircle, Brain, Cpu, Server, Terminal, Zap } from 'lucide-react';
+import { AlertCircle, Brain, Cpu, Server, Sparkles, Terminal, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,11 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/toast';
 import { useTranslation } from 'react-i18next';
 import { useAiProviders, useUpdateProvider } from '@/modules/ai-hub/hooks/use-ai-providers';
+import {
+  useQuickJudgeSettings,
+  useUpdateQuickJudgeSettings,
+} from '@/modules/ai-hub/hooks/use-quick-judge-settings';
+import { useAuth } from '@/modules/auth/hooks/use-auth';
 import { useCliProviders, useMcpServers, PROVIDER_DISPLAY_NAMES, type CliProviderStatus, type McpServerStatus } from '@/modules/mcp-server';
 import { useSkills } from '@/modules/skills';
 import { CliBrandIcon, ProviderBrandIcon, ProviderStatusDot, providerDisplayName } from './provider-visuals';
@@ -67,8 +72,11 @@ function HealthStatusBadge({ status }: { status: 'online' | 'offline' | 'disable
  */
 function QuickSettingsCard({ onNavigateTab }: { onNavigateTab: (tab: AiManagementTab) => void }) {
   const { t } = useTranslation();
+  const { isAdmin } = useAuth();
   const { data: providers = [], isLoading: providersLoading } = useAiProviders();
   const updateProviderMutation = useUpdateProvider();
+  const quickJudgeSettings = useQuickJudgeSettings();
+  const updateQuickJudge = useUpdateQuickJudgeSettings();
   const {
     saved,
     effective,
@@ -231,6 +239,36 @@ function QuickSettingsCard({ onNavigateTab }: { onNavigateTab: (tab: AiManagemen
               ))}
             </div>
           )}
+        </div>
+
+        {/* AI 快速判断通道（CAP-A-27）：advisory 判断（审批风险定级/证据预审）的启停 */}
+        <div>
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
+            <Sparkles className="size-3.5 text-muted-foreground" />
+            {t('aiHub.quickJudge')}
+          </label>
+          <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 py-2.5">
+            <span className="min-w-0">
+              <span className="block text-sm font-medium">{t('aiHub.quickJudgeToggle')}</span>
+              <span className="block text-xs text-muted-foreground">
+                {quickJudgeSettings.isLoading
+                  ? t('aiHub.quickJudgeLoading')
+                  : quickJudgeSettings.data?.enabled
+                    ? t('aiHub.quickJudgeOnHint', { model: quickJudgeSettings.data.model })
+                    : t('aiHub.quickJudgeOffHint')}
+              </span>
+            </span>
+            <Switch
+              checked={quickJudgeSettings.data?.enabled ?? false}
+              disabled={!isAdmin || updateQuickJudge.isPending || quickJudgeSettings.isLoading}
+              onCheckedChange={(v) => updateQuickJudge.mutate({ enabled: v })}
+              aria-label={t('aiHub.quickJudgeToggle')}
+            />
+          </div>
+          {!isAdmin && (
+            <p className="mt-1.5 text-xs text-muted-foreground">{t('aiHub.quickJudgeAdminOnly')}</p>
+          )}
+          <p className="mt-1.5 text-xs text-muted-foreground">{t('aiHub.quickJudgeNote')}</p>
         </div>
       </CardContent>
     </Card>

@@ -7,12 +7,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Check,
   CheckCircle2,
   CircleDashed,
   Clock,
   CalendarClock,
+  FileText,
   Flag,
   FolderKanban,
   GitPullRequestArrow,
@@ -27,6 +29,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SkeletonCard } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Stepper,
   StepperIndicator,
@@ -51,7 +60,7 @@ import { ReleaseNotesDraftDialog } from '../components/release-notes-draft-dialo
 import { ReleaseTraceSection } from '../components/release-trace-section';
 import { ReleaseDeliverablesCard } from '../components/release-deliverables-card';
 import { ReleaseChannelChip, ReleasePlatformBadges } from '../components/release-platform-badges';
-import { deriveReleaseChannel } from '../api/release-api';
+import { deriveReleaseChannel, releaseApi } from '../api/release-api';
 import { RELEASE_STATUS_TONE, isPlannedOverdue, statusLabelKey } from '../release-status-meta';
 import type { ExecutionStep, GateCheck, ReleaseRecord, ReleaseStatus } from '../api/release-api';
 import { cn } from '@/lib/utils';
@@ -88,6 +97,8 @@ export function ReleaseDetailPage() {
   // AI 起草说明对话框（CAP-A-18 样板推广二）：draft 态入口，
   // 生成/编辑/确认都在对话框内，页面 notes 只在确认写回后经 query 失效刷新
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
+  // CHANGELOG 再生文本预览（批四）：只读不写文件，任意状态可看
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   const gate = useGateRelease(release?.id ?? '');
   const approval = useApprovalRequest(release?.id ?? '');
@@ -180,17 +191,28 @@ export function ReleaseDetailPage() {
                     <Rocket className="size-4 text-accent-green" />
                     {t('release.detail.notesTitle')}
                   </CardTitle>
-                  {release.status === 'draft' ? (
+                  <div className="flex items-center gap-2">
+                    {release.status === 'draft' ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() => setNotesDialogOpen(true)}
+                      >
+                        <Sparkles className="mr-1 size-3 text-accent-purple" />
+                        {t('release.detail.aiDraft')}
+                      </Button>
+                    ) : null}
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       className="h-7 text-xs"
-                      onClick={() => setNotesDialogOpen(true)}
+                      onClick={() => setChangelogOpen(true)}
                     >
-                      <Sparkles className="mr-1 size-3 text-accent-purple" />
-                      {t('release.detail.aiDraft')}
+                      <FileText className="mr-1 size-3 text-content-text-muted" />
+                      {t('release.detail.changelogPreview')}
                     </Button>
-                  ) : null}
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {release.notes ? (
@@ -259,6 +281,13 @@ export function ReleaseDetailPage() {
                   onOpenChange={setNotesDialogOpen}
                 />
               ) : null}
+
+              {/* CHANGELOG 再生预览（批四：只读不写文件） */}
+              <ChangelogPreviewDialog
+                releaseId={release.id}
+                open={changelogOpen}
+                onOpenChange={setChangelogOpen}
+              />
 
               {/* 交付成果清单（CAP-K-03 批二）：交付了什么/在哪拿/怎么验证/限制/接收人 */}
               <ReleaseDeliverablesCard release={release} />
@@ -588,5 +617,55 @@ function UpgradeNotesBlock({ release }: { release: ReleaseRecord }) {
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * CHANGELOG 再生文本预览（CAP-K-03 批四）：GET /releases/:id/changelog-preview
+ * 只读拉取项目级再生文本，不写工作区文件——「Release 实体 = CHANGELOG 唯一真相、
+ * 单向再生」卖点的可见面。打开时才请求。
+ */
+function ChangelogPreviewDialog({
+  releaseId,
+  open,
+  onOpenChange,
+}: {
+  releaseId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  const preview = useQuery({
+    queryKey: ['release-changelog-preview', releaseId],
+    enabled: open && !!releaseId,
+    queryFn: () => releaseApi.changelogPreview(releaseId!),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-dialog-scroll overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-sm">
+            {t('release.detail.changelogTitle')}
+          </DialogTitle>
+          <DialogDescription className="text-2xs">
+            {t('release.detail.changelogHint')}
+          </DialogDescription>
+        </DialogHeader>
+        {preview.isLoading ? (
+          <p className="py-6 text-center text-xs text-content-text-muted">
+            {t('release.detail.loading')}
+          </p>
+        ) : preview.isError ? (
+          <p className="py-6 text-center text-xs text-accent-red">
+            {t('release.detail.changelogLoadFailed')}
+          </p>
+        ) : (
+          <pre className="max-h-96 overflow-auto whitespace-pre-wrap rounded-md border border-border bg-muted/30 p-3 font-mono text-2xs leading-relaxed text-content-text">
+            {preview.data?.content}
+          </pre>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

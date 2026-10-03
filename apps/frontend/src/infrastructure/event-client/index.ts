@@ -48,6 +48,7 @@ const SUBSCRIBED_EVENT_TYPES = [
   DomainEventTypes.AcceptanceDeleted,
   DomainEventTypes.ReleaseCreated,
   DomainEventTypes.ReleaseApproved,
+  DomainEventTypes.ReleaseStatusChanged,
 
   // 决策提案创建（收件箱/侧栏徽标实时失效，兜底改造批 4；暂无注册表键）
   'decision.proposal.created',
