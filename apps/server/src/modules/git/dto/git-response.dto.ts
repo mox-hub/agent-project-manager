@@ -579,6 +579,13 @@ export class WorkspaceValidationResponseDto {
 
   @ApiPropertyOptional({ type: Boolean, description: '是否检测到 .git 目录' })
   gitRepoDetected?: boolean;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    description:
+      'localPath 指向的目录不存在（前端语义组件据此出现「创建目录」动作）',
+  })
+  missing?: boolean;
 }
 
 /** 克隆结果（cloneRepository） */

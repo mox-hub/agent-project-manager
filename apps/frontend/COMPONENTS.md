@@ -14,11 +14,11 @@
 
 | 状态 | 数量 | 计入 LU 分母 | 必须在画廊展示 | 是否需消费方 |
 |---|---|---|---|---|
-| ✅ canonical | 314 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
+| ✅ canonical | 319 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
 | 📦 standby | 17 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
 | 🔒 internal | 5 | ❌ 不计 | ❌ 免 | — |
 | ⛔ deprecated | 1 | ❌ 不计 | ✅ 标记 deprecated | — |
-| **合计** | **337** | | | |
+| **合计** | **342** | | | |
 
 > **画廊豁免（H 类，2026-09-29 裁决）**：任何状态条目可登记 `galleryExempt`（一句话理由）豁免画廊 demo——豁免后不入覆盖率分母（`check-component-registry.mjs` §4.2 ④ 机器强制），但在设计系统页 Registry 对账区可见；**demo 豁免 ≠ 清退豁免**，五态裁决面不受影响。
 
@@ -32,11 +32,11 @@
 | Feedback | 10 |
 | Navigation | 11 |
 | Overlays | 12 |
-| Layout & Shells | 11 |
-| AI Execution | 26 |
+| Layout & Shells | 12 |
+| AI Execution | 25 |
 | App Patterns | 6 |
-| Semantic | 16 |
-| App Components | 202 |
+| Semantic | 20 |
+| App Components | 203 |
 
 ## 待裁决清单（设计系统页「只看待裁决」视图同源）
 
@@ -190,7 +190,7 @@
 |---|---|---|---|---|
 | view-display-popover | `src/components/semantic/view-display-popover.tsx` | 🔒 internal | — | — |
 
-### Layout & Shells（11）
+### Layout & Shells（12）
 
 #### UI 原子层 `src/components/ui/`（5）
 
@@ -202,17 +202,16 @@
 | scroll-area | `src/components/ui/scroll-area.tsx` | ✅ canonical | — | — |
 | separator | `src/components/ui/separator.tsx` | ✅ canonical | — | — |
 
-#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（5）
+#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（6）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
 | data-table-shell | `src/components/semantic/data-table-shell.tsx` | ✅ canonical | — | — |
-| detail-page-frame | `src/components/semantic/detail-page-frame.tsx` | ✅ canonical | task/bug/member/team 四详情页 | L2 双栏母版（§20.2），侧栏二态内聚、主栏宽档同表分发 |
-| detail-section | `src/components/semantic/detail-section.tsx` | ✅ canonical | issue 详情页主栏六分区（描述/自定义字段/子任务/执行项/验收预览/依赖） | 与 sidebar-panel 同构不同形（平铺无卡底），各自独立 |
 | page-shell | `src/components/semantic/page-shell.tsx` | ✅ canonical | — | — |
 | right-sidebar | `src/components/semantic/right-sidebar.tsx` | ✅ canonical | — | — |
 | section-card | `src/components/semantic/section-card.tsx` | ✅ canonical | — | — |
 | sidebar-panel | `src/components/semantic/sidebar-panel.tsx` | ✅ canonical | — | — |
+| detail-page-frame | `src/components/semantic/detail-page-frame.tsx` | ✅ canonical | — | — |
 
 #### 模块专用组件 `src/modules/*/components/`（1）
 
@@ -220,9 +219,9 @@
 |---|---|---|---|---|
 | chapter-scrubber | `src/modules/document/components/chapter-scrubber.tsx` | ✅ canonical | — | — |
 
-### AI Execution（26）
+### AI Execution（25）
 
-#### 模块专用组件 `src/modules/*/components/`（26）
+#### 模块专用组件 `src/modules/*/components/`（25）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
@@ -237,7 +236,7 @@
 | station-card | `src/modules/ai-surface/components/station-card.tsx` | ✅ canonical | — | — |
 | surface-liveness | `src/modules/ai-surface/components/surface-liveness.tsx` | ✅ canonical | — | — |
 | surface-narration-bar | `src/modules/ai-surface/components/surface-narration-bar.tsx` | ✅ canonical | — | — |
-| watch-deck | `src/modules/ai-surface/components/watch-deck.tsx` | ✅ canonical | — | 2026-10-02 自 radial-watch-deck 重写：绝对定位拼贴改三栏响应布局（ARCH-AISURFACE-001 §3.1），工位卡抽出为 station-card |
+| watch-deck | `src/modules/ai-surface/components/watch-deck.tsx` | ✅ canonical | — | — |
 | anchor-qa-thread | `src/modules/assistant/components/anchor-qa-thread.tsx` | ✅ canonical | — | — |
 | assistant-colleague-slot | `src/modules/assistant/components/assistant-colleague-slot.tsx` | ✅ canonical | — | — |
 | assistant-context-chip | `src/modules/assistant/components/assistant-context-chip.tsx` | ✅ canonical | — | — |
@@ -265,20 +264,23 @@
 | sub-page-toolbar | `src/components/semantic/sub-page-toolbar.tsx` | ✅ canonical | — | — |
 | toolbar-row | `src/components/semantic/toolbar-row.tsx` | ✅ canonical | — | — |
 
-### Semantic（16）
+### Semantic（20）
 
-#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（16）
+#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（20）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
+| ai-verdict-pill | `src/components/semantic/ai-verdict-pill.tsx` | ✅ canonical | — | — |
 | subtask-badge | `src/components/semantic/subtask-badge.tsx` | ✅ canonical | — | — |
 | chip | `src/components/semantic/chip.tsx` | ✅ canonical | — | — |
 | nav-status-dot | `src/components/semantic/nav-status-dot.tsx` | ✅ canonical | — | — |
 | theme-mode-card | `src/components/semantic/theme-mode-card.tsx` | ✅ canonical | — | — |
 | chart-card | `src/components/semantic/chart-card.tsx` | ✅ canonical | — | — |
+| confidence-bar | `src/components/semantic/confidence-bar.tsx` | ✅ canonical | — | — |
 | stat-tile | `src/components/semantic/stat-tile.tsx` | ✅ canonical | — | — |
 | metric-row | `src/components/semantic/metric-row.tsx` | ✅ canonical | — | — |
 | stats-card | `src/components/semantic/stats-card.tsx` | ✅ canonical | — | — |
+| detail-section | `src/components/semantic/detail-section.tsx` | ✅ canonical | — | — |
 | settings-header | `src/components/semantic/settings-header.tsx` | ✅ canonical | — | — |
 | section-scrubber | `src/components/semantic/section-scrubber.tsx` | ✅ canonical | — | — |
 | settings-section-card | `src/components/semantic/settings-section-card.tsx` | ✅ canonical | — | — |
@@ -287,10 +289,11 @@
 | status-definition-dialog | `src/components/semantic/status-definition-dialog.tsx` | ✅ canonical | — | —（**画廊豁免**：受控表单弹窗（候选/回调由消费方注入），画廊以 status-definition-list demo 间接覆盖） |
 | sticky-save-bar | `src/components/semantic/sticky-save-bar.tsx` | ✅ canonical | — | — |
 | settings-field-row | `src/components/semantic/settings-field-row.tsx` | ✅ canonical | — | — |
+| path-input | `src/components/semantic/path-input.tsx` | ✅ canonical | — | — |
 
-### App Components（202）
+### App Components（203）
 
-#### 跨模块业务组件 `src/shared/components/`（27）
+#### 跨模块业务组件 `src/shared/components/`（29）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
@@ -322,8 +325,9 @@
 | markdown-live-editor | `src/shared/components/markdown-live-editor.tsx` | ✅ canonical | — | — |
 | markdown-view | `src/shared/components/markdown-view.tsx` | ✅ canonical | — | — |
 | prompt-editor | `src/shared/components/prompt-editor.tsx` | ✅ canonical | — | — |
+| decision-review-modal | `src/shared/decision-card/decision-review-modal.tsx` | ✅ canonical | — | — |
 
-#### 模块专用组件 `src/modules/*/components/`（175）
+#### 模块专用组件 `src/modules/*/components/`（174）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
@@ -361,7 +365,6 @@
 | status-manager | `src/modules/core-config/components/status-manager.tsx` | ✅ canonical | — | — |
 | tag-manager | `src/modules/core-config/components/tag-manager.tsx` | ✅ canonical | — | — |
 | template-manager | `src/modules/core-config/components/template-manager.tsx` | ✅ canonical | — | — |
-| decision-review-modal | `src/shared/decision-card/decision-review-modal.tsx` | ✅ canonical | — | — |
 | decomposition-review-panel | `src/modules/decision/components/decomposition-review-panel.tsx` | ✅ canonical | — | — |
 | BackendStatusBadge | `src/modules/desktop/components/BackendStatusBadge.tsx` | ✅ canonical | — | — |
 | desktop-gate | `src/modules/desktop/components/desktop-gate.tsx` | ✅ canonical | — | — |

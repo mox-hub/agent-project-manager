@@ -124,6 +124,8 @@ export interface WorkspaceValidationResult {
   error?: string;
   suggestion?: string;
   gitRepoDetected?: boolean;
+  /** 目录不存在（CAP-A-28：path-input 据此出现「创建目录」动作） */
+  missing?: boolean;
 }
 
 export interface GitCommandResult {
@@ -274,6 +276,22 @@ export const gitApi = {
 
   validateWorkspace: (projectId: string) => {
     return api.post<WorkspaceValidationResult>(`/git/projects/${projectId}/workspace/validate`, );
+  },
+
+  /** 直验输入框当前值（不读不写已存配置）——path-input「验证」动作（CAP-A-28） */
+  validateWorkspacePath: (projectId: string, localPath: string) => {
+    return api.post<WorkspaceValidationResult>(
+      `/git/projects/${projectId}/workspace/validate`,
+      { localPath },
+    );
+  },
+
+  /** 确保目录存在（mkdir -p 幂等）并回检验结果——path-input「创建目录」动作 */
+  ensureWorkspaceDirectory: (projectId: string, localPath: string) => {
+    return api.post<WorkspaceValidationResult>(
+      `/git/projects/${projectId}/workspace/directory`,
+      { localPath },
+    );
   },
 
   cloneRepository: (

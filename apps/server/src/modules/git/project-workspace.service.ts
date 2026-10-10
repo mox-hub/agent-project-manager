@@ -19,6 +19,8 @@ export interface WorkspaceValidationResult {
   error?: string;
   suggestion?: string;
   gitRepoDetected?: boolean;
+  /** localPath 指向的目录不存在——前端语义组件（CAP-A-28）据此刻「创建目录」动作 */
+  missing?: boolean;
 }
 
 @Injectable()
@@ -180,35 +182,104 @@ export class ProjectWorkspaceService {
       return result;
     }
 
-    const localPath = workspace.localPath;
+    const result = this.checkPath(workspace.localPath);
+    await this.updateValidationStatus(projectId, result);
+    return result;
+  }
 
+  /**
+   * 直验给定路径（纯文件系统检查，不读不写已存配置）——
+   * 语义组件「验证」动作（POST workspace/validate { localPath }）用，
+   * 让组件校验输入框当前值而非必须先保存
+   */
+  checkPathDirect(rawPath: string): WorkspaceValidationResult {
+    return this.checkPath(path.resolve(rawPath));
+  }
+
+  /**
+   * 确保目录存在（mkdir -p 幂等）并回检验结果——语义组件「创建目录」动作。
+   * 显式用户动作（权限同 setWorkspace：owner/maintainer），绝不静默自动建目录。
+   * 创建后的目录必然无 .git，结果如实返回 invalid + gitRepoDetected:false。
+   */
+  async ensureDirectory(
+    projectId: string,
+    userId: string,
+    rawPath: string,
+  ): Promise<WorkspaceValidationResult> {
+    const project = await this.prisma.project.findFirst({
+      where: {
+        id: projectId,
+        members: {
+          some: {
+            userId,
+            role: { in: ['owner', 'maintainer'] },
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      throw new NotFoundException('Project not found or access denied');
+    }
+
+    if (!rawPath?.trim()) {
+      throw new BadRequestException('localPath is required');
+    }
+
+    const resolvedPath = path.resolve(rawPath);
+
+    let existing: fs.Stats | null = null;
+    try {
+      existing = fs.statSync(resolvedPath);
+    } catch {
+      // 不存在 → 走创建
+    }
+
+    if (existing && !existing.isDirectory()) {
+      throw new BadRequestException('Local path exists and is not a directory');
+    }
+
+    if (!existing) {
+      try {
+        fs.mkdirSync(resolvedPath, { recursive: true });
+      } catch (error) {
+        throw new BadRequestException(
+          `Failed to create directory: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    return this.checkPath(resolvedPath);
+  }
+
+  /**
+   * 纯文件系统检查（不读不写 DB）：存在性 → 可读写 → .git 结构。
+   * validateWorkspace（落库回显）/ checkPathDirect（直验输入值）/ ensureDirectory
+   * 三条入口共用同一口径，验证结论永远来自后端实测。
+   */
+  private checkPath(localPath: string): WorkspaceValidationResult {
     // Check if path exists
     if (!fs.existsSync(localPath)) {
-      const result: WorkspaceValidationResult = {
+      return {
         valid: false,
         status: 'invalid',
         error: 'Local path does not exist',
         suggestion:
           'Please verify the path or update the workspace configuration',
+        missing: true,
       };
-
-      await this.updateValidationStatus(projectId, result);
-      return result;
     }
 
     // Check if path is accessible
     try {
       fs.accessSync(localPath, fs.constants.R_OK | fs.constants.W_OK);
     } catch {
-      const result: WorkspaceValidationResult = {
+      return {
         valid: false,
         status: 'invalid',
         error: 'Local path is not accessible',
         suggestion: 'Please check file permissions',
       };
-
-      await this.updateValidationStatus(projectId, result);
-      return result;
     }
 
     // Check if .git directory exists
@@ -216,7 +287,7 @@ export class ProjectWorkspaceService {
     const gitRepoDetected = fs.existsSync(gitPath);
 
     if (!gitRepoDetected) {
-      const result: WorkspaceValidationResult = {
+      return {
         valid: false,
         status: 'invalid',
         error: '.git directory not found',
@@ -224,9 +295,6 @@ export class ProjectWorkspaceService {
           'This directory is not a Git repository. Run "git init" or clone a repository.',
         gitRepoDetected: false,
       };
-
-      await this.updateValidationStatus(projectId, result);
-      return result;
     }
 
     // Validate .git directory structure
@@ -235,7 +303,7 @@ export class ProjectWorkspaceService {
       const configPath = path.join(gitPath, 'config');
 
       if (!fs.existsSync(headPath) || !fs.existsSync(configPath)) {
-        const result: WorkspaceValidationResult = {
+        return {
           valid: false,
           status: 'invalid',
           error: '.git directory is corrupted',
@@ -243,32 +311,23 @@ export class ProjectWorkspaceService {
             'The .git directory appears to be corrupted. Consider re-initializing or re-cloning the repository.',
           gitRepoDetected: true,
         };
-
-        await this.updateValidationStatus(projectId, result);
-        return result;
       }
     } catch {
-      const result: WorkspaceValidationResult = {
+      return {
         valid: false,
         status: 'invalid',
         error: 'Failed to validate .git directory',
         suggestion: 'Please check the repository integrity',
         gitRepoDetected: true,
       };
-
-      await this.updateValidationStatus(projectId, result);
-      return result;
     }
 
     // All checks passed
-    const result: WorkspaceValidationResult = {
+    return {
       valid: true,
       status: 'valid',
       gitRepoDetected: true,
     };
-
-    await this.updateValidationStatus(projectId, result);
-    return result;
   }
 
   /**

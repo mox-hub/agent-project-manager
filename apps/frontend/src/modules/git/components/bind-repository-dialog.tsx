@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { gitApi } from '../api/git-api';
+import { PathInput } from '@/components/semantic/path-input';
 import { GitBranch, Link2 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -194,9 +195,17 @@ export function BindRepositoryDialog({
                 <FormItem>
                   <FormLabel>Local Path (optional)</FormLabel>
                   <FormControl>
-                    <Input
+                    <PathInput
+                      value={field.value ?? ''}
+                      onChange={field.onChange}
                       placeholder="C:\Projects\my-project"
-                      {...field}
+                      inputClassName="font-mono text-sm"
+                      onValidate={(path) =>
+                        gitApi.validateWorkspacePath(projectId, path)
+                      }
+                      onCreate={(path) =>
+                        gitApi.ensureWorkspaceDirectory(projectId, path)
+                      }
                     />
                   </FormControl>
                   <FormMessage />

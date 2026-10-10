@@ -30,20 +30,6 @@ export function useSetWorkspace() {
   });
 }
 
-export function useValidateWorkspace() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (projectId: string) => gitApi.validateWorkspace(projectId),
-    onSuccess: (_data, projectId) => {
-      queryClient.invalidateQueries({ queryKey: ['workspace', projectId] });
-    },
-    onError: (err) => {
-      toast.error('验证工作空间失败: ' + (err instanceof Error ? err.message : '未知错误'));
-    },
-  });
-}
-
 export function useCloneRepository() {
   const queryClient = useQueryClient();
 

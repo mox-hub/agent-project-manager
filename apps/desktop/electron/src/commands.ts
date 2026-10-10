@@ -472,6 +472,23 @@ export const commandHandlers = {
     return { path: result.filePaths[0] };
   },
 
+  /** 原生单文件选择器（Git 可执行文件路径等，CAP-A-28 path-input）；取消返回 null。 */
+  async choose_file(args?: {
+    title?: string;
+    filters?: { name: string; extensions: string[] }[];
+  }): Promise<{ path: string | null }> {
+    const win = BrowserWindow.getAllWindows()[0];
+    const result = await dialog.showOpenDialog(win, {
+      title: args?.title ?? '选择文件',
+      properties: ['openFile'],
+      filters: args?.filters,
+    });
+    if (result.canceled || result.filePaths.length === 0) {
+      return { path: null };
+    }
+    return { path: result.filePaths[0] };
+  },
+
   async toggle_devtools(): Promise<ActionResult> {
     const win = BrowserWindow.getAllWindows()[0];
     if (!win) {

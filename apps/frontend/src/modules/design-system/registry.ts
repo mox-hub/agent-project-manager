@@ -225,6 +225,10 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   // settings-field-row 左说明右控件字段行（收编 settings 域 10+ 处同构散写）。
   { name: 'sticky-save-bar', file: 'semantic/sticky-save-bar.tsx', section: 'Semantic', status: 'canonical' },
   { name: 'settings-field-row', file: 'semantic/settings-field-row.tsx', section: 'Semantic', status: 'canonical' },
+  // path-input 路径输入统一件（CAP-A-28，2026-10-03）：手输+桌面壳系统选择器
+  // （choose_directory/choose_file）+后端实测验证+失效一键创建+保底报错，
+  // 收编 git/workspace/project/settings 四域 6 处路径手输。
+  { name: 'path-input', file: 'semantic/path-input.tsx', section: 'Semantic', status: 'canonical' },
 
   // ── 跨模块业务组件：src/shared/components/ ───────────────────────────────
   { name: 'board-view', file: 'shared/components/board-view/board-view.tsx', section: 'App Components', status: 'canonical' },

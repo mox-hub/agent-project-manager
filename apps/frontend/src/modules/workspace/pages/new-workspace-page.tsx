@@ -7,7 +7,6 @@ import {
   ArrowRight,
   CheckCircle2,
   Database,
-  FolderOpen,
   FolderPlus,
   Info,
   KeyRound,
@@ -23,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { PathInput } from '@/components/semantic/path-input';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from '@/components/ui/toast';
@@ -349,17 +349,14 @@ function NewWorkspaceContent() {
                           {t('workspace.pathLabel', '数据目录（绝对路径）')}
                         </FieldLabel>
                         <FieldContent>
-                          <div className="flex items-center gap-2">
-                            <FolderOpen size={14} className="shrink-0 text-muted-foreground" />
-                            <Input
-                              id="workspace-path"
-                              value={pathInput}
-                              onChange={(e) => setPathInput(e.target.value)}
-                              placeholder={t('workspace.pathPlaceholder', '如：D:\\apm-workspaces\\company-a')}
-                              className="font-mono text-xs"
-                              autoFocus
-                            />
-                          </div>
+                          {/* 无项目域 validate/create 端点（admin 建工作区在提交时自建子目录）——仅选择器+手输+页面自身绝对路径校验 */}
+                          <PathInput
+                            id="workspace-path"
+                            value={pathInput}
+                            onChange={setPathInput}
+                            placeholder={t('workspace.pathPlaceholder', '如：D:\\apm-workspaces\\company-a')}
+                            inputClassName="font-mono text-xs"
+                          />
                           {pathInput && !pathValid ? (
                             <p className="text-2xs text-accent-red">
                               {t(

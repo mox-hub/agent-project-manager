@@ -275,6 +275,7 @@ import { SettingsHeader } from '@/components/semantic/settings-header'
 import { SectionScrubber } from '@/components/semantic/section-scrubber'
 import { SettingsSectionCard } from '@/components/semantic/settings-section-card'
 import { SettingsFieldRow } from '@/components/semantic/settings-field-row'
+import { PathInput } from '@/components/semantic/path-input'
 import { StickySaveBar } from '@/components/semantic/sticky-save-bar'
 import { DefinitionRow } from '@/components/semantic/definition-row'
 import { StatusDefinitionList } from '@/components/semantic/status-definition-list'
@@ -485,6 +486,7 @@ const SECTIONS = [
   { id: 'settings-section-card', label: 'Settings Section Card', group: 'Semantic' },
   { id: 'sticky-save-bar', label: 'Sticky Save Bar', group: 'Semantic' },
   { id: 'settings-field-row', label: 'Settings Field Row', group: 'Semantic' },
+  { id: 'path-input', label: 'Path Input', group: 'Semantic' },
   { id: 'definition-row', label: 'Definition Row', group: 'Semantic' },
   { id: 'status-definition-list', label: 'Status Definition List', group: 'Semantic' },
   // registry 口径本就是 section:'Semantic' 的两件：侧边栏组从层组归位（锚块物理位不动，
@@ -5585,6 +5587,38 @@ export function DesignSystemPage() {
                     control={<Switch defaultChecked aria-label="常驻显示" />}
                   />
                   <SettingsFieldRow title="仅说明行（无控件槽）" description="用于提示性条目" />
+                </div>
+              </div>
+              </SectionAnchor>
+              <SectionAnchor id="path-input">
+              <div>
+                <SubLabel>PathInput — 路径输入统一件（CAP-A-28：手输+桌面壳系统选择器[仅壳内渲染]+后端实测验证+失效一键创建+保底报错）</SubLabel>
+                <div className="flex max-w-xl flex-col gap-4">
+                  <PathInput
+                    label="本地路径（已验证回显）"
+                    description="项目在本机的目录路径"
+                    value="D:\\code\\my-project"
+                    onChange={() => {}}
+                    savedStatus="valid"
+                    savedValidatedAt="2026-10-03T09:30:00Z"
+                    onValidate={() => Promise.resolve({ status: 'valid', gitRepoDetected: true })}
+                  />
+                  <PathInput
+                    label="本地路径（目录缺失）"
+                    description="验证结论 missing 时出现「创建目录」动作"
+                    value="D:\\code\\gone-project"
+                    onChange={() => {}}
+                    onValidate={() => Promise.resolve({ status: 'invalid', error: 'Local path does not exist', suggestion: '创建目录或重新选择', missing: true })}
+                    onCreate={() => Promise.resolve({ status: 'invalid', error: '.git directory not found', gitRepoDetected: false })}
+                  />
+                  <PathInput
+                    label="可执行文件（kind=file）"
+                    description="Git 可执行文件路径——桌面壳内可唤起系统文件选择器"
+                    value=""
+                    onChange={() => {}}
+                    kind="file"
+                    placeholder="C:\\Program Files\\Git\\bin\\git.exe"
+                  />
                 </div>
               </div>
               </SectionAnchor>

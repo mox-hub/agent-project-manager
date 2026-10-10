@@ -47,6 +47,10 @@ import {
   BranchListResponseDto,
   BranchMutationResultResponseDto,
 } from './dto/git-response.dto';
+import {
+  WorkspaceValidateRequestDto,
+  EnsureWorkspaceDirectoryRequestDto,
+} from './dto/workspace-request.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiStandardErrors } from '@/common/decorators/api-response.decorator';
@@ -284,18 +288,44 @@ export class GitController {
   }
 
   @Post('projects/:projectId/workspace/validate')
-  @ApiOperation({ summary: '验证项目工作空间' })
+  @ApiOperation({
+    summary: '验证项目工作空间（带 localPath 时直验该路径，不落库）',
+  })
   @ApiParam({ name: 'projectId', description: '项目 ID' })
   @ApiStandardErrors()
   @ApiOkResponse({
     type: WorkspaceValidationResponseDto,
-    description: '校验结果（valid/status/error/suggestion/gitRepoDetected）',
+    description:
+      '校验结果（valid/status/error/suggestion/gitRepoDetected/missing）',
   })
   async validateWorkspace(
     @Param('projectId') projectId: string,
     @CurrentUser() user: { sub: string },
+    @Body() dto?: WorkspaceValidateRequestDto,
   ) {
+    if (dto?.localPath) {
+      return this.workspace.checkPathDirect(dto.localPath);
+    }
     return this.workspace.validateWorkspace(projectId, user.sub);
+  }
+
+  @Post('projects/:projectId/workspace/directory')
+  @ApiOperation({
+    summary: '确保项目工作空间目录存在（mkdir -p 幂等）并回检验结果',
+  })
+  @ApiParam({ name: 'projectId', description: '项目 ID' })
+  @ApiStandardErrors()
+  @ApiOkResponse({
+    type: WorkspaceValidationResponseDto,
+    description:
+      '创建后校验结果（新建目录必无 .git：invalid + gitRepoDetected:false 如实返回）',
+  })
+  async ensureWorkspaceDirectory(
+    @Param('projectId') projectId: string,
+    @CurrentUser() user: { sub: string },
+    @Body() dto: EnsureWorkspaceDirectoryRequestDto,
+  ) {
+    return this.workspace.ensureDirectory(projectId, user.sub, dto.localPath);
   }
 
   @Post('projects/:projectId/workspace/clone')

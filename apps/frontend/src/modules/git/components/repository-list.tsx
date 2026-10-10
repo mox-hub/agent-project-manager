@@ -8,7 +8,8 @@ import { SectionCard } from "@/components/semantic/section-card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateRepository, useRepositories } from "../hooks/use-repositories";
 import { useProjectList } from "@/modules/project/hooks/use-project-list";
-import { type CreateRepositoryDto } from "../api/git-api";
+import { gitApi, type CreateRepositoryDto } from "../api/git-api";
+import { PathInput } from "@/components/semantic/path-input";
 
 interface RepositoryListProps {
   projectId?: string;
@@ -161,13 +162,25 @@ export function RepositoryList({ projectId: propProjectId, provider = "all", que
 
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Local Path</label>
-            <Input
-              value={formData.localPath || ""}
-              onChange={(e) => setFormData({ ...formData, localPath: e.target.value })}
-              placeholder="E:/code/app"
-              data-ai-component="git.repository-list.create-form.local-path"
-              data-ai-action="git.repository-list.create-form.local-path.change"
-            />
+            {/* AI 协议标记挂容器（PathInput 封闭 props 不透传 data-ai-*） */}
+            <div data-ai-component="git.repository-list.create-form.local-path">
+              <PathInput
+                value={formData.localPath || ""}
+                onChange={(localPath) => setFormData({ ...formData, localPath })}
+                placeholder="E:/code/app"
+                inputClassName="font-mono text-sm"
+                onValidate={
+                  formData.projectId
+                    ? (path) => gitApi.validateWorkspacePath(formData.projectId, path)
+                    : undefined
+                }
+                onCreate={
+                  formData.projectId
+                    ? (path) => gitApi.ensureWorkspaceDirectory(formData.projectId, path)
+                    : undefined
+                }
+              />
+            </div>
           </div>
 
           <div className="space-y-1">

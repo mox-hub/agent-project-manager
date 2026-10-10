@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PathInput } from '@/components/semantic/path-input';
 import {
   Stepper,
   StepperIndicator,
@@ -187,14 +188,15 @@ export function ProjectEntryWizard({
               <p>{t('project.importWizard.connectHint')}</p>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium" htmlFor="wizard-local-path">
-                {t('project.importWizard.localPath')}
-              </label>
-              <Input
+              <PathInput
                 id="wizard-local-path"
-                value={localPath}
-                onChange={(e) => setLocalPath(e.target.value)}
+                label={t('project.importWizard.localPath')}
                 placeholder="D:\\code\\my-project"
+                value={localPath}
+                onChange={setLocalPath}
+                inputClassName="font-mono text-sm"
+                onValidate={(path) => gitApi.validateWorkspacePath(projectId, path)}
+                onCreate={(path) => gitApi.ensureWorkspaceDirectory(projectId, path)}
               />
             </div>
             <div className="space-y-1.5">

@@ -13,6 +13,7 @@ import { StickySaveBar } from '@/components/semantic/sticky-save-bar';
 import { nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Spinner } from '@/components/ui/spinner';
+import { PathInput } from '@/components/semantic/path-input';
 import { useGlobalConfig, useUpdateGlobalConfig } from '@/modules/config/hooks/use-global-config';
 import { useGitToolStatus, useSetGitPath } from '@/modules/git/hooks/use-git-tool';
 import { GitBranch, RefreshCw, CheckCircle2, XCircle, Settings2 } from 'lucide-react';
@@ -136,20 +137,26 @@ function GitToolStatusCard() {
           </div>
         )}
 
-        {/* Git 路径配置 */}
+        {/* Git 路径配置（CAP-A-28：kind=file 系统选择器；验证走 Save→check 链，无目录域端点故无验证/创建钮） */}
         <div className="space-y-3 pt-2">
           <p className="text-sm font-medium text-foreground">{t('settings.gitPathInput')}</p>
+          <PathInput
+            kind="file"
+            value={gitPathInput}
+            onChange={setGitPathInput}
+            placeholder={t('settings.gitPathPlaceholder')}
+            inputClassName="font-mono text-sm"
+            pickerTitle={t('settings.gitPathPickerTitle')}
+            pickerFilters={
+              /Win/i.test(navigator.userAgent)
+                ? [{ name: 'git.exe', extensions: ['exe'] }]
+                : undefined
+            }
+          />
           <div className="flex gap-2">
-            <Input
-              value={gitPathInput}
-              onChange={(e) => setGitPathInput(e.target.value)}
-              placeholder={t('settings.gitPathPlaceholder')}
-              className="font-mono text-sm"
-            />
             <Button
               onClick={handleSaveGitPath}
               disabled={setGitPath.isPending}
-              className="shrink-0"
             >
               {setGitPath.isPending ? (
                 <Spinner className="size-3.5 text-inherit" />
