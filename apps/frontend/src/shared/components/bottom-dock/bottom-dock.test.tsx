@@ -1,10 +1,35 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import React from 'react';
 import { DOCK_ITEM_IDS, useAppStore, type DockItemId } from '@/infrastructure/store/app-store';
 import { BottomDock } from './bottom-dock';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+// jsdom 无真实帧回调：AnimatePresence mode="wait" 的 exit 永不完成，展开态子树
+// （Prompt 栏）永不挂载。测试关注状态语义，让 motion 退化为直渲染。
+vi.mock('motion/react', () => ({
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  motion: new Proxy(
+    {},
+    {
+      get: (_target, name: string) => (props: Record<string, unknown>) => {
+        const {
+          whileHover: _wh,
+          whileTap: _wt,
+          transition: _tr,
+          layout: _layout,
+          initial: _initial,
+          animate: _animate,
+          exit: _exit,
+          ...rest
+        } = props;
+        return React.createElement(name, rest);
+      },
+    },
+  ),
 }));
 
 // useTheme 需 ThemeProvider；本测试只关心 Dock 行为，直接注入固定主题（意图与生效同档）
@@ -186,7 +211,8 @@ describe('BottomDock —— 退出判定区域（回归：点弹窗内部不得�
     renderDock();
     openPromptBar();
 
-    fireEvent.mouseDown(screen.getByTestId('dock-item-search'));
+    // 展开态的 Prompt 栏本体就是 Dock 的一部分（收起态功能按钮已随状态切换卸载）
+    fireEvent.mouseDown(screen.getByTestId('dock-prompt-bar'));
 
     expect(useAppStore.getState().aiPanelOpen).toBe(true);
   });
@@ -198,6 +224,51 @@ describe('BottomDock —— 退出判定区域（回归：点弹窗内部不得�
     fireEvent.mouseDown(document.body);
 
     // 关闭由 Dock 的 outside-click 处理器触发，前提是 Prompt 栏已展开（处理器才挂载）
+    expect(useAppStore.getState().aiPanelOpen).toBe(false);
+  });
+});
+
+describe('BottomDock —— 发送后输入栏保持展开（dock 是唯一对话输入口）', () => {
+  it('回车发送：草稿唤起助手对话，输入栏保持挂载、文本清空、面板保持开启', () => {
+    const openAssistantWithDraft = vi.fn();
+    useAppStore.setState({ openAssistantWithDraft });
+    renderDock();
+    openPromptBar();
+
+    const input = screen.getByPlaceholderText('向小周提问或安排任务...');
+    fireEvent.input(input, { target: { value: '帮我盘点今天的风险' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(openAssistantWithDraft).toHaveBeenCalledWith('帮我盘点今天的风险');
+    // 发送后不收缩（曾收起输入栏打断连续追问）；文本清空承接下一条输入
+    expect(screen.getByPlaceholderText('向小周提问或安排任务...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('向小周提问或安排任务...')).toHaveValue('');
+    // 面板保持开启以查看实时回复
+    expect(useAppStore.getState().aiPanelOpen).toBe(true);
+  });
+
+  it('点击发送按钮与回车同语义', () => {
+    const openAssistantWithDraft = vi.fn();
+    useAppStore.setState({ openAssistantWithDraft });
+    renderDock();
+    openPromptBar();
+
+    const input = screen.getByPlaceholderText('向小周提问或安排任务...');
+    fireEvent.input(input, { target: { value: '按钮发送' } });
+    fireEvent.click(screen.getByTitle('发送指令 (Enter)'));
+
+    expect(openAssistantWithDraft).toHaveBeenCalledWith('按钮发送');
+    expect(screen.getByPlaceholderText('向小周提问或安排任务...')).toHaveValue('');
+  });
+
+  it('Esc 与收起按钮仍是显式收起出口（收起同时关闭对话面板）', () => {
+    useAppStore.setState({ openAssistantWithDraft: vi.fn() });
+    renderDock();
+    openPromptBar();
+
+    const input = screen.getByPlaceholderText('向小周提问或安排任务...');
+    fireEvent.keyDown(input, { key: 'Escape' });
+
     expect(useAppStore.getState().aiPanelOpen).toBe(false);
   });
 });

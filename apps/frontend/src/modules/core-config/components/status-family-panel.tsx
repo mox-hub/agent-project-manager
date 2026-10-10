@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { countBy } from '@/components/semantic/filter-chips';
+import { Button } from '@/components/ui/button';
 import { AsyncState } from '@/components/semantic/async-state';
 import { StatusDefinitionList, type StatusDefinitionLike } from '@/components/semantic/status-definition-list';
 import {
@@ -156,6 +158,14 @@ export function StatusFamilyPanel({
         onRetry={() => void refetch()}
         isEmpty={statuses.length === 0}
         emptyTitle={emptyTitle ?? t('settings.noStatuses')}
+        emptyAction={
+          isAdmin ? (
+            <Button size="sm" className="gap-1" onClick={() => openCreate('backlog')}>
+              <Plus className="size-4" />
+              {t('settings.addStatus', '新建状态')}
+            </Button>
+          ) : undefined
+        }
         loadingFallback={
           <DataTableShell>
             <SkeletonTable rows={6} columns={3} />

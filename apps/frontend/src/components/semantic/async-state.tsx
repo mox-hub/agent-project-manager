@@ -12,6 +12,8 @@ interface AsyncStateProps {
   emptyIcon?: ComponentType<{ className?: string }>;
   emptyTitle?: string;
   emptyDescription?: string;
+  /** 空态行动按钮（如「新建第一个」）：透传 EmptyState action 槽 */
+  emptyAction?: ReactNode;
   /** 空态场景变体透传：page=整页主体空态（撑满内容区），card=分区内紧凑形态（默认） */
   emptyVariant?: "page" | "card";
   /** 空态自定义视觉块透传（page 变体配 IconStack 插画）；错误态恒为 card 简式 */
@@ -28,6 +30,7 @@ export function AsyncState({
   emptyIcon,
   emptyTitle,
   emptyDescription,
+  emptyAction,
   emptyVariant = "card",
   emptyVisual,
   children,
@@ -62,6 +65,7 @@ export function AsyncState({
         variant={emptyVariant}
         title={emptyTitle ?? t("common.noData", "暂无数据")}
         description={emptyDescription}
+        action={emptyAction}
       />
     );
   }

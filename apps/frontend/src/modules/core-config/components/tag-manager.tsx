@@ -209,6 +209,14 @@ export function TagManager() {
         onRetry={() => void refetch()}
         isEmpty={filteredTags.length === 0}
         emptyTitle={t('settings.noTags')}
+        emptyAction={
+          isAdmin ? (
+            <Button size="sm" className="gap-1" onClick={openCreate}>
+              <Plus className="size-4" />
+              {t('settings.addLabel')}
+            </Button>
+          ) : undefined
+        }
         loadingFallback={
           <DataTableShell>
             <SkeletonTable rows={6} columns={3} />

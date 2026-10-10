@@ -217,8 +217,10 @@ export function BottomDock({ preview = false }: BottomDockProps = {}) {
       : `[@${selectedColleague.name}] ${trimmed}`;
     openAssistantWithDraft(fullDraft);
 
-    // 发送后平滑收起 Dock 输入栏，但保持上方 AI 对话面板开启（closePanel = false）以查看实时回复
-    handleClosePrompt(false);
+    // 发送后输入栏保持展开（dock 是唯一对话输入口，收起会打断连续追问）：
+    // 只清空文本承接下一条输入；收起走显式出口（Esc / X / 点击交互面之外），
+    // 上方 AI 对话面板同步保持开启以查看实时回复。
+    setPromptText('');
   };
 
   // 全局命令面板快捷触发：走命令式 CustomEvent（不伪造键位事件，
