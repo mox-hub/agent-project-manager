@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { StatusPill } from '@/components/semantic/status-pill';
 import { StatsCard } from '@/components/semantic/stats-card';
 import { Switch } from '@/components/ui/switch';
@@ -181,10 +182,16 @@ function QuickSettingsCard({ onNavigateTab }: { onNavigateTab: (tab: AiManagemen
               {isDirty && effective?.model ? (
                 <Button
                   size="sm"
+                  className="gap-1"
                   onClick={handleSaveDefaultModel}
                   disabled={setDefaultModelMutation.isPending}
                 >
-                  {t('common.save')}
+                  {setDefaultModelMutation.isPending ? (
+                    <Spinner className="size-3 text-inherit" />
+                  ) : null}
+                  {setDefaultModelMutation.isPending
+                    ? t('aiHub.defaultModelSaving')
+                    : t('common.save')}
                 </Button>
               ) : (
                 !isDirty &&

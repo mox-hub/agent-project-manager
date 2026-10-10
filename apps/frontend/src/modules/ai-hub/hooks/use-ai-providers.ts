@@ -184,6 +184,29 @@ export function useSetDefaultModel() {
 }
 
 /**
+ * 保存内置模型（先实测走通再落库）：
+ * 1) POST /ai/providers/validate-model 用已存 key 对所选 provider+model 发一次最小真实调用；
+ * 2) 通过才 PUT /ai/default-model 落库，失败抛出后端结构化错误（网关无此模型/不可达等）。
+ * 「配置后要真实走通才能显示成功」——实测不过不落库不假成功，调用方 toast 即时报错。
+ */
+export function useSaveDefaultModelValidated() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { provider: string; model: string }) => {
+      const check = await aiHubApi.validateModel(data);
+      if (!check.valid) {
+        throw new Error(check.error || '模型实测未通过，请检查厂家连接与模型名');
+      }
+      return aiHubApi.setDefaultModel(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: defaultModelKeys.all });
+    },
+  });
+}
+
+/**
  * Hook to get all available AI models
  */
 export function useAiModels(provider?: string) {

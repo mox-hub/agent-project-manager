@@ -5,7 +5,7 @@
  * 收敛出结构化需求摘要 → 用户确认后回调 onConfirm 交给宿主创建项目。
  * 会话态全在本地 useState（无服务端会话）；任何时刻可降级 onFallback 改手动。
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ArrowRight, CircleAlert, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,8 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
   const [currentChoices, setCurrentChoices] = useState<GrillChoice[]>([]);
   const [freeText, setFreeText] = useState('');
   const [summary, setSummary] = useState<GrillSummary | null>(null);
+  // 同一轮作答的连点守卫：isPending 在同一 tick 内不会翻转，选项/回车双触发靠它挡
+  const answeringRef = useRef(false);
 
   const ask = (history: GrillTurn[], input?: string) => {
     grill.mutate(
@@ -52,6 +54,9 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
             setSummary(result.summary);
           }
         },
+        onSettled: () => {
+          answeringRef.current = false;
+        },
       },
     );
   };
@@ -65,11 +70,17 @@ export function GrillInterview({ onConfirm, onFallback, confirmPending = false }
   };
 
   const answer = (text: string, choice?: GrillChoice) => {
-    if (!currentQuestion || grill.isPending) return;
+    if (!currentQuestion || grill.isPending || answeringRef.current) return;
     const trimmed = text.trim();
     if (!trimmed) return;
-    const history = [...turns, { question: currentQuestion, answer: trimmed }];
-    setTurns([...history, { question: currentQuestion, answer: trimmed, choices: choice ? [choice] : undefined }]);
+    answeringRef.current = true;
+    const turn: AskedTurn = {
+      question: currentQuestion,
+      answer: trimmed,
+      ...(choice ? { choices: [choice] } : {}),
+    };
+    const history: GrillTurn[] = [...turns, { question: currentQuestion, answer: trimmed }];
+    setTurns([...turns, turn]);
     setFreeText('');
     setCurrentQuestion(null);
     setCurrentChoices([]);

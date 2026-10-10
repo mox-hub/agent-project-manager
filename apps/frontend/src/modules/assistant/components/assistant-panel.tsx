@@ -62,14 +62,23 @@ function useRouteProjectId(): string | undefined {
 type EnsureConversation = () => Promise<string | undefined>;
 
 /** 出站消息派发器：消费跨组件唤起请求携带的草稿（Dock / 办公室同事卡 / AI 创建），
- *  确保会话就绪后直接发送——面板内无输入框，草稿即消息。 */
-function AssistantOutboundDispatcher({
+ *  确保会话就绪后直接发送——面板内无输入框，草稿即消息。
+ *  nonce 去重必须用面板级已消费标记（consumedNonce）：本组件随 chatKey（会话/作用域
+ *  切换）整树重挂载，组件内 ref 会清零——曾致切换会话后同一条草稿被原样重发一次
+ *  （同问出现两条）。面板 state 跨重挂载存活。
+ *  导出仅供测试（assistant-outbound-dispatcher.test.tsx：锁死「await 期间重渲染不丢消息」）。 */
+export function AssistantOutboundDispatcher({
   outbound,
+  consumedNonce,
+  onConsumed,
   projectId,
   activeConversationId,
   ensureConversation,
 }: {
   outbound: { text: string; nonce: number } | null;
+  /** 面板级已消费 nonce（跨 Chat 实例重挂载存活） */
+  consumedNonce: number;
+  onConsumed: (nonce: number) => void;
   projectId?: string;
   activeConversationId?: string;
   ensureConversation: EnsureConversation;
@@ -77,30 +86,47 @@ function AssistantOutboundDispatcher({
   const { t } = useTranslation();
   const { sendMessage } = useAssistantChatHelpers();
   const viewing = useAppStore((s) => s.viewing);
-  const lastNonceRef = useRef(0);
+  // 发送上下文走 latest-ref 镜像：effect 只认 outbound/consumedNonce 变化。ensureConversation
+  // 依赖 useMutation 结果对象、t 依赖 i18n 实例，每次渲染都可能是新引用——若进依赖数组，
+  // await 创建会话期间的任何重渲染都会触发 cleanup 把在途发送 cancelled 掉（消息无声蒸发：
+  // 会话已建、POST 未发），重跑又被 nonce guard 挡住，无法自愈。
+  const sendCtxRef = useRef({ onConsumed, projectId, activeConversationId, viewing, ensureConversation, sendMessage, t });
+  useEffect(() => {
+    sendCtxRef.current = { onConsumed, projectId, activeConversationId, viewing, ensureConversation, sendMessage, t };
+  });
+
+  // 卸载标记：effect 依赖（consumedNonce）会因 onConsumed 同步回写在发送启动瞬间变化，
+  // 依赖变化的 cleanup 不得取消在途发送——真正的取消边界只有组件卸载（面板关闭/
+  // 会话切换销毁 Chat 实例）。空依赖 effect 的 cleanup 仅在卸载时执行（StrictMode
+  // 双挂载的模拟卸载会在重挂载时复位）。
+  const unmountedRef = useRef(false);
+  useEffect(() => {
+    unmountedRef.current = false;
+    return () => {
+      unmountedRef.current = true;
+    };
+  }, []);
 
   useEffect(() => {
-    if (!outbound || outbound.nonce === lastNonceRef.current) return;
-    lastNonceRef.current = outbound.nonce;
-    let cancelled = false;
+    if (!outbound || outbound.nonce === consumedNonce) return;
+    sendCtxRef.current.onConsumed(outbound.nonce);
     void (async () => {
       try {
-        const ensured = await ensureConversation();
-        if (cancelled) return;
-        const conversationId = ensured ?? activeConversationId;
-        sendMessage(
+        const ctx = sendCtxRef.current;
+        const ensured = await ctx.ensureConversation();
+        if (unmountedRef.current) return;
+        const conversationId = ensured ?? ctx.activeConversationId;
+        ctx.sendMessage(
           { text: outbound.text, metadata: {} },
-          { body: buildAssistantSendBody({ projectId, conversationId, viewing }) },
+          { body: buildAssistantSendBody({ projectId: ctx.projectId, conversationId, viewing: ctx.viewing }) },
         );
       } catch {
         // 会话创建失败：toast 告知，不打断面板（会话流内不再有输入口可重试）
-        if (!cancelled) toast.error(t('assistant.chat.outboundFailed'));
+        if (!unmountedRef.current) toast.error(sendCtxRef.current.t('assistant.chat.outboundFailed'));
       }
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, [outbound, ensureConversation, activeConversationId, projectId, viewing, sendMessage, t]);
+     
+  }, [outbound, consumedNonce]);
 
   return null;
 }
@@ -194,6 +220,9 @@ export function AssistantPanel() {
   const openRequest = useAppStore((s) => s.assistantOpenRequest);
   const [consumedRequestNonce, setConsumedRequestNonce] = useState(0);
   const [outbound, setOutbound] = useState<{ text: string; nonce: number } | null>(null);
+  // 出站草稿已消费 nonce（面板级，跨 Chat 实例重挂载存活）：
+  // 去重标记若存放在派发器组件内，会话切换重挂载后清零，同一条草稿会被重发
+  const [consumedOutboundNonce, setConsumedOutboundNonce] = useState(0);
   if (openRequest && openRequest.nonce !== consumedRequestNonce) {
     setConsumedRequestNonce(openRequest.nonce);
     setActiveConversationId(openRequest.conversationId);
@@ -222,12 +251,23 @@ export function AssistantPanel() {
     return created.conversationId;
   }, [pendingNew, createConversation]);
 
-  // 会话域就绪门槛：新对话模式跳过旧会话水合；显式会话需等消息水合完成
-  const sessionReady =
+  // 会话域就绪门槛：新对话模式跳过旧会话水合；显式会话需等消息水合完成。
+  // 「跟随当前」模式在本轮（openEpoch）一旦就绪就保持就绪——新对话落会话时
+  // useCreateAssistantConversation 会 invalidate 跟随查询触发 refetch，若让
+  // sessionReady 随加载空窗翻转，AssistantChatSession（含在途出站发送与本地
+  // 流式消息）会被整树卸载，草稿在 ensureConversation 的 await 之间被 cancelled
+  // 吞掉：服务端落库成功、界面却毫无痕迹。显式切换历史会话不受记忆影响，
+  // 仍走水合门槛（避免换会话瞬间渲染旧会话内容）。
+  const [readyEpoch, setReadyEpoch] = useState(-1);
+  const readyNow =
     pendingNew ||
     (!sessionLoading &&
       !!session &&
       (activeConversationId === null || session.conversationId === activeConversationId));
+  if (readyNow && activeConversationId === null && readyEpoch !== openEpoch) {
+    setReadyEpoch(openEpoch);
+  }
+  const sessionReady = readyNow || (readyEpoch === openEpoch && activeConversationId === null);
   // key 含 openEpoch：每次打开都是全新 Chat 实例；新对话落会话后 key 稳定，流式不中断
   const chatKey = `${projectId ?? 'workspace'}::${openEpoch}::${activeConversationId ?? 'live'}`;
   const sessionConversationId = session?.conversationId ?? null;
@@ -335,6 +375,8 @@ export function AssistantPanel() {
           >
             <AssistantOutboundDispatcher
               outbound={outbound}
+              consumedNonce={consumedOutboundNonce}
+              onConsumed={setConsumedOutboundNonce}
               projectId={projectId}
               activeConversationId={activeConversationId ?? undefined}
               ensureConversation={ensureConversation}

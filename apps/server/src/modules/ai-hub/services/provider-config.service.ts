@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../../core/database/prisma.service';
 import { EncryptionService } from '../../../core/crypto/encryption.service';
 import { MessageBusService } from '../../../core/message-bus/message-bus.service';
@@ -14,6 +15,7 @@ import {
   UpdateProviderConfigDto,
   ValidateProviderDto,
   ValidateProviderResponseDto,
+  ValidateModelDto,
   ProviderConfigResponseDto,
   ProviderBalanceResponseDto,
   ProviderBalanceWindowDto,
@@ -65,19 +67,27 @@ export class ProviderConfigService {
   ) {}
 
   /**
-   * 获取所有 Provider 配置（附 availableModels：AIModelConfig 中该厂家的已启用模型）
+   * 获取所有 Provider 配置（附 availableModels：AIModelConfig 中该厂家的已启用模型）。
+   * 空表时按内置厂家目录补种连接槽位（首启/新工作区库）：模板库由 db push 生成、
+   * 无种子数据，桌面版首装 AI 管理页会因零配置落入「死占位卡」分支无法配置厂家
+   * （2026-10-03 桌面真机实测）。幂等：仅空表触发；槽位是目录不是用户数据，
+   * 删光后重进恢复默认槽位是有意行为。
    */
   async listProviders(): Promise<ProviderConfigResponseDto[]> {
-    const [providers, modelConfigs] = await Promise.all([
-      this.prisma.aIProviderConfig.findMany({
+    let providers = await this.prisma.aIProviderConfig.findMany({
+      orderBy: { provider: 'asc' },
+    });
+    if (providers.length === 0) {
+      await this.seedDefaultProviderSlots();
+      providers = await this.prisma.aIProviderConfig.findMany({
         orderBy: { provider: 'asc' },
-      }),
-      this.prisma.aIModelConfig.findMany({
-        where: { enabled: true },
-        select: { provider: true, name: true },
-        orderBy: { name: 'asc' },
-      }),
-    ]);
+      });
+    }
+    const modelConfigs = await this.prisma.aIModelConfig.findMany({
+      where: { enabled: true },
+      select: { provider: true, name: true },
+      orderBy: { name: 'asc' },
+    });
 
     const modelsByProvider = new Map<string, string[]>();
     for (const m of modelConfigs) {
@@ -92,6 +102,39 @@ export class ProviderConfigService {
           ...this.toResponseDto(p),
           availableModels: modelsByProvider.get(p.provider) ?? [],
         }) as ProviderConfigResponseDto,
+    );
+  }
+
+  /**
+   * 空表补种内置厂家连接槽位（无 key、disconnected）：
+   * 目录 = PROVIDER_DEFAULT_BASE_URLS 键集（与前端 PROVIDER_INFO 对齐的 7 家），
+   * displayName/sdkType 走同源映射。SQLite createMany 不支持 skipDuplicates，
+   * 并发首启双写靠组合唯一约束兜底：撞 P2002 说明对方请求已完成补种，静默吞掉。
+   */
+  private async seedDefaultProviderSlots(): Promise<void> {
+    const entries = Object.entries(
+      ProviderConfigService.PROVIDER_DEFAULT_BASE_URLS,
+    );
+    try {
+      await this.prisma.aIProviderConfig.createMany({
+        data: entries.map(([provider, baseUrl]) => ({
+          provider,
+          displayName: this.getProviderDisplayName(provider),
+          sdkType: this.getSdkType(provider),
+          baseUrl,
+          status: 'disconnected',
+        })),
+      });
+    } catch (error) {
+      if (
+        !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+        error.code !== 'P2002'
+      ) {
+        throw error;
+      }
+    }
+    this.logger.log(
+      `已补种 ${entries.length} 个内置厂家连接槽位（空表首启自动补齐）`,
     );
   }
 
@@ -313,6 +356,40 @@ export class ProviderConfigService {
       };
     } catch (error) {
       // 校验失败不落状态：被验的是输入框里的新 key，不代表已保存 key 失效
+      return {
+        valid: false,
+        error: error.message || 'Validation failed',
+      };
+    }
+  }
+
+  /**
+   * 校验指定模型真实可用（内置模型保存前的「真实走通」实测）：
+   * 读已存 key 按模型惰性构建适配器，发一次最小真实调用。区别于 validateProvider
+   * （验输入框新 key、用厂家兜底模型）——这里验的是「用户实际要用的 provider+model 组合」，
+   * 未配置 key / 网关无此模型 / 网关不可达都会如实验为 invalid，不落任何状态。
+   */
+  async validateModel(
+    dto: ValidateModelDto,
+  ): Promise<ValidateProviderResponseDto> {
+    const adapter = await this.adapterRegistry.resolveAdapter(
+      dto.provider,
+      dto.model,
+    );
+    if (!adapter) {
+      return {
+        valid: false,
+        error: `该厂家（${dto.provider}）未配置 API Key 或未启用，请先保存 API Key`,
+      };
+    }
+    try {
+      const result = await adapter.validateConnection();
+      return {
+        valid: result.valid,
+        models: result.models,
+        error: result.error,
+      };
+    } catch (error) {
       return {
         valid: false,
         error: error.message || 'Validation failed',

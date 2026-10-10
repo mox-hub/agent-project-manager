@@ -107,6 +107,7 @@ vi.mock('@/modules/ai-hub/hooks/use-ai-providers', () => ({
     isLoading: false,
   }),
   useSetDefaultModel: () => ({ mutate: vi.fn(), isPending: false }),
+  useSaveDefaultModelValidated: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 
 vi.mock('@/modules/ai-hub/hooks/use-validate-provider', () => ({

@@ -5,6 +5,13 @@ import { AiSdkAdapterFactory } from '../adapters/ai-sdk-adapter.factory';
 import { ModelAdapter } from '../adapters/model-adapter.interface';
 
 /**
+ * 内置模型（工作区默认 AI 模型）的 AppConfig 存储键（scope=global，随工作区库天然隔离）。
+ * 常量住在本文件：resolveBuiltinAdapter 消费它，而 provider-config 依赖本服务，
+ * 反向 import 会成环；provider-config 处保留 re-export 兼容旧 import 路径。
+ */
+export const AI_DEFAULT_MODEL_CONFIG_KEY = 'ai.defaultModel';
+
+/**
  * 适配器注册表服务
  * 替代 AiHubService 中硬编码的 adapters Map
  * 从 DB 动态加载 provider 配置并管理适配器实例
@@ -186,6 +193,26 @@ export class AdapterRegistryService implements OnModuleInit {
       );
       return null;
     }
+  }
+
+  /**
+   * 工作区内置模型解析（AppConfig ai.defaultModel）：主助手与静默 AI 的统一默认目标。
+   * 命中且适配器可建 → 按模型惰性构建；未配置/解析失败回落「第一个可用厂家（优先
+   * openai）」；无任何已装载适配器返回 null（调用方转可读 400）。
+   */
+  async resolveBuiltinAdapter(): Promise<ModelAdapter | null> {
+    const row = await this.prisma.appConfig.findFirst({
+      where: { key: AI_DEFAULT_MODEL_CONFIG_KEY, scope: 'global' },
+    });
+    const value = row?.value as { provider?: string; model?: string } | null;
+    if (value?.provider && value?.model) {
+      const resolved = await this.resolveAdapter(value.provider, value.model);
+      if (resolved) return resolved;
+    }
+    const providers = this.getLoadedProviders();
+    if (providers.length === 0) return null;
+    const provider = providers.includes('openai') ? 'openai' : providers[0];
+    return this.getAdapter(provider);
   }
 
   /**

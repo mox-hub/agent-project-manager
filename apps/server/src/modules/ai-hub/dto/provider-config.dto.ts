@@ -284,6 +284,27 @@ export class DefaultModelResponseDto {
 }
 
 /**
+ * 校验指定模型可用性 DTO（内置模型保存前的「真实走通」实测；读已存 key，不接收新 key）
+ */
+export class ValidateModelDto {
+  @ApiProperty({
+    description: 'Provider 类型',
+    enum: AIProviderType,
+    example: 'opencode-go',
+  })
+  @IsEnum(AIProviderType)
+  provider: AIProviderType;
+
+  @ApiProperty({
+    description: '待实测的模型名（用户在内置模型卡选择的模型）',
+    example: 'deepseek-v4.1-flash',
+  })
+  @IsString()
+  @MinLength(1)
+  model: string;
+}
+
+/**
  * 校验结果响应 DTO
  */
 export class ValidateProviderResponseDto {

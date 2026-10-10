@@ -43,11 +43,15 @@ describe('AssistantSilentService.run', () => {
     const service = new AssistantSilentService(
       { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
       {
-        listAdapters: () => adapters,
-        getAdapter: () => ({
-          getProvider: () => adapters[0]?.provider ?? 'x',
-          chat,
-        }),
+        // resolveBuiltinAdapter：有可用厂家时返回可聊天适配器；空注册表返回 null 走可读 400
+        resolveBuiltinAdapter: async () =>
+          adapters.length === 0
+            ? null
+            : {
+                getProvider: () => adapters[0].provider,
+                getModelName: () => adapters[0].model,
+                chat,
+              },
       } as never,
       // UsagePricingService 桩：成本估算返回 null（估算不可用口径）
       { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
@@ -136,8 +140,11 @@ describe('AssistantSilentService.run', () => {
       const service = new AssistantSilentService(
         { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
         {
-          listAdapters: () => [{ provider: 'glm', model: 'm' }],
-          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+          resolveBuiltinAdapter: async () => ({
+            getProvider: () => 'glm',
+            getModelName: () => 'm',
+            chat,
+          }),
         } as never,
         { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       );
@@ -205,8 +212,11 @@ describe('AssistantSilentService.run', () => {
       const service = new AssistantSilentService(
         prisma as never,
         {
-          listAdapters: () => [{ provider: 'glm', model: 'm' }],
-          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+          resolveBuiltinAdapter: async () => ({
+            getProvider: () => 'glm',
+            getModelName: () => 'm',
+            chat,
+          }),
         } as never,
         { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       );
@@ -328,8 +338,11 @@ describe('AssistantSilentService.run', () => {
       const service = new AssistantSilentService(
         prisma as never,
         {
-          listAdapters: () => [{ provider: 'glm', model: 'm' }],
-          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+          resolveBuiltinAdapter: async () => ({
+            getProvider: () => 'glm',
+            getModelName: () => 'm',
+            chat,
+          }),
         } as never,
         { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       );
@@ -412,8 +425,11 @@ describe('AssistantSilentService.run', () => {
       const service = new AssistantSilentService(
         prisma as never,
         {
-          listAdapters: () => [{ provider: 'glm', model: 'm' }],
-          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+          resolveBuiltinAdapter: async () => ({
+            getProvider: () => 'glm',
+            getModelName: () => 'm',
+            chat,
+          }),
         } as never,
         { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       );
@@ -500,8 +516,11 @@ describe('AssistantSilentService.run', () => {
       const service = new AssistantSilentService(
         prisma as never,
         {
-          listAdapters: () => [{ provider: 'glm', model: 'm' }],
-          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+          resolveBuiltinAdapter: async () => ({
+            getProvider: () => 'glm',
+            getModelName: () => 'm',
+            chat,
+          }),
         } as never,
         { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       );
@@ -587,8 +606,11 @@ describe('AssistantSilentService.run', () => {
       const service = new AssistantSilentService(
         prisma as never,
         {
-          listAdapters: () => [{ provider: 'glm', model: 'm' }],
-          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+          resolveBuiltinAdapter: async () => ({
+            getProvider: () => 'glm',
+            getModelName: () => 'm',
+            chat,
+          }),
         } as never,
         { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       );
@@ -657,8 +679,11 @@ describe('AssistantSilentService.run', () => {
       const service = new AssistantSilentService(
         prisma as never,
         {
-          listAdapters: () => [{ provider: 'glm', model: 'm' }],
-          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+          resolveBuiltinAdapter: async () => ({
+            getProvider: () => 'glm',
+            getModelName: () => 'm',
+            chat,
+          }),
         } as never,
         { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       );
@@ -826,8 +851,11 @@ describe('AssistantSilentService.run', () => {
       const service = new AssistantSilentService(
         prisma as never,
         {
-          listAdapters: () => [{ provider: 'glm', model: 'm' }],
-          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+          resolveBuiltinAdapter: async () => ({
+            getProvider: () => 'glm',
+            getModelName: () => 'm',
+            chat,
+          }),
         } as never,
         { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       );
@@ -896,8 +924,11 @@ describe('AssistantSilentService.run', () => {
       const service = new AssistantSilentService(
         prisma as never,
         {
-          listAdapters: () => [{ provider: 'glm', model: 'm' }],
-          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+          resolveBuiltinAdapter: async () => ({
+            getProvider: () => 'glm',
+            getModelName: () => 'm',
+            chat,
+          }),
         } as never,
         { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       );
@@ -978,8 +1009,11 @@ describe('AssistantSilentService.run', () => {
       const service = new AssistantSilentService(
         { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
         {
-          listAdapters: () => [{ provider: 'glm', model: 'm' }],
-          getAdapter: () => ({ getProvider: () => 'glm', chat }),
+          resolveBuiltinAdapter: async () => ({
+            getProvider: () => 'glm',
+            getModelName: () => 'm',
+            chat,
+          }),
         } as never,
         { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       );
@@ -1037,8 +1071,11 @@ describe('AssistantSilentService.run · grill-next', () => {
     const service = new AssistantSilentService(
       prisma as never,
       {
-        listAdapters: () => [{ provider: 'glm', model: 'm' }],
-        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        resolveBuiltinAdapter: async () => ({
+          getProvider: () => 'glm',
+          getModelName: () => 'm',
+          chat,
+        }),
       } as never,
       { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
     );
@@ -1169,8 +1206,11 @@ describe('AssistantSilentService.run · anchor-qa', () => {
     const service = new AssistantSilentService(
       prisma as never,
       {
-        listAdapters: () => [{ provider: 'glm', model: 'm' }],
-        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        resolveBuiltinAdapter: async () => ({
+          getProvider: () => 'glm',
+          getModelName: () => 'm',
+          chat,
+        }),
       } as never,
       { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
     );
@@ -1286,8 +1326,11 @@ describe('AssistantSilentService.run · card-explain', () => {
     const service = new AssistantSilentService(
       prisma as never,
       {
-        listAdapters: () => [{ provider: 'glm', model: 'm' }],
-        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        resolveBuiltinAdapter: async () => ({
+          getProvider: () => 'glm',
+          getModelName: () => 'm',
+          chat,
+        }),
       } as never,
       { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
     );
@@ -1651,8 +1694,11 @@ describe('surface-narration', () => {
     const service = new AssistantSilentService(
       { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
       {
-        listAdapters: () => [{ provider: 'glm', model: 'm' }],
-        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        resolveBuiltinAdapter: async () => ({
+          getProvider: () => 'glm',
+          getModelName: () => 'm',
+          chat,
+        }),
       } as never,
       { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
     );
@@ -1731,8 +1777,11 @@ describe('surface-narration', () => {
     const service = new AssistantSilentService(
       { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
       {
-        listAdapters: () => [{ provider: 'glm', model: 'm' }],
-        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        resolveBuiltinAdapter: async () => ({
+          getProvider: () => 'glm',
+          getModelName: () => 'm',
+          chat,
+        }),
       } as never,
       { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
     );
@@ -1757,8 +1806,11 @@ describe('surface-narration', () => {
     const service = new AssistantSilentService(
       { aIUsageLog: { create: vi.fn().mockResolvedValue({}) } } as never,
       {
-        listAdapters: () => [{ provider: 'glm', model: 'm' }],
-        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        resolveBuiltinAdapter: async () => ({
+          getProvider: () => 'glm',
+          getModelName: () => 'm',
+          chat,
+        }),
       } as never,
       {
         estimateCostUsd: vi.fn().mockRejectedValue(new Error('no price table')),
@@ -1792,9 +1844,9 @@ describe('AssistantSilentService.run failure-diagnosis（批一 P0 切片 3，�
         execution: { findUnique: vi.fn().mockResolvedValue(run) },
       } as never,
       {
-        listAdapters: () => [{ provider: 'glm', model: 'm' }],
-        getAdapter: () => ({
+        resolveBuiltinAdapter: async () => ({
           getProvider: () => 'glm',
+          getModelName: () => 'm',
           chat,
         }),
       } as never,
@@ -1919,8 +1971,11 @@ describe('AssistantSilentService.run · release-notes-draft（CAP-A-18 样板推
         issue: { findMany: vi.fn().mockResolvedValue(ISSUES) },
       } as never,
       {
-        listAdapters: () => [{ provider: 'glm', model: 'm' }],
-        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        resolveBuiltinAdapter: async () => ({
+          getProvider: () => 'glm',
+          getModelName: () => 'm',
+          chat,
+        }),
       } as never,
       { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
     );
@@ -2055,8 +2110,11 @@ describe('intake quick-judge 快筛档（CAP-A-27 批二）', () => {
     const service = new AssistantSilentService(
       prisma as never,
       {
-        listAdapters: () => [{ provider: 'glm', model: 'm' }],
-        getAdapter: () => ({ getProvider: () => 'glm', chat }),
+        resolveBuiltinAdapter: async () => ({
+          getProvider: () => 'glm',
+          getModelName: () => 'm',
+          chat,
+        }),
       } as never,
       { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
       quickJudge as never,

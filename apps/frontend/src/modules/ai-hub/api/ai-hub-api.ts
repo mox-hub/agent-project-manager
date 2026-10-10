@@ -418,6 +418,16 @@ export const aiHubApi = {
     api.post<ValidateProviderResponse>('/ai/providers/validate', data),
 
   /**
+   * 实测指定 provider+model 真实可用（读已存 key 发一次最小调用）。
+   * 内置模型保存闸门：实测通过才允许落库。timeoutMs 放宽到 60s（网关慢时
+   * 后端真实调用可超过全局默认 30s，先超时会吞掉结构化错误信息）。
+   */
+  validateModel: (data: { provider: string; model: string }) =>
+    api.post<ValidateProviderResponse>('/ai/providers/validate-model', data, {
+      timeoutMs: 60_000,
+    }),
+
+  /**
    * 测试已保存 Provider 的连接（触发后端真实验证链路，最长约 38s）。
    * timeoutMs 放宽到 60s：全局默认 30s 会先于后端返回超时，
    * 吞掉后端拼好的结构化诊断信息。

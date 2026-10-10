@@ -94,6 +94,26 @@ describe('GrillInterview', () => {
     await screen.findByText('这一期做到哪？');
   });
 
+  it('防回归：一轮作答只在转录里追加一条问答（历史双追加曾致同问答成对重复）', async () => {
+    const user = userEvent.setup();
+    mockGrillRespond({
+      kind: 'question',
+      question: '它给谁用？',
+      choices: [{ key: 'a', label: '小团队' }],
+    });
+    renderGrill();
+
+    await startWithDraft(user, '会议纪要');
+    await screen.findByText('它给谁用？');
+
+    mockGrillRespond({ kind: 'question', question: '这一期做到哪？', choices: [] });
+    await user.click(screen.getByRole('button', { name: /小团队/ }));
+
+    await screen.findByText('这一期做到哪？');
+    expect(screen.getAllByText('它给谁用？')).toHaveLength(1);
+    expect(screen.getAllByText('小团队')).toHaveLength(1);
+  });
+
   it('自由输入：文本框回车发送已答内容', async () => {
     const user = userEvent.setup();
     mockGrillRespond({ kind: 'question', question: '它给谁用？', choices: [] });

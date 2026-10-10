@@ -1551,15 +1551,14 @@ export class AssistantSilentService {
       );
     }
 
-    const adapters = this.adapterRegistry.listAdapters();
-    if (adapters.length === 0) {
+    // 与主助手链同源：消费工作区内置模型（AppConfig ai.defaultModel），未配置时回落
+    // 第一个可用厂家（优先 openai）。此前直接取注册表第一个厂家，设置页「全部 AI 功能
+    // 的默认模型」对静默场景（grill 拷问/创建草稿/锚点问答等）不生效。
+    const adapter = await this.adapterRegistry.resolveBuiltinAdapter();
+    if (!adapter) {
       throw new BadRequestException(
         '当前没有可用的 LLM provider，请先在设置中配置并启用',
       );
-    }
-    const adapter = this.adapterRegistry.getAdapter(adapters[0].provider);
-    if (!adapter) {
-      throw new BadRequestException('LLM 适配器不可用，请重新加载 provider');
     }
 
     const rawContext = context ?? {};
@@ -1588,7 +1587,7 @@ export class AssistantSilentService {
 
     const data = extractJsonObject(result.content ?? '');
 
-    const modelName = result.model ?? adapters[0].model;
+    const modelName = result.model ?? adapter.getModelName();
     const promptTokens = result.tokens?.prompt ?? 0;
     const completionTokens = result.tokens?.completion ?? 0;
     const totalTokens = result.tokens?.total ?? 0;

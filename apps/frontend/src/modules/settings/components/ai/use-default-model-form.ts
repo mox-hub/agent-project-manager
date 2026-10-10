@@ -6,7 +6,9 @@
 import { useMemo, useState } from 'react';
 import {
   useDefaultModel,
-  useSetDefaultModel,
+  // 保存走「先实测走通再落库」组合链：validate-model 真实调用通过才写内置模型，
+  // 失败抛后端结构化错误（不落库不假成功）
+  useSaveDefaultModelValidated,
 } from '@/modules/ai-hub/hooks/use-ai-providers';
 import type { AIProviderConfig } from '@/modules/ai-hub/api/ai-hub-api';
 import { PROVIDER_MODELS } from './provider-visuals';
@@ -18,7 +20,7 @@ export interface DefaultModelSelection {
 
 export function useDefaultModelForm(providers: AIProviderConfig[]) {
   const { data: defaultModel, isLoading } = useDefaultModel();
-  const setDefaultModelMutation = useSetDefaultModel();
+  const setDefaultModelMutation = useSaveDefaultModelValidated();
   const [draft, setDraft] = useState<DefaultModelSelection | null>(null);
 
   const saved = useMemo<DefaultModelSelection | null>(() => {

@@ -22,6 +22,7 @@ describe('ProviderConfigService（模型查询 + 内置模型）', () => {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
@@ -587,6 +588,40 @@ describe('ProviderConfigService（模型查询 + 内置模型）', () => {
         'deepseek-chat',
         'deepseek-reasoner',
       ]);
+    });
+
+    it('空表首启：按内置厂家目录补种连接槽位后返回（7 家、无 key、disconnected）', async () => {
+      // 第一次 findMany 空（模板库无种子数据），补种后第二次返回槽位行
+      mockPrisma.aIProviderConfig.findMany
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { ...deepseekProvider, apiKeyEnc: null, status: 'disconnected' },
+        ]);
+      mockPrisma.aIProviderConfig.createMany.mockResolvedValue({ count: 7 });
+      mockPrisma.aIModelConfig.findMany.mockResolvedValue([]);
+
+      const providers = await service.listProviders();
+
+      expect(mockPrisma.aIProviderConfig.createMany).toHaveBeenCalledTimes(1);
+      const payload = mockPrisma.aIProviderConfig.createMany.mock.calls[0][0];
+      // 目录 = 内置 7 家，每行无 key、disconnected
+      expect(payload.data).toHaveLength(7);
+      for (const row of payload.data) {
+        expect(row.apiKeyEnc).toBeUndefined();
+        expect(row.status).toBe('disconnected');
+      }
+      expect(providers).toHaveLength(1);
+    });
+
+    it('非空表不触发补种', async () => {
+      mockPrisma.aIProviderConfig.findMany.mockResolvedValue([
+        deepseekProvider,
+      ]);
+      mockPrisma.aIModelConfig.findMany.mockResolvedValue([]);
+
+      await service.listProviders();
+
+      expect(mockPrisma.aIProviderConfig.createMany).not.toHaveBeenCalled();
     });
   });
 

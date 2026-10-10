@@ -861,7 +861,9 @@ export function ModelsTab() {
                   ) : (
                     <Save className="size-3" />
                   )}
-                  {t('common.save')}
+                  {setDefaultModelMutation.isPending
+                    ? t('aiHub.defaultModelSaving')
+                    : t('common.save')}
                 </Button>
               ) : (
                 !isDirty &&

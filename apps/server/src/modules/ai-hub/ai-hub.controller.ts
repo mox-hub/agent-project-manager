@@ -43,6 +43,7 @@ import {
   CreateProviderConfigDto,
   UpdateProviderConfigDto,
   ValidateProviderDto,
+  ValidateModelDto,
   ProviderConfigResponseDto,
   ValidateProviderResponseDto,
   SetDefaultModelDto,
@@ -244,6 +245,20 @@ export class AiHubController {
   @ApiStandardErrors()
   async validateProvider(@Body() dto: ValidateProviderDto) {
     return this.providerConfigService.validateProvider(dto);
+  }
+
+  @Post('providers/validate-model')
+  @ApiOperation({
+    summary:
+      'Validate a specific provider+model really responds (reads saved key; for default-model save gate)',
+  })
+  @ApiOkResponse({
+    type: ValidateProviderResponseDto,
+    description: '实测结果 { valid, models?, error? }（内置模型保存闸门）',
+  })
+  @ApiStandardErrors()
+  async validateModel(@Body() dto: ValidateModelDto) {
+    return this.providerConfigService.validateModel(dto);
   }
 
   @Post('providers/:id/test')

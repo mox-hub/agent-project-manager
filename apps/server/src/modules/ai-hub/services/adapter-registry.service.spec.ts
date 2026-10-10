@@ -22,6 +22,9 @@ describe('AdapterRegistryService（代表槽位解析）', () => {
       findMany: vi.fn(),
       findFirst: vi.fn(),
     },
+    appConfig: {
+      findFirst: vi.fn(),
+    },
   };
 
   const mockFactory = {
@@ -131,5 +134,53 @@ describe('AdapterRegistryService（代表槽位解析）', () => {
     // 第二次走 modelAdapters 缓存，零 DB 查询
     await service.resolveAdapter('deepseek', 'deepseek-reasoner');
     expect(mockPrisma.aIProviderConfig.findFirst).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolveBuiltinAdapter：命中内置模型配置时按 provider+model 解析专属适配器', async () => {
+    mockPrisma.appConfig.findFirst.mockResolvedValue({
+      key: 'ai.defaultModel',
+      value: { provider: 'opencode-go', model: 'deepseek-v4.1-flash' },
+    });
+    mockPrisma.aIProviderConfig.findFirst.mockResolvedValue(
+      makeSlot({ provider: 'opencode-go', displayName: 'OpenCode Go' }),
+    );
+
+    const adapter = await service.resolveBuiltinAdapter();
+
+    expect(adapter).toBe(mockAdapter);
+    expect(mockFactory.createFromConfig).toHaveBeenCalledWith(
+      expect.objectContaining({
+        provider: 'opencode-go',
+        defaultModel: 'deepseek-v4.1-flash',
+      }),
+    );
+  });
+
+  it('resolveBuiltinAdapter：未配置时回落第一个可用厂家（openai 优先）', async () => {
+    mockPrisma.appConfig.findFirst.mockResolvedValue(null);
+    mockPrisma.aIProviderConfig.findMany.mockResolvedValue([
+      makeSlot({ provider: 'glm', displayName: 'GLM' }),
+      makeSlot({ provider: 'openai', displayName: 'OpenAI' }),
+    ]);
+    // 按 config 返回对应 provider 的适配器（共享 mockAdapter 的 provider 写死，验不了偏好）
+    mockFactory.createFromConfig.mockImplementation(
+      (cfg: { provider: string }) => ({
+        ...mockAdapter,
+        getProvider: () => cfg.provider,
+      }),
+    );
+
+    await service.loadAdapters();
+    const adapter = await service.resolveBuiltinAdapter();
+
+    expect(adapter?.getProvider()).toBe('openai');
+  });
+
+  it('resolveBuiltinAdapter：空注册表返回 null（调用方转可读 400）', async () => {
+    mockPrisma.aIProviderConfig.findMany.mockResolvedValue([]);
+
+    await service.loadAdapters();
+
+    expect(await service.resolveBuiltinAdapter()).toBeNull();
   });
 });
