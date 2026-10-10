@@ -54,13 +54,20 @@ const DEFAULT_STEPS: OnboardingStep[] = [
   },
 ];
 
-/** 桌面模式在「欢迎」步骤后插入「工作目录」步骤（AI 执行面的工作根目录，可跳过） */
+/** 桌面模式在「欢迎」步骤后插入两个本地步骤（均可跳过）：工作目录 + 环境检查 */
 const DESKTOP_INSERT_AFTER = 'welcome';
-const DESKTOP_EXTRA_STEP: Omit<OnboardingStep, 'status'> = {
-  id: 'workspace-root',
-  title: 'onboarding.steps.workspaceRoot.title',
-  description: 'onboarding.steps.workspaceRoot.description',
-};
+const DESKTOP_EXTRA_STEPS: Omit<OnboardingStep, 'status'>[] = [
+  {
+    id: 'workspace-root',
+    title: 'onboarding.steps.workspaceRoot.title',
+    description: 'onboarding.steps.workspaceRoot.description',
+  },
+  {
+    id: 'environment',
+    title: 'onboarding.steps.environment.title',
+    description: 'onboarding.steps.environment.description',
+  },
+];
 
 export function buildSteps(isDesktop: boolean): OnboardingStep[] {
   const base = DEFAULT_STEPS.map((step, index) => ({
@@ -74,7 +81,9 @@ export function buildSteps(isDesktop: boolean): OnboardingStep[] {
   for (const step of base) {
     steps.push(step);
     if (step.id === DESKTOP_INSERT_AFTER) {
-      steps.push({ ...DESKTOP_EXTRA_STEP, status: 'pending' });
+      for (const extra of DESKTOP_EXTRA_STEPS) {
+        steps.push({ ...extra, status: 'pending' });
+      }
     }
   }
   return steps;
@@ -85,7 +94,7 @@ const isDesktopShell = isDesktopShellAvailable();
 export function useOnboarding() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { setOnboardingCompleted } = useAppStore();
+  const { setOnboardingCompleted, setOnboardingOpen } = useAppStore();
 
   const [state, setState] = useState<OnboardingState>({
     currentStep: 0,
@@ -178,10 +187,13 @@ export function useOnboarding() {
       })),
     }));
     setOnboardingCompleted(true);
+    // 复位侧边栏重开开关：gate 条件是 completed && !open，只落标记不复位的话，
+    // 从侧边栏进入的会话点「进入 APM」后向导关不掉（2026-10-04 实机暴露）
+    setOnboardingOpen(false);
     // 桌面模式镜像到壳侧：动态端口漂移换 origin 后向导不重弹
     persistOnboardingToShell(true);
     queryClient.invalidateQueries({ queryKey: ['user-settings'] });
-  }, [queryClient, setOnboardingCompleted]);
+  }, [queryClient, setOnboardingCompleted, setOnboardingOpen]);
 
   const createProjectMutation = useMutation({
     mutationFn: (data: CreateProjectData) => onboardingApi.createProject(data),

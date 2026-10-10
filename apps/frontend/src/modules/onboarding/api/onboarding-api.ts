@@ -14,6 +14,20 @@ export interface OnboardingData {
   stepsCompleted: string[];
 }
 
+/** GET /environment 单项工具状态（镜像 server EnvironmentToolDto，key 见 ENVIRONMENT_TOOL_KEYS） */
+export interface EnvironmentToolInfo {
+  key: string;
+  installed: boolean;
+  version?: string | null;
+  error?: string | null;
+}
+
+/** GET /environment 响应（镜像 server EnvironmentReportDto） */
+export interface EnvironmentReport {
+  tools: EnvironmentToolInfo[];
+  checkedAt: string;
+}
+
 /**
  * 向导 API 层——只打真实契约端点（openapi.json 已登记的路径）。
  *
@@ -31,4 +45,6 @@ export const onboardingApi = {
       type: data.type ?? 'team',
       visibility: data.visibility ?? 'internal',
     }),
+  /** 本地基础环境检测（node/git/AI CLI）——引导「环境检查」步骤消费 */
+  getEnvironment: () => api.get<EnvironmentReport>('/environment'),
 };

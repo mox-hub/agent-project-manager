@@ -162,6 +162,12 @@ interface AppState {
 
   onboardingCompleted: boolean;
   setOnboardingCompleted: (completed: boolean) => void;
+  /**
+   * 引导向导手动打开开关（侧边栏「引导」项用）。非持久化——重开是会话内动作，
+   * 若持久化会在用户中途离开后下次启动误触发自动弹出，破坏「一台机器主动触及一次」。
+   */
+  onboardingOpen: boolean;
+  setOnboardingOpen: (open: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -330,6 +336,8 @@ export const useAppStore = create<AppState>()(
 
       onboardingCompleted: false,
       setOnboardingCompleted: (completed) => set({ onboardingCompleted: completed }),
+      onboardingOpen: false,
+      setOnboardingOpen: (open) => set({ onboardingOpen: open }),
     }),
     {
       name: 'app-storage',

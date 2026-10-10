@@ -41,6 +41,7 @@ import {
   Palette,
   ListTree,
   Sparkles,
+  Wand2,
   type LucideIcon,
 } from 'lucide-react';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
@@ -72,9 +73,10 @@ import { formatComboForDisplay } from '@/shared/hotkeys/hotkey-utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { StatusIconComponent } from '@/shared/status/status-visuals';
 
-/** 侧栏导航项（收藏分区的项带 favorite 标记，渲染时挂 hover 预览卡） */
+/** 侧栏导航项（收藏分区的项挂 favorite 标记，渲染时挂 hover 预览卡；
+ *  onClick 型为动作项（如「引导」重开向导），非路由——渲染成同款按钮） */
 interface SidebarNavItem {
-  to: string;
+  to?: string;
   icon: StatusIconComponent;
   label: string;
   color?: string;
@@ -83,6 +85,7 @@ interface SidebarNavItem {
   favorite?: boolean;
   stageNumber?: string;
   hint?: string;
+  onClick?: () => void;
 }
 
 /** 导航分组标识：所有分组均可折叠 */
@@ -228,6 +231,13 @@ export function ShellLayout() {
               ]
             : []),
           { to: '/app/help', icon: HelpCircle, label: t('nav.help') },
+          {
+            // 引导：手动重开首启向导（action 型导航项，非路由）。getState 直调避免进 useMemo 依赖
+            // （与上方快捷键 getState 模式一致）；重开走非持久化 onboardingOpen，不污染完成标记
+            icon: Wand2,
+            label: t('nav.onboarding', '引导'),
+            onClick: () => useAppStore.getState().setOnboardingOpen(true),
+          },
           ...(import.meta.env.DEV
             ? [
                 { to: '/app/design-system', icon: Palette, label: 'Design System', capsule: 'dev' },
@@ -523,14 +533,16 @@ export function ShellLayout() {
                             />
                           )}
                           {group.items.map((item) => {
-                            const { to, icon: Icon, label, color, capsule, count, favorite, stageNumber, hint } = item;
+                            const { to, icon: Icon, label, color, capsule, count, favorite, stageNumber, hint, onClick } = item;
                             // Tooltip/预览触发器的 hover 状态会跨渲染存活：折叠后 TooltipContent
                             // 才挂载，若指针停在该行，base-ui 会“自动”打开气泡（折叠/展开动画结束后
                             // 悬浮弹出）。key 绑定折叠态与路由，切换即重挂载、重置 hover 态；
-                            // 顺带消除点击导航后气泡残留。
-                            const navKey = sidebarCollapsed
-                              ? `${to}:c:${location.pathname}`
-                              : `${to}:e`;
+                            // 顺带消除点击导航后气泡残留。action 项无路由，用动作键占位。
+                            const navKey = to
+                              ? (sidebarCollapsed
+                                ? `${to}:c:${location.pathname}`
+                                : `${to}:e`)
+                              : `action:${label}:${sidebarCollapsed ? 'c' : 'e'}`;
 
                             const tooltipText = stageNumber && hint
                               ? `${stageNumber} ${hint} · ${label}`
@@ -540,6 +552,36 @@ export function ShellLayout() {
                             // （base-ui render 模式，事件/className/ref 组合合入 DOM），
                             // 其余项由 TooltipTrigger 的 render 消费——这里只负责产出元素
                             const renderLink = () => {
+                              if (onClick) {
+                                // action 型导航项：同款样式按钮（无激活态/预览卡）；
+                                // 虚线框圈住是「引导」入口的既定视觉（与候选/动作型入口区分，用户实览裁决）
+                                return (
+                                  <button
+                                    type="button"
+                                    className={cn(
+                                      'flex items-center rounded-lg border border-dashed border-sidebar-border/70 text-xs font-medium transition-colors relative text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground hover:border-sidebar-border',
+                                      sidebarCollapsed
+                                        ? 'justify-center size-10'
+                                        : 'gap-2 px-2.5 py-1.5 h-8 w-full',
+                                    )}
+                                    onClick={() => {
+                                      onClick();
+                                      setMobileSidebarOpen(false);
+                                    }}
+                                  >
+                                    <Icon
+                                      className="size-4 shrink-0"
+                                      style={color ? { color } : undefined}
+                                    />
+                                    {!sidebarCollapsed && (
+                                      <span className="flex-1 truncate text-left">{label}</span>
+                                    )}
+                                  </button>
+                                );
+                              }
+                              if (!to) {
+                                return null;
+                              }
                               const active = isNavActive(to);
                               return (
                                 <NavLink

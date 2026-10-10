@@ -17,6 +17,7 @@ const isDesktopShellAvailableMock = vi.hoisted(() => vi.fn(() => false));
 const postMock = vi.hoisted(() => vi.fn());
 const navigateMock = vi.hoisted(() => vi.fn());
 const setOnboardingCompletedMock = vi.hoisted(() => vi.fn());
+const setOnboardingOpenMock = vi.hoisted(() => vi.fn());
 const persistOnboardingMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/shared/types/electron-api', () => ({
@@ -36,7 +37,10 @@ vi.mock('react-router-dom', () => ({
 }));
 
 vi.mock('@/infrastructure/store/app-store', () => ({
-  useAppStore: () => ({ setOnboardingCompleted: setOnboardingCompletedMock }),
+  useAppStore: () => ({
+    setOnboardingCompleted: setOnboardingCompletedMock,
+    setOnboardingOpen: setOnboardingOpenMock,
+  }),
 }));
 
 vi.mock('@/shared/lib/desktop-session', () => ({
@@ -58,6 +62,7 @@ beforeEach(() => {
   postMock.mockReset();
   navigateMock.mockClear();
   setOnboardingCompletedMock.mockClear();
+  setOnboardingOpenMock.mockClear();
   persistOnboardingMock.mockClear();
 });
 
@@ -74,11 +79,12 @@ describe('buildSteps（初始化向导步骤序列）', () => {
     ]);
   });
 
-  it('桌面模式：在欢迎步骤后插入工作目录步骤（共 6 步）', () => {
+  it('桌面模式：在欢迎步骤后插入工作目录与环境检查步骤（共 7 步）', () => {
     const steps = buildSteps(true);
     expect(steps.map((s) => s.id)).toEqual([
       'welcome',
       'workspace-root',
+      'environment',
       'create-project',
       'connect-repository',
       'add-ai',
@@ -86,6 +92,7 @@ describe('buildSteps（初始化向导步骤序列）', () => {
     ]);
     expect(steps[0].status).toBe('current');
     expect(steps[1].status).toBe('pending');
+    expect(steps[2].status).toBe('pending');
   });
 });
 
@@ -98,6 +105,9 @@ describe('finishOnboarding（进入 APM 回归）', () => {
     });
 
     expect(setOnboardingCompletedMock).toHaveBeenCalledWith(true);
+    // 完成须同时复位侧边栏重开开关：gate 条件是 completed && !open，
+    // 不复位的话从侧边栏进入的会话点「进入 APM」后向导关不掉（2026-10-04 实机暴露）
+    expect(setOnboardingOpenMock).toHaveBeenCalledWith(false);
     expect(persistOnboardingMock).toHaveBeenCalledWith(true);
     expect(navigateMock).toHaveBeenCalledWith('/app');
     // 修复前：调 POST /onboarding/finish（服务端从未实现，404 静默）→ 按钮无反应
@@ -114,6 +124,7 @@ describe('watchReplayThenStart（S6：向导完成 → 先看回放）', () => {
     });
 
     expect(setOnboardingCompletedMock).toHaveBeenCalledWith(true);
+    expect(setOnboardingOpenMock).toHaveBeenCalledWith(false);
     expect(persistOnboardingMock).toHaveBeenCalledWith(true);
     expect(navigateMock).toHaveBeenCalledWith('/app/ai-surface/replay');
     // 同样零网络：完成标记是前端/壳侧状态，回放页更是一个请求都不发

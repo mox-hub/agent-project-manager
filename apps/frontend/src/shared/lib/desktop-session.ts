@@ -15,8 +15,7 @@ import {
   type DesktopAppInfo,
   type DesktopPersistentState,
 } from '@/shared/types/electron-api';
-
-const ZUSTAND_STORAGE_KEY = 'app-storage';
+import { useAppStore } from '@/infrastructure/store/app-store';
 
 /**
  * API base 钉底重试预算。壳在（重）启后端期间 `state.backend` 为空，get_app_info
@@ -90,7 +89,7 @@ async function pinDesktopApiBase(): Promise<string | null> {
  * 应用入口早期调用：钉底后端地址 + 把壳侧镜像恢复进 localStorage。
  * - API base：壳侧真实后端地址（**必须先于一切请求**，见 pinDesktopApiBase）
  * - access_token / apm-workspace-id：直接按同名键写入（localStorage 无值或与壳侧不一致时以壳为准）
- * - onboarding_completed：merge 进 zustand persist JSON（app-storage）
+ * - onboarding_completed：播种进 zustand store（persist 中间件同步回写 localStorage）
  *
  * 返回 `ready=false` 时调用方**不得**照常渲染：那会让请求打到未知后端并被误判未登录。
  */
@@ -115,16 +114,11 @@ export async function restoreDesktopSession(): Promise<DesktopSessionRestore> {
     localStorage.setItem('apm-workspace-id', state['apm-workspace-id']);
   }
   if (state.onboarding_completed) {
-    try {
-      const raw = localStorage.getItem(ZUSTAND_STORAGE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as { state?: Record<string, unknown>; version?: number }) : null;
-      if (parsed && parsed.state && !parsed.state.onboardingCompleted) {
-        parsed.state.onboardingCompleted = true;
-        localStorage.setItem(ZUSTAND_STORAGE_KEY, JSON.stringify(parsed));
-      }
-    } catch {
-      // persist JSON 损坏时交由 zustand 自身迁移逻辑兜底
-    }
+    // 用 store setState 播种，不能只 merge 既有 persist JSON：端口漂移换 origin 后
+    // app-storage 可能根本不存在（旧逻辑 `parsed && parsed.state` 前置导致空存储不播种，
+    // 是桌面端「每次打开都重弹引导」的根因），且直改 localStorage 不影响已 hydrate 的内存态。
+    // setState 两条都治：persist 中间件同步回写 localStorage（空存储即创建），内存态即时生效。
+    useAppStore.setState({ onboardingCompleted: true });
   }
 
   if (!base) {

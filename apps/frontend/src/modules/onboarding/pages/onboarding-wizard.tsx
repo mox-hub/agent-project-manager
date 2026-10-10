@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboarding } from '../hooks/use-onboarding';
+import type { CreateProjectData } from '../api/onboarding-api';
+import { EnvironmentStep } from '../components/environment-step';
+import { ConnectRepositoryStep } from '../components/connect-repository-step';
+import { ConfigureAiStep } from '../components/configure-ai-step';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,16 +16,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Stepper,
-  StepperIndicator,
-  StepperItem,
-  StepperNav,
-  StepperSeparator,
-  StepperTitle,
-  StepperTrigger,
-} from '@/components/ui/stepper';
+import { cn } from '@/lib/utils';
 import { invoke } from '@/shared/types/electron-api';
+import { useAppStore } from '@/infrastructure/store/app-store';
+import { persistOnboardingToShell } from '@/shared/lib/desktop-session';
 import { IconStack } from '@/components/semantic/icon-stack';
 import {
   Rocket,
@@ -224,13 +222,19 @@ function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
   );
 }
 
+interface CreateProjectStepProps extends StepContentProps {
+  isPending: boolean;
+  /** 父级（wizard 挂钩实例）的建项 mutation：内建 onSuccess 落 data.projectId 并前进，
+   *  保证 projectId 传导到「连接仓库」步——此前步骤内自建挂钩实例，projectId 落在了孤儿 state 上 */
+  createProject: { mutate: (data: CreateProjectData) => void };
+}
+
 function CreateProjectStep({
-  onNext,
   onSkip,
   isPending,
-}: StepContentProps & { isPending: boolean }) {
+  createProject,
+}: CreateProjectStepProps) {
   const { t } = useTranslation();
-  const { createProject } = useOnboarding();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<'team' | 'personal' | 'enterprise'>('team');
@@ -238,12 +242,12 @@ function CreateProjectStep({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    createProject.mutate(
-      { name: name.trim(), description: description.trim() || undefined, type },
-      {
-        onSuccess: () => onNext(),
-      },
-    );
+    // 内建 onSuccess：updateData({projectId}) + nextStep()，此处不再挂 onSuccess 防双跳
+    createProject.mutate({
+      name: name.trim(),
+      description: description.trim() || undefined,
+      type,
+    });
   };
 
   return (
@@ -320,78 +324,6 @@ function CreateProjectStep({
         </Button>
       </DialogFooter>
     </form>
-  );
-}
-
-/**
- * 仓库连接引导页（2026-09-12 诚实化改造）。
- * 历史版本是表单 + 假 mutation（POST /onboarding/repository 恒 404，静默失败）；
- * 仓库连接在契约面没有单一端点，真实入口在项目内，此处只做引导。
- */
-function ConnectRepositoryStep({ onNext, onSkip }: StepContentProps) {
-  const { t } = useTranslation();
-  return (
-    <div className="space-y-6">
-      <DialogHeader>
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-          <GitBranch className="h-7 w-7 text-primary" />
-        </div>
-        <DialogTitle className="text-center text-xl">{t('onboarding.connectRepository.heading')}</DialogTitle>
-        <DialogDescription className="text-center">
-          {t('onboarding.connectRepository.description')}
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="rounded-lg bg-muted/30 p-4 text-sm text-muted-foreground">
-        {t('onboarding.connectRepository.hint')}
-      </div>
-
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button type="button" variant="outline" onClick={onSkip}>
-          {t('onboarding.common.skip')}
-        </Button>
-        <Button onClick={onNext}>
-          {t('onboarding.common.next')}
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
-      </DialogFooter>
-    </div>
-  );
-}
-
-/**
- * AI 配置引导页（2026-09-12 诚实化改造）。
- * 历史版本是表单 + 假 mutation（POST /onboarding/ai 恒 404）；真实的模型
- * 配置入口在「设置 → AI 管理」（作用于既有 provider 记录），此处只做引导。
- */
-function ConfigureAiStep({ onNext, onSkip }: StepContentProps) {
-  const { t } = useTranslation();
-  return (
-    <div className="space-y-6">
-      <DialogHeader>
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-          <Bot className="h-7 w-7 text-primary" />
-        </div>
-        <DialogTitle className="text-center text-xl">{t('onboarding.configureAi.heading')}</DialogTitle>
-        <DialogDescription className="text-center">
-          {t('onboarding.configureAi.description')}
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="rounded-lg bg-muted/30 p-4 text-sm text-muted-foreground">
-        {t('onboarding.configureAi.hint')}
-      </div>
-
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button type="button" variant="outline" onClick={onSkip}>
-          {t('onboarding.common.skip')}
-        </Button>
-        <Button onClick={onNext}>
-          {t('onboarding.common.next')}
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
-      </DialogFooter>
-    </div>
   );
 }
 
@@ -500,13 +432,10 @@ function CompleteStep({
   );
 }
 
-interface OnboardingWizardProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-}
-
-export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizardProps) {
+export function OnboardingWizard() {
   const { t } = useTranslation();
+  const setOnboardingCompleted = useAppStore((s) => s.setOnboardingCompleted);
+  const setOnboardingOpen = useAppStore((s) => s.setOnboardingOpen);
   const {
     state,
     currentStepData,
@@ -520,29 +449,44 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
     goToStep,
   } = useOnboarding();
 
+  /**
+   * 主动触及一次性消费（2026-10-03 改版裁决）：向导被关闭（ESC/遮罩/关闭钮）即视为
+   * 本机已触及——落完成标记不再自动弹，之后只能从侧边栏「引导」手动重开。
+   * 走完流程的路径（finishOnboarding/watchReplayThenStart）在 completeOnboarding 已落
+   * 同一标记，此处幂等；onboardingOpen 一并复位，侧边栏重开的会话随即收口。
+   */
+  const handleDismiss = () => {
+    setOnboardingCompleted(true);
+    persistOnboardingToShell(true);
+    setOnboardingOpen(false);
+  };
+
   const renderStepContent = () => {
     const commonProps = {
       onNext: nextStep,
       onSkip: () => skipStep(currentStepData?.id || ''),
     };
 
-    // 按步骤 id 分发（桌面模式会在 welcome 后插入 workspace-root 步骤，索引随模式漂移）
+    // 按步骤 id 分发（桌面模式会在 welcome 后插入 workspace-root 与 environment 步骤，索引随模式漂移）
     switch (currentStepData?.id) {
       case 'welcome':
         return <WelcomeStep {...commonProps} isPending={false} />;
       case 'workspace-root':
         return <WorkspaceRootStep {...commonProps} isPending={false} />;
+      case 'environment':
+        return <EnvironmentStep {...commonProps} />;
       case 'create-project':
         return (
           <CreateProjectStep
             {...commonProps}
             isPending={createProject.isPending}
+            createProject={createProject}
           />
         );
       case 'connect-repository':
-        return <ConnectRepositoryStep {...commonProps} isPending={false} />;
+        return <ConnectRepositoryStep {...commonProps} projectId={state.data.projectId} />;
       case 'add-ai':
-        return <ConfigureAiStep {...commonProps} isPending={false} />;
+        return <ConfigureAiStep {...commonProps} />;
       case 'complete':
         return (
           <CompleteStep
@@ -556,55 +500,112 @@ export function OnboardingWizard({ open = true, onOpenChange }: OnboardingWizard
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
-        {/* 步骤条（可点击回跳已走过的步骤；未来步骤禁用）——受控 value，导航走 goToStep */}
-        <Stepper value={state.currentStep + 1} className="mb-6">
-          <StepperNav>
-            {state.steps.map((step, i) => (
-              <StepperItem key={step.id} step={i + 1}>
-                <StepperTrigger
-                  onClick={() => goToStep(i)}
-                  disabled={i > state.currentStep}
-                  className="gap-1.5"
-                >
-                  <StepperIndicator className="size-5 text-3xs font-medium">
-                    {step.status === 'completed' ? (
-                      <Check className="size-3" />
-                    ) : step.status === 'skipped' ? (
-                      <SkipForward className="size-3" />
-                    ) : (
-                      i + 1
-                    )}
-                  </StepperIndicator>
-                  <StepperTitle className="text-xs whitespace-nowrap">
-                    {t(step.title)}
-                  </StepperTitle>
-                </StepperTrigger>
-                {i < state.steps.length - 1 && <StepperSeparator />}
-              </StepperItem>
-            ))}
-          </StepperNav>
-        </Stepper>
-
-        <div className="min-h-100">{renderStepContent()}</div>
-
-        {!isLastStep && state.currentStep > 0 && (
-          <div className="mt-4 flex items-center justify-between border-t pt-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={prevStep}
-              disabled={state.currentStep === 0}
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) {
+          handleDismiss();
+        }
+      }}
+    >
+      {/* 双栏规格（2026-10-03 改版，896px=Dialog wide 档）：左竖步骤轨（可点回跳）+ 右内容区内滚 */}
+      <DialogContent size="wide" className="gap-0 overflow-hidden p-0">
+        <div className="flex h-150 max-h-[85vh]">
+          <aside className="flex w-56 shrink-0 flex-col border-r border-border/60 bg-muted/30 p-4">
+            <div className="mb-3 flex items-center gap-2 px-1">
+              <IconStack aria-hidden="true" className="text-primary">
+                <Rocket className="size-3.5 text-primary" />
+              </IconStack>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">{t('onboarding.rail.title')}</p>
+                <p className="text-3xs text-muted-foreground">{t('onboarding.rail.subtitle')}</p>
+              </div>
+            </div>
+            <nav
+              aria-label={t('onboarding.rail.navAria')}
+              className="flex-1 space-y-1 overflow-y-auto"
             >
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              {t('onboarding.common.prev')}
-            </Button>
-            <span className="text-xs text-muted-foreground">
+              {state.steps.map((step, i) => {
+                const isCurrent = i === state.currentStep;
+                const isFuture = i > state.currentStep;
+                return (
+                  <button
+                    key={step.id}
+                    type="button"
+                    onClick={() => goToStep(i)}
+                    disabled={isFuture}
+                    className={cn(
+                      'flex w-full items-start gap-2 rounded-lg border px-2 py-1.5 text-left transition-colors',
+                      isCurrent
+                        ? 'border-border/60 bg-background shadow-xs'
+                        : isFuture
+                          ? 'border-transparent opacity-50'
+                          : 'border-transparent hover:bg-muted/60',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'mt-px flex size-5 shrink-0 items-center justify-center rounded-full text-3xs font-medium',
+                        step.status === 'completed'
+                          ? 'bg-accent-green/15 text-accent-green'
+                          : step.status === 'skipped'
+                            ? 'bg-muted text-muted-foreground'
+                            : isCurrent
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground',
+                      )}
+                    >
+                      {step.status === 'completed' ? (
+                        <Check className="size-3" />
+                      ) : step.status === 'skipped' ? (
+                        <SkipForward className="size-3" />
+                      ) : (
+                        i + 1
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span
+                        className={cn(
+                          'block truncate text-xs font-medium',
+                          isCurrent ? 'text-foreground' : 'text-muted-foreground',
+                        )}
+                      >
+                        {t(step.title)}
+                      </span>
+                      <span className="block truncate text-3xs text-muted-foreground/70">
+                        {t(step.description)}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+            <p className="mt-3 px-1 text-3xs text-muted-foreground">
               {t('onboarding.common.escClose')}
-            </span>
-          </div>
-        )}
+            </p>
+          </aside>
+
+          <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+            {/* min-h-0 必须在 flex 链上逐层声明：缺了会被内容撑破父高、被 DialogContent
+                的 overflow-hidden 裁掉且不出现滚动条（实机验收暴露的「高度不正确」） */}
+            <div className="min-h-0 flex-1 overflow-y-auto p-6">
+              <div className="mx-auto max-w-xl">{renderStepContent()}</div>
+            </div>
+            {!isLastStep && state.currentStep > 0 && (
+              <div className="flex items-center border-t px-6 py-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={prevStep}
+                  disabled={state.currentStep === 0}
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  {t('onboarding.common.prev')}
+                </Button>
+              </div>
+            )}
+          </section>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -6,9 +6,11 @@
  * 这样将来再有人硬编码文案，测试直接红。
  * 同时覆盖内容同步两处新卡：Welcome 数据安全卡 / Complete 决策收件箱指引卡。
  */
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { OnboardingWizard } from './onboarding-wizard';
+import { useAppStore } from '@/infrastructure/store/app-store';
 
 // i18n mock 仅透传键名——断言直接对着键写，键缺失时文本即键名本身（可定位）
 vi.mock('react-i18next', () => ({
@@ -22,6 +24,7 @@ vi.mock('react-i18next', () => ({
 const steps = [
   { id: 'welcome', title: 'onboarding.steps.welcome.title', description: '', status: 'current' as const },
   { id: 'workspace-root', title: 'onboarding.steps.workspaceRoot.title', description: '', status: 'pending' as const },
+  { id: 'environment', title: 'onboarding.steps.environment.title', description: '', status: 'pending' as const },
   { id: 'create-project', title: 'onboarding.steps.createProject.title', description: '', status: 'pending' as const },
   { id: 'connect-repository', title: 'onboarding.steps.connectRepository.title', description: '', status: 'pending' as const },
   { id: 'add-ai', title: 'onboarding.steps.configureAi.title', description: '', status: 'pending' as const },
@@ -39,7 +42,40 @@ vi.mock('@/shared/types/electron-api', () => ({
   isDesktopShellAvailable: () => false,
 }));
 
-function mockStateAt(stepIndex: number) {
+// 连接仓库步接真实绑定：git-api mock 防真发请求；ai-hub hooks/api mock 供配置 AI 步
+vi.mock('@/modules/git/api/git-api', () => ({
+  gitApi: { getRepositories: vi.fn().mockResolvedValue([]) },
+}));
+
+vi.mock('@/modules/ai-hub/api/ai-hub-api', () => ({
+  aiHubApi: {
+    validateProvider: vi.fn().mockResolvedValue({ valid: true, models: ['gpt-4o'] }),
+  },
+}));
+
+vi.mock('@/modules/ai-hub/hooks/use-ai-providers', () => ({
+  useAiProviders: () => ({
+    data: [
+      { id: 'p1', provider: 'openai', providerId: 'openai', displayName: 'OpenAI', hasApiKey: false, enabled: true },
+      { id: 'p2', provider: 'glm', providerId: 'glm', displayName: 'GLM', hasApiKey: true, enabled: true },
+    ],
+    isLoading: false,
+  }),
+  useUpdateProvider: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
+  useSetDefaultModel: () => ({ mutateAsync: vi.fn().mockResolvedValue({}) }),
+}));
+
+// 环境步骤引入 provider-meta → lobehub 原生 ESM（emoji-mart JSON）在 vitest 崩——
+// 结构性回归不消费品牌图标，mock 掉断链（仓库既有坑，见 lobehub-icons 记账）
+vi.mock('@/shared/ai-providers/provider-meta', () => ({
+  getProviderMeta: (id: string) => ({
+    label: id,
+    Icon: () => null,
+    Color: undefined,
+  }),
+}));
+
+function mockStateAt(stepIndex: number, data: Record<string, unknown> = {}) {
   useOnboardingMock.mockReturnValue({
     state: {
       currentStep: stepIndex,
@@ -47,6 +83,7 @@ function mockStateAt(stepIndex: number) {
         ...s,
         status: i < stepIndex ? ('completed' as const) : i === stepIndex ? ('current' as const) : ('pending' as const),
       })),
+      data,
     },
     currentStepData: steps[stepIndex],
     isLastStep: stepIndex === steps.length - 1,
@@ -92,7 +129,7 @@ describe('OnboardingWizard i18n 结构性回归（CAP-A-18）', () => {
   });
 
   it('complete 步：完成指引四卡（含决策收件箱新卡）+ 三按钮全键名，零硬编码中文', () => {
-    mockStateAt(5);
+    mockStateAt(6);
     const { baseElement } = render(<OnboardingWizard />);
 
     expect(screen.getByText('onboarding.complete.heading')).toBeTruthy();
@@ -107,7 +144,8 @@ describe('OnboardingWizard i18n 结构性回归（CAP-A-18）', () => {
   });
 
   it('create-project 步：表单标签/占位符/类型选项全键名，零硬编码中文', () => {
-    mockStateAt(2);
+    // 桌面 7 步序（welcome/workspace-root/environment/create-project/...）中 create-project 是 index 3
+    mockStateAt(3);
     const { baseElement } = render(<OnboardingWizard />);
 
     expect(screen.getByText('onboarding.createProject.heading')).toBeTruthy();
@@ -117,6 +155,89 @@ describe('OnboardingWizard i18n 结构性回归（CAP-A-18）', () => {
       baseElement.querySelector('input#project-name')?.getAttribute('placeholder'),
     ).toBe('onboarding.createProject.namePlaceholder');
 
+    assertNoHardcodedChinese(baseElement);
+  });
+});
+
+describe('OnboardingWizard 关闭即触及（2026-10-03 触发一次性改版）', () => {
+  beforeAll(() => {
+    // base-ui Dialog 关闭钮点击路径依赖 window.PointerEvent（jsdom 缺失），
+    // 与 desktop-preferences-card.test.tsx 同解
+    if (typeof (window as { PointerEvent?: unknown }).PointerEvent === 'undefined') {
+      (window as unknown as { PointerEvent: unknown }).PointerEvent = class PointerEvent extends MouseEvent {
+        pointerId: number;
+        constructor(type: string, params: PointerEventInit = {}) {
+          super(type, params);
+          this.pointerId = params.pointerId ?? 0;
+        }
+      };
+    }
+  });
+
+  it('点关闭钮：未走完也落完成标记（自动触发机会即消费）+ 复位 onboardingOpen', () => {
+    useAppStore.setState({ onboardingCompleted: false, onboardingOpen: true });
+    mockStateAt(0);
+    const { baseElement } = render(<OnboardingWizard />);
+
+    const closeButton = baseElement.querySelector('[data-slot="dialog-close"]');
+    expect(closeButton).toBeTruthy();
+    fireEvent.click(closeButton as HTMLElement);
+
+    expect(useAppStore.getState().onboardingCompleted).toBe(true);
+    expect(useAppStore.getState().onboardingOpen).toBe(false);
+  });
+
+  it('双栏规格：左步骤轨（7 步全渲染）+ rail 文案走 i18n 键', () => {
+    useAppStore.setState({ onboardingCompleted: false, onboardingOpen: true });
+    mockStateAt(0);
+    render(<OnboardingWizard />);
+
+    expect(screen.getByText('onboarding.rail.title')).toBeTruthy();
+    // 步骤轨列出全部 7 步标题（桌面模式 5+2）
+    for (const step of steps) {
+      expect(screen.getAllByText(step.title).length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('OnboardingWizard 步骤真实化回归（2026-10-04 实机验收反馈）', () => {
+  /** 连接仓库/配置 AI 步消费 react-query——挂 QueryClientProvider 再渲染向导 */
+  function renderWizardAt(stepIndex: number, data: Record<string, unknown> = {}) {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    useAppStore.setState({ onboardingCompleted: false, onboardingOpen: true });
+    mockStateAt(stepIndex, data);
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <OnboardingWizard />
+      </QueryClientProvider>,
+    );
+  }
+
+  it('连接仓库步：有 projectId 时出真实绑定入口（复用 BindRepositoryDialog），空仓库给绑定提示', () => {
+    const { baseElement } = renderWizardAt(4, { projectId: 'proj-1' });
+
+    expect(screen.getByText('onboarding.connectRepository.bind')).toBeTruthy();
+    expect(screen.getByText('onboarding.connectRepository.bindHint')).toBeTruthy();
+    assertNoHardcodedChinese(baseElement);
+  });
+
+  it('连接仓库步：跳过建项目（无 projectId）回落静态指引', () => {
+    renderWizardAt(4);
+
+    expect(screen.getByText('onboarding.connectRepository.noProjectHint')).toBeTruthy();
+  });
+
+  it('配置 AI 步：厂家选卡渲染（含已配置徽注）+ 快捷配置表单入口，零硬编码中文', () => {
+    const { baseElement } = renderWizardAt(5);
+
+    expect(screen.getByText('onboarding.configureAi.quick.providerLabel')).toBeTruthy();
+    // 厂家名是专有名词（ASCII 直出）；配置态徽注走键名
+    expect(screen.getByText('OpenAI')).toBeTruthy();
+    expect(screen.getByText('GLM (Zhipu)')).toBeTruthy();
+    expect(screen.getByText('onboarding.configureAi.quick.configured')).toBeTruthy();
+    expect(screen.getByText('onboarding.configureAi.quick.hint')).toBeTruthy();
     assertNoHardcodedChinese(baseElement);
   });
 });

@@ -292,7 +292,8 @@
     "aiSurfaceReplay": "AI Replay",
     "workflow": "Workflows",
     "delivery": "Delivery",
-    "releases": "Releases"
+    "releases": "Releases",
+    "onboarding": "Onboarding"
   },
   "analytics": {
     "title": "Analytics",
@@ -602,6 +603,7 @@
         "sourceCurrentNotesNone": "No existing notes"
       },
       "tag": "Git Tag",
+      "tagPending": "created on publish",
       "project": "Project",
       "milestone": "Milestone",
       "planned": "Planned",
@@ -3027,6 +3029,7 @@
     "gitPath": "Executable Path",
     "gitPathInput": "Git Executable Path",
     "gitPathPlaceholder": "git or C:\\Program Files\\Git\\bin\\git.exe",
+    "gitPathPickerTitle": "Choose Git executable",
     "gitPathSave": "Save",
     "gitPathDesc": "Enter the path to the Git executable. Use \"git\" to search in PATH, or specify the full path.",
     "gitQuickSelect": "Quick Select",
@@ -4668,7 +4671,44 @@
     "clear": "Clear",
     "executeFailed": "Failed to execute command"
   },
+  "path-input": {
+    "pickDirectory": "Choose directory...",
+    "pickFile": "Choose file...",
+    "status": {
+      "unknown": "Not verified",
+      "checking": "Verifying...",
+      "creating": "Creating...",
+      "valid": "Path valid",
+      "invalid": "Invalid"
+    },
+    "savedAt": "Validated {{time}}",
+    "action": {
+      "validate": "Verify",
+      "create": "Create directory"
+    },
+    "actionFailed": "Action failed: {{message}}"
+  },
   "git": {
+    "workspace": {
+      "title": "Workspace Configuration",
+      "refresh": "Refresh",
+      "loading": "Loading workspace configuration...",
+      "loadFailed": "Load failed",
+      "loadFailedDesc": "Failed to load workspace configuration",
+      "status": "Status:",
+      "localPath": "Local Path",
+      "localPathDesc": "Local directory path for this project",
+      "remoteUrl": "Remote URL",
+      "remoteUrlDesc": "Git repository URL (HTTPS or SSH)",
+      "autoClone": "Auto-clone when setting remote URL",
+      "save": "Save",
+      "clone": "Clone Repository",
+      "lastError": "Last Validation Error",
+      "cloneConfirmTitle": "Clone Repository",
+      "cloneConfirmDesc": "Clone from {{remote}} to {{path}}? Missing directories will be created automatically.",
+      "cloneConfirmConfirm": "Start cloning",
+      "cloneConfirmCancel": "Cancel"
+    },
     "title": "Git Repositories",
     "description": "Unified repository status, branch context and connection quality.",
     "loadFailed": "Loading failed",
@@ -4804,7 +4844,8 @@
     "defaultModelHint": "The default model for all AI features; falls back to the first available provider (OpenAI preferred) when unset",
     "defaultModelNotSet": "No default model set",
     "defaultModelBadge": "Default",
-    "defaultModelSaved": "Default model saved",
+    "defaultModelSaved": "Default model saved (connection verified)",
+    "defaultModelSaving": "Verifying connection…",
     "defaultModelSaveFailed": "Failed to save default model: {{message}}",
     "defaultModelNoProviders": "No model provider configured yet",
     "selectModelHint": "Pick a provider and model, then save",
@@ -6196,6 +6237,10 @@
         "title": "Working folders",
         "description": "Set where your AI teammate works"
       },
+      "environment": {
+        "title": "Environment",
+        "description": "Check your local base environment"
+      },
       "createProject": {
         "title": "Create project",
         "description": "Set up your first project"
@@ -6218,6 +6263,26 @@
       "next": "Next",
       "prev": "Back",
       "escClose": "Press ESC to close"
+    },
+    "rail": {
+      "title": "Initial setup",
+      "subtitle": "Every step is skippable",
+      "navAria": "Onboarding steps"
+    },
+    "environment": {
+      "heading": "Check your local environment",
+      "description": "Verify the tools your AI teammates need. APM only detects and guides — it never installs anything for you.",
+      "recheck": "Re-check",
+      "checking": "Checking…",
+      "toolCount": "{{count}} tools",
+      "installed": "Ready",
+      "notInstalled": "Not found",
+      "unknown": "Unknown",
+      "requiresNode": "Requires Node.js installed first",
+      "copy": "Copy",
+      "copied": "Copied",
+      "officialSite": "Download",
+      "installHint": "Copy the command into your terminal. You may need to restart APM after installing so new CLI tools are picked up. The environment can also be set up later — it won't block you."
     },
     "welcome": {
       "title": "Welcome to APM",
@@ -6280,12 +6345,32 @@
     "connectRepository": {
       "heading": "Connect a Git repository",
       "description": "Link your code repository to track changes and branches",
-      "hint": "Works with GitHub, GitLab, Gitee and more — you can connect inside a project anytime after entering APM. It's safe to skip this step for now."
+      "bind": "Bind repository",
+      "bindAnother": "Bind another repository",
+      "bindHint": "Once bound, your AI teammates can read and write code in this repository. Works with GitHub, GitLab, Gitee and local repositories.",
+      "noProjectHint": "Create a project in the previous step to bind a repository right here. You can also skip — repositories can be bound inside a project anytime later."
     },
     "configureAi": {
       "heading": "Configure AI models",
       "description": "Connect AI services to enable intelligent assistance",
-      "hint": "Supports OpenAI, Anthropic, Zhipu GLM, DeepSeek and more. After entering APM, configure API keys and endpoints anytime in Settings → AI Management — it's safe to skip this step for now."
+      "quick": {
+        "providerLabel": "Pick a model service",
+        "loading": "Loading model services…",
+        "configured": "Key configured",
+        "notConfigured": "Not configured",
+        "apiKeyLabel": "API Key",
+        "apiKeyPlaceholder": "Paste your API key (stored locally in this workspace only)",
+        "baseUrlLabel": "Base URL (optional)",
+        "baseUrlPlaceholder": "Leave empty to use the provider default",
+        "testAndSave": "Test & save as primary AI",
+        "testing": "Testing connection…",
+        "testPassed": "Connection successful",
+        "testFailed": "Test failed — check your key and base URL",
+        "modelsFound": "Connected. {{count}} models available; the first one is now your primary AI",
+        "savedToast": "{{name}} saved and set as primary AI",
+        "defaultModelFailed": "Key saved, but setting the primary AI failed — you can set it later in Settings → AI Management",
+        "hint": "Pick a service, paste your API key — once the test passes it's saved and set as your primary AI (the built-in default). Fine-tune multiple slots, model lists and endpoints anytime in Settings → AI Management. It's safe to skip this step for now."
+      }
     },
     "complete": {
       "heading": "You're all set!",

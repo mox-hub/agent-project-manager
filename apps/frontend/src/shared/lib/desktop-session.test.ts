@@ -23,6 +23,7 @@ import {
   persistTokenToShell,
   restoreDesktopSession,
 } from './desktop-session';
+import { useAppStore } from '@/infrastructure/store/app-store';
 
 /** 测试环境 localStorage 是无实现 vi.fn() mock——自接内存实现才能断言持久化 */
 function installMemoryStorage(): Map<string, string> {
@@ -140,12 +141,15 @@ describe('restoreDesktopSession', () => {
     expect(baseUrlState.value).toBeNull();
   });
 
-  it('壳侧 onboarding_completed=true 时 merge 进 zustand persist JSON', async () => {
-    const store = installMemoryStorage();
-    store.set(
-      'app-storage',
-      JSON.stringify({ state: { onboardingCompleted: false, viewMode: 'list' }, version: 0 }),
-    );
+  it('壳侧 onboarding_completed=true 时向 store 播种完成标记（空 localStorage 也生效）', async () => {
+    // 回归背景（2026-10-03）：桌面端端口漂移换 origin 后 app-storage 不存在，
+    // 旧「merge 进既有 persist JSON」逻辑前置条件不满足什么都不写——向导每次打开重弹。
+    // 修复后走 useAppStore.setState 播种：内存态即时生效（restore 先于 renderApp，
+    // gate 首帧就看到 true）；persist 回写 localStorage 由 zustand 保证（空存储即创建），
+    // 注：setup.ts 先于 localStorage mock 导入了 app-store，persist 捕获的是 jsdom
+    // 原生 storage——回写不可经 mock 断言，以 store 状态为准。
+    installMemoryStorage();
+    useAppStore.setState({ onboardingCompleted: false });
     mockShell({
       appInfo: () => ({ apiBaseUrl: 'http://127.0.0.1:4302' }),
       desktopState: () => ({ onboarding_completed: true }),
@@ -153,11 +157,20 @@ describe('restoreDesktopSession', () => {
 
     await restoreDesktopSession();
 
-    const parsed = JSON.parse(store.get('app-storage')!) as {
-      state: { onboardingCompleted: boolean; viewMode: string };
-    };
-    expect(parsed.state.onboardingCompleted).toBe(true);
-    expect(parsed.state.viewMode).toBe('list');
+    expect(useAppStore.getState().onboardingCompleted).toBe(true);
+  });
+
+  it('壳侧无 onboarding_completed 标记时不播种（新机器保留首启自动弹）', async () => {
+    installMemoryStorage();
+    useAppStore.setState({ onboardingCompleted: false });
+    mockShell({
+      appInfo: () => ({ apiBaseUrl: 'http://127.0.0.1:4302' }),
+      desktopState: () => ({}),
+    });
+
+    await restoreDesktopSession();
+
+    expect(useAppStore.getState().onboardingCompleted).toBe(false);
   });
 
   it('web 模式（壳桥不可用）为 no-op 且恒 ready', async () => {

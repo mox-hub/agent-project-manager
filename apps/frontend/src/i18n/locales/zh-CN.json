@@ -292,7 +292,8 @@
     "aiSurfaceReplay": "AI 回放",
     "workflow": "工作流",
     "delivery": "交付视图",
-    "releases": "发版交付"
+    "releases": "发版交付",
+    "onboarding": "引导"
   },
   "analytics": {
     "title": "分析",
@@ -602,6 +603,7 @@
         "sourceCurrentNotesNone": "无已有说明"
       },
       "tag": "Git Tag",
+      "tagPending": "发布时创建",
       "project": "所属项目",
       "milestone": "所属里程碑",
       "planned": "计划发版",
@@ -3027,6 +3029,7 @@
     "gitPath": "可执行文件路径",
     "gitPathInput": "Git 可执行文件路径",
     "gitPathPlaceholder": "git 或 C:\\Program Files\\Git\\bin\\git.exe",
+    "gitPathPickerTitle": "选择 Git 可执行文件",
     "gitPathSave": "保存",
     "gitPathDesc": "输入 Git 可执行文件路径。使用 \"git\" 搜索 PATH，或指定完整路径。",
     "gitQuickSelect": "快速选择",
@@ -4668,7 +4671,44 @@
     "clear": "清除",
     "executeFailed": "执行命令失败"
   },
+  "path-input": {
+    "pickDirectory": "选择目录…",
+    "pickFile": "选择文件…",
+    "status": {
+      "unknown": "未验证",
+      "checking": "验证中…",
+      "creating": "创建中…",
+      "valid": "路径有效",
+      "invalid": "无效"
+    },
+    "savedAt": "已于 {{time}} 验证",
+    "action": {
+      "validate": "验证",
+      "create": "创建目录"
+    },
+    "actionFailed": "操作失败：{{message}}"
+  },
   "git": {
+    "workspace": {
+      "title": "工作区配置",
+      "refresh": "刷新",
+      "loading": "加载工作区配置中…",
+      "loadFailed": "加载失败",
+      "loadFailedDesc": "无法加载工作区配置",
+      "status": "状态：",
+      "localPath": "本地路径",
+      "localPathDesc": "项目在本机的目录路径",
+      "remoteUrl": "远程仓库 URL",
+      "remoteUrlDesc": "Git 仓库地址（HTTPS 或 SSH）",
+      "autoClone": "设置远程 URL 时自动克隆",
+      "save": "保存",
+      "clone": "克隆仓库",
+      "lastError": "上次验证错误",
+      "cloneConfirmTitle": "克隆仓库",
+      "cloneConfirmDesc": "确认从 {{remote}} 克隆到 {{path}} 吗？目录不存在会自动创建。",
+      "cloneConfirmConfirm": "开始克隆",
+      "cloneConfirmCancel": "取消"
+    },
     "title": "Git 仓库",
     "description": "统一查看仓库状态、分支上下文与连接质量。",
     "loadFailed": "加载失败",
@@ -4804,7 +4844,8 @@
     "defaultModelHint": "全部 AI 功能的默认模型；未设置时回落到第一个可用厂家（优先 OpenAI）",
     "defaultModelNotSet": "未设置内置模型",
     "defaultModelBadge": "内置",
-    "defaultModelSaved": "内置模型已保存",
+    "defaultModelSaved": "内置模型已保存（实测走通）",
+    "defaultModelSaving": "实测走通中…",
     "defaultModelSaveFailed": "内置模型保存失败：{{message}}",
     "defaultModelNoProviders": "尚未配置任何模型服务厂家",
     "selectModelHint": "选择厂家与模型后保存",
@@ -6196,6 +6237,10 @@
         "title": "工作目录",
         "description": "设置 AI 同事执行任务的工作目录"
       },
+      "environment": {
+        "title": "环境检查",
+        "description": "检测本机基础环境是否就绪"
+      },
       "createProject": {
         "title": "创建项目",
         "description": "建立您的第一个项目"
@@ -6218,6 +6263,26 @@
       "next": "下一步",
       "prev": "上一步",
       "escClose": "按 ESC 关闭"
+    },
+    "rail": {
+      "title": "初始设置",
+      "subtitle": "全部步骤均可跳过",
+      "navAria": "引导步骤导航"
+    },
+    "environment": {
+      "heading": "检查本地基础环境",
+      "description": "检测 AI 同事干活所需的工具是否就绪。APM 只做检测与指引，不会替你安装任何东西。",
+      "recheck": "重新检测",
+      "checking": "检测中…",
+      "toolCount": "共 {{count}} 项",
+      "installed": "已就绪",
+      "notInstalled": "未检测到",
+      "unknown": "检测失败",
+      "requiresNode": "需要先安装 Node.js",
+      "copy": "复制",
+      "copied": "已复制",
+      "officialSite": "官方下载",
+      "installHint": "复制命令到终端执行即可；安装后可能需要重启 APM 才能识别新装的命令行工具。环境也可以稍后再配，不影响继续使用。"
     },
     "welcome": {
       "title": "欢迎使用 APM",
@@ -6280,12 +6345,32 @@
     "connectRepository": {
       "heading": "连接 Git 仓库",
       "description": "关联您的代码仓库，跟踪代码变更和分支",
-      "hint": "仓库连接支持 GitHub、GitLab、Gitee 等平台，可在进入 APM 后于项目内随时完成——此步可以先跳过，不影响使用。"
+      "bind": "绑定仓库",
+      "bindAnother": "再绑定一个仓库",
+      "bindHint": "填写仓库信息后，AI 同事即可在该仓库内读写代码与提交。支持 GitHub、GitLab、Gitee 与本地仓库。",
+      "noProjectHint": "先在上一步创建项目，即可在这里直接绑定仓库；也可以先跳过——进入 APM 后在项目内随时绑定，不影响使用。"
     },
     "configureAi": {
       "heading": "配置 AI 模型",
       "description": "连接 AI 服务，启用智能辅助",
-      "hint": "支持 OpenAI、Anthropic、智谱 GLM、DeepSeek 等模型服务。进入 APM 后可在「设置 → AI 管理」中随时配置 API Key 与端点——此步可以先跳过。"
+      "quick": {
+        "providerLabel": "选择模型服务",
+        "loading": "正在加载模型服务…",
+        "configured": "已配置 Key",
+        "notConfigured": "未配置",
+        "apiKeyLabel": "API Key",
+        "apiKeyPlaceholder": "粘贴 API Key（仅保存在本机工作区）",
+        "baseUrlLabel": "接入点 Base URL（可选）",
+        "baseUrlPlaceholder": "留空使用厂家默认接入点",
+        "testAndSave": "测试并保存为主 AI",
+        "testing": "正在测试连接…",
+        "testPassed": "连接成功",
+        "testFailed": "测试未通过，请检查 Key 与接入点",
+        "modelsFound": "连接成功，检测到 {{count}} 个可用模型，已将第一个设为主 AI",
+        "savedToast": "{{name}} 已保存并设为主 AI",
+        "defaultModelFailed": "Key 已保存，但主 AI 设置未成功——可在「设置 → AI 管理」中补设",
+        "hint": "选择一家模型服务并填入 API Key，测试通过后会自动保存并设为主 AI（内置模型）。此后可随时在「设置 → AI 管理」中调整多槽位、模型清单与端点——此步可以先跳过。"
+      }
     },
     "complete": {
       "heading": "设置完成！",

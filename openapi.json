@@ -28206,6 +28206,148 @@
         ]
       }
     },
+    "/_api/ai/providers/validate-model": {
+      "post": {
+        "operationId": "AiHubController_validateModel",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateModelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "实测结果 { valid, models?, error? }（内置模型保存闸门）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateProviderResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Validate a specific provider+model really responds (reads saved key; for default-model save gate)",
+        "tags": [
+          "AI Hub"
+        ]
+      }
+    },
     "/_api/ai/providers/{id}/test": {
       "post": {
         "operationId": "AiHubController_testProvider",
@@ -51555,9 +51697,19 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceValidateRequestDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "校验结果（valid/status/error/suggestion/gitRepoDetected）",
+            "description": "校验结果（valid/status/error/suggestion/gitRepoDetected/missing）",
             "content": {
               "application/json": {
                 "schema": {
@@ -51677,7 +51829,159 @@
             "JWT-auth": []
           }
         ],
-        "summary": "验证项目工作空间",
+        "summary": "验证项目工作空间（带 localPath 时直验该路径，不落库）",
+        "tags": [
+          "Git"
+        ]
+      }
+    },
+    "/_api/git/projects/{projectId}/workspace/directory": {
+      "post": {
+        "operationId": "GitController_ensureWorkspaceDirectory",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "path",
+            "description": "项目 ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnsureWorkspaceDirectoryRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建后校验结果（新建目录必无 .git：invalid + gitRepoDetected:false 如实返回）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceValidationResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "确保项目工作空间目录存在（mkdir -p 幂等）并回检验结果",
         "tags": [
           "Git"
         ]
@@ -56083,6 +56387,138 @@
         "summary": "Delete provider config (reset to built-in defaults)",
         "tags": [
           "CLI Providers"
+        ]
+      }
+    },
+    "/_api/environment": {
+      "get": {
+        "operationId": "EnvironmentController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "六项工具的安装与版本状态",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvironmentReportDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "本地基础环境检测（node/git + AI CLI）",
+        "tags": [
+          "Environment"
         ]
       }
     },
@@ -73289,6 +73725,34 @@
           "valid"
         ]
       },
+      "ValidateModelDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider 类型",
+            "enum": [
+              "openai",
+              "anthropic",
+              "gemini",
+              "deepseek",
+              "glm",
+              "opencode",
+              "opencode-go"
+            ],
+            "example": "opencode-go"
+          },
+          "model": {
+            "type": "string",
+            "description": "待实测的模型名（用户在内置模型卡选择的模型）",
+            "example": "deepseek-v4.1-flash"
+          }
+        },
+        "required": [
+          "provider",
+          "model"
+        ]
+      },
       "DetectModelsResponseDto": {
         "type": "object",
         "properties": {
@@ -80558,6 +81022,15 @@
           "updatedAt"
         ]
       },
+      "WorkspaceValidateRequestDto": {
+        "type": "object",
+        "properties": {
+          "localPath": {
+            "type": "string",
+            "description": "直接验证该路径（纯文件系统检查，不落库不改已存配置）；缺省时验证已保存的 localPath"
+          }
+        }
+      },
       "WorkspaceValidationResponseDto": {
         "type": "object",
         "properties": {
@@ -80580,11 +81053,27 @@
           "gitRepoDetected": {
             "type": "boolean",
             "description": "是否检测到 .git 目录"
+          },
+          "missing": {
+            "type": "boolean",
+            "description": "localPath 指向的目录不存在（前端语义组件据此出现「创建目录」动作）"
           }
         },
         "required": [
           "valid",
           "status"
+        ]
+      },
+      "EnsureWorkspaceDirectoryRequestDto": {
+        "type": "object",
+        "properties": {
+          "localPath": {
+            "type": "string",
+            "description": "要创建（已存在则幂等跳过）的目录绝对路径"
+          }
+        },
+        "required": [
+          "localPath"
         ]
       },
       "CloneRepositoryResponseDto": {
@@ -81553,6 +82042,61 @@
         },
         "required": [
           "providerId"
+        ]
+      },
+      "EnvironmentToolDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "工具键",
+            "enum": [
+              "node",
+              "git",
+              "claude-code",
+              "codex",
+              "zcode",
+              "opencode"
+            ]
+          },
+          "installed": {
+            "type": "boolean",
+            "description": "是否已安装（探测可用）"
+          },
+          "version": {
+            "type": "object",
+            "description": "探测到的版本（原样输出）",
+            "nullable": true
+          },
+          "error": {
+            "type": "object",
+            "description": "未安装/探测失败的原因（超时、命令不存在等）",
+            "nullable": true
+          }
+        },
+        "required": [
+          "key",
+          "installed"
+        ]
+      },
+      "EnvironmentReportDto": {
+        "type": "object",
+        "properties": {
+          "tools": {
+            "description": "基础环境工具状态列表（node/git + 四个 AI CLI，顺序固定）",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnvironmentToolDto"
+            }
+          },
+          "checkedAt": {
+            "type": "string",
+            "description": "检测完成时间（ISO 8601）"
+          }
+        },
+        "required": [
+          "tools",
+          "checkedAt"
         ]
       },
       "SkillStatusResponseDto": {

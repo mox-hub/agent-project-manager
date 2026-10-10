@@ -3490,6 +3490,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/ai/providers/validate-model": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate a specific provider+model really responds (reads saved key; for default-model save gate) */
+        post: operations["AiHubController_validateModel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/ai/providers/{id}/test": {
         parameters: {
             query?: never;
@@ -6247,8 +6264,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 验证项目工作空间 */
+        /** 验证项目工作空间（带 localPath 时直验该路径，不落库） */
         post: operations["GitController_validateWorkspace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/git/projects/{projectId}/workspace/directory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 确保项目工作空间目录存在（mkdir -p 幂等）并回检验结果 */
+        post: operations["GitController_ensureWorkspaceDirectory"];
         delete?: never;
         options?: never;
         head?: never;
@@ -12181,6 +12215,19 @@ export interface components {
              */
             error?: string;
         };
+        ValidateModelDto: {
+            /**
+             * @description Provider 类型
+             * @example opencode-go
+             * @enum {string}
+             */
+            provider: "openai" | "anthropic" | "gemini" | "deepseek" | "glm" | "opencode" | "opencode-go";
+            /**
+             * @description 待实测的模型名（用户在内置模型卡选择的模型）
+             * @example deepseek-v4.1-flash
+             */
+            model: string;
+        };
         DetectModelsResponseDto: {
             /** @description 探测到的模型名列表 */
             models: string[];
@@ -15004,6 +15051,10 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        WorkspaceValidateRequestDto: {
+            /** @description 直接验证该路径（纯文件系统检查，不落库不改已存配置）；缺省时验证已保存的 localPath */
+            localPath?: string;
+        };
         WorkspaceValidationResponseDto: {
             /** @description 是否有效 */
             valid: boolean;
@@ -15015,6 +15066,12 @@ export interface components {
             suggestion?: string;
             /** @description 是否检测到 .git 目录 */
             gitRepoDetected?: boolean;
+            /** @description localPath 指向的目录不存在（前端语义组件据此出现「创建目录」动作） */
+            missing?: boolean;
+        };
+        EnsureWorkspaceDirectoryRequestDto: {
+            /** @description 要创建（已存在则幂等跳过）的目录绝对路径 */
+            localPath: string;
         };
         CloneRepositoryResponseDto: {
             /** @description 是否成功 */
@@ -32207,6 +32264,85 @@ export interface operations {
             };
         };
     };
+    AiHubController_validateModel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ValidateModelDto"];
+            };
+        };
+        responses: {
+            /** @description 实测结果 { valid, models?, error? }（内置模型保存闸门） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidateProviderResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
     AiHubController_testProvider: {
         parameters: {
             query?: never;
@@ -45179,9 +45315,95 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceValidateRequestDto"];
+            };
+        };
         responses: {
-            /** @description 校验结果（valid/status/error/suggestion/gitRepoDetected） */
+            /** @description 校验结果（valid/status/error/suggestion/gitRepoDetected/missing） */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceValidationResponseDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    GitController_ensureWorkspaceDirectory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description 项目 ID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnsureWorkspaceDirectoryRequestDto"];
+            };
+        };
+        responses: {
+            /** @description 创建后校验结果（新建目录必无 .git：invalid + gitRepoDetected:false 如实返回） */
             200: {
                 headers: {
                     [name: string]: unknown;
