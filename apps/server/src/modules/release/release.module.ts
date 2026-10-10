@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { QuickJudgeModule } from '../ai-hub/quick-judge/quick-judge.module';
 import { ContractModule } from '../contract/contract.module';
 import { GitHubModule } from '../integration/providers/github/github.module';
 import { ReleaseChangelogSubscriber } from './release-changelog.subscriber';
@@ -14,7 +15,7 @@ import { ReleaseController } from './release.controller';
  * release.created → CHANGELOG.md 单向再生；release.approved → 自动发布执行。
  */
 @Module({
-  imports: [ContractModule, GitHubModule],
+  imports: [ContractModule, GitHubModule, QuickJudgeModule],
   controllers: [ReleaseController],
   providers: [
     ReleaseService,

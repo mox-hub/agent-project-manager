@@ -8,6 +8,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ConfidenceBar } from "@/components/semantic/confidence-bar";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -328,6 +329,13 @@ export function ReleaseDetailPage() {
                     status={release.status}
                     checks={release.gateResult?.checks ?? []}
                     ranAt={release.gateResult?.ranAt}
+                    aiReadiness={
+                      (
+                        release.gateResult as unknown as
+                          | { aiReadiness?: { probability: number; confidence: number | null } }
+                          | null
+                      )?.aiReadiness ?? null
+                    }
                     gatePending={gate.isPending}
                     onGate={() =>
                       gate.mutate(undefined, {
@@ -469,6 +477,7 @@ function GateCard({
   status,
   checks,
   ranAt,
+  aiReadiness,
   gatePending,
   onGate,
 }: {
@@ -476,6 +485,8 @@ function GateCard({
   status: ReleaseStatus;
   checks: GateCheck[];
   ranAt?: string;
+  /** AI 发布就绪度（CAP-A-27 扩展批，advisory）——gateResult.aiReadiness 投影 */
+  aiReadiness?: { probability: number; confidence: number | null } | null;
   gatePending: boolean;
   onGate: () => void;
 }) {
@@ -500,8 +511,17 @@ function GateCard({
       </CardHeader>
       <CardContent className="space-y-2">
         {ranAt ? (
-          <p className="text-2xs text-content-text-muted">
-            {t("release.gate.ranAt")} {new Date(ranAt).toLocaleString()}
+          <p className="flex flex-wrap items-center gap-2 text-2xs text-content-text-muted">
+            <span>
+              {t("release.gate.ranAt")} {new Date(ranAt).toLocaleString()}
+            </span>
+            {/* AI 就绪度（advisory）：确定性门禁之外的综合倾向参考，低置信转黄 */}
+            {aiReadiness && (
+              <ConfidenceBar
+                value={aiReadiness.probability / 100}
+                label={t("release.gate.aiReadiness")}
+              />
+            )}
           </p>
         ) : (
           <p className="text-xs text-content-text-muted">

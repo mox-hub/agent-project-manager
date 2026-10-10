@@ -1,3 +1,4 @@
+import { QuickJudgeService } from '../ai-hub/quick-judge/quick-judge.service';
 import {
   Inject,
   Injectable,
@@ -96,6 +97,7 @@ export class ReleaseService {
     @Inject(CONTRACT_WORKSPACE_FS) private readonly fs: ContractWorkspaceFs,
     private readonly gate: ReleaseGateService,
     private readonly version: ReleaseVersionService,
+    private readonly quickJudge: QuickJudgeService,
   ) {}
 
   async createRelease(input: CreateReleaseInput) {
@@ -422,10 +424,74 @@ export class ReleaseService {
         gateResult: result as unknown as Prisma.InputJsonValue,
       },
     });
+    // AI 发布就绪度（CAP-A-27 扩展批，advisory）：fire-and-forget，结果并入
+    // gateResult 快照 aiReadiness 键——只供详情页展示「有多确定」，不改门禁判定
+    void this.judgeReleaseReadiness(releaseId, release, result).catch(() => {});
     if (result.passed) {
       this.emitStatusChanged(release, 'draft', 'gated');
     }
     return result;
+  }
+
+  /**
+   * 发布就绪度判定（扩展批二）：state 只含门禁快照的系统结构化字段（check 键/
+   * 通过态/拒因），Score 十档输出就绪度 0-100。判定失败静默跳过（快照无该键，
+   * 前端整块隐藏）。门禁检查本身是确定性规则，本判定补的是「综合起来有多确定」
+   * 的倾向参考，绝非对确定性检查的二次裁决。
+   */
+  private async judgeReleaseReadiness(
+    releaseId: string,
+    release: ReleaseModel,
+    gate: GateResult,
+  ): Promise<void> {
+    const state = [
+      `版本：v${release.version}（状态 ${release.status}）`,
+      `热修版本：${release.hotfixOfId ? '是' : '否'}`,
+      ...gate.checks.map(
+        (c) => `检查[${c.label}]：${c.passed ? '通过' : '未通过'}——${c.detail}`,
+      ),
+    ].join('\n');
+    const result = await this.quickJudge.judge(
+      'release_readiness',
+      `发布门禁检查已完成。基于以下确定性检查结果，评估该版本当前的发布就绪度（0-100）。\n\n${state}`,
+      [
+        {
+          id: 'readiness',
+          type: 'score',
+          instructions: '该版本当前的发布就绪度（0-100）',
+          criteria: [
+            '0-20 多项检查未过，不可发布',
+            '30-50 关键检查未过',
+            '60-70 次要检查未过，基本可用',
+            '80-90 全部通过，个别项有提示',
+            '100 全部通过且无任何风险提示',
+          ],
+        },
+      ],
+    );
+    if (!result) return;
+    const ans = result.answers.readiness;
+    const raw = typeof ans?.score === 'number' ? ans.score : null;
+    if (raw === null) return;
+    const aiReadiness = {
+      probability: Math.max(0, Math.min(100, Math.round((raw * 100) / 9))),
+      confidence: typeof ans?.confidence === 'number' ? ans.confidence : null,
+      model: result.model,
+      judgedAt: new Date().toISOString(),
+      advisory: true,
+    };
+    const current = await this.prisma.release.findUnique({
+      where: { id: releaseId },
+      select: { gateResult: true },
+    });
+    if (!current) return;
+    const snapshot = (current.gateResult ?? {}) as Record<string, unknown>;
+    await this.prisma.release.update({
+      where: { id: releaseId },
+      data: {
+        gateResult: { ...snapshot, aiReadiness } as Prisma.InputJsonValue,
+      },
+    });
   }
 
   /** CHANGELOG 一致性（派生文本 vs 工作区文件），依赖本服务故不进 GateService */

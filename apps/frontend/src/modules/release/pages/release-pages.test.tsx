@@ -43,6 +43,8 @@ vi.mock('react-i18next', () => ({
         'release.gate.title': '发布门禁',
         'release.gate.notRun': '尚未提交门禁',
         'release.gate.skippedEmptyScope': '范围内无内容，跳过',
+        'release.gate.ranAt': '上次检查：',
+        'release.gate.aiReadiness': 'AI 就绪度',
         'release.action.title': '审批与发布',
         'release.detail.logTitle': '发布执行日志',
         'release.detail.loading': '发版详情',
@@ -431,6 +433,55 @@ describe('ReleaseDetailPage', () => {
     expect(screen.getAllByText('发布执行日志').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('github-release')).toBeTruthy();
     expect(screen.getByText('说明文本')).toBeTruthy();
+  });
+
+  it('门禁 AI 就绪度（advisory）：gateResult.aiReadiness 有判定时渲染概率条（CAP-A-27 扩展批二）', () => {
+    detailState.release = {
+      id: 'r-1',
+      projectId: 'p-1',
+      version: '1.2.0',
+      status: 'gated',
+      tagPushed: false,
+      githubReleased: false,
+      gateResult: {
+        passed: true,
+        ranAt: '2026-09-12T00:00:00Z',
+        checks: [{ key: 'scope', label: '发布范围', passed: true, detail: 'ok' }],
+        aiReadiness: {
+          probability: 82,
+          confidence: null,
+          model: 'glm-test',
+          judgedAt: '2026-09-12T00:01:00Z',
+          advisory: true,
+        },
+      },
+    };
+    renderWithRouter(<ReleaseDetailPage />, '/r-1');
+    expect(screen.getByText('AI 就绪度')).toBeTruthy();
+    expect(
+      document.querySelector('[data-ai-component="confidence-bar"]'),
+    ).toBeTruthy();
+  });
+
+  it('门禁无 AI 就绪度快照（旧数据/判定静默失败）时不渲染概率条', () => {
+    detailState.release = {
+      id: 'r-1',
+      projectId: 'p-1',
+      version: '1.2.0',
+      status: 'gated',
+      tagPushed: false,
+      githubReleased: false,
+      gateResult: {
+        passed: true,
+        ranAt: '2026-09-12T00:00:00Z',
+        checks: [{ key: 'scope', label: '发布范围', passed: true, detail: 'ok' }],
+      },
+    };
+    renderWithRouter(<ReleaseDetailPage />, '/r-1');
+    expect(screen.queryByText('AI 就绪度')).toBeNull();
+    expect(
+      document.querySelector('[data-ai-component="confidence-bar"]'),
+    ).toBeNull();
   });
 
   it('空范围跳过的检查项统一中性渲染（ci/audit 不再红、acceptance 不再绿）', () => {
