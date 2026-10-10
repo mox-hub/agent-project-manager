@@ -3,9 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/toast';
 import { authApi, type RegisterInvitePreview } from '../api/auth-api';
 import { AuthVisualCard } from '../components/auth-visual-card';
 
@@ -25,7 +25,6 @@ export function RegisterPage() {
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [invite, setInvite] = useState<RegisterInvitePreview | null>(null);
 
@@ -44,13 +43,12 @@ export function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     if (password.length < 8) {
-      setError('密码至少 8 位');
+      toast.error('密码至少 8 位');
       return;
     }
     if (password !== confirm) {
-      setError('两次输入的密码不一致');
+      toast.error('两次输入的密码不一致');
       return;
     }
     setSubmitting(true);
@@ -69,9 +67,9 @@ export function RegisterPage() {
         apiError.code === 'EMAIL_ALREADY_REGISTERED' ||
         apiError.status === 409
       ) {
-        setError(t('auth.errors.emailAlreadyRegistered'));
+        toast.error(t('auth.errors.emailAlreadyRegistered'));
       } else {
-        setError(apiError.message || '注册失败，请稍后再试');
+        toast.error(apiError.message || '注册失败，请稍后再试');
       }
     } finally {
       setSubmitting(false);
@@ -97,12 +95,6 @@ export function RegisterPage() {
                   invite.email ? `（受邀邮箱：${invite.email}）` : ''
                 }`}
           </div>
-        )}
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
         )}
 
         <div className="space-y-2.5">

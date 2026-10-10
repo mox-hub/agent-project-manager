@@ -134,11 +134,12 @@ export function AuthVisualCard({
 
   return (
     <div
-      className="flex min-h-screen w-full items-center justify-center bg-background p-4 sm:p-6 transition-colors duration-slow"
+      className="flex min-h-screen w-full bg-background transition-colors duration-slow"
       data-ai-page={aiPage}
     >
-      {/* 现代双栏一体化大卡片 */}
-      <div className="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-border/80 shadow-xs md:grid md:min-h-130 md:grid-cols-12 transition-colors duration-slow bg-card">
+      {/* 双栏一体化面板：铺满窗口（窗口即卡片，无外隙/圆角/边框），桌面认证窗
+          右上角 36px 由系统窗口控制 overlay（titleBarOverlay）占用 */}
+      <div className="relative flex min-h-screen w-full flex-col md:grid md:grid-cols-12 transition-colors duration-slow bg-card">
         {/* 桌面紧凑窗口拖动区：盖住卡片顶部品牌行（右上控制按钮组 z-30 在其上可点；
             -webkit-app-region 在浏览器端无效，不影响 web） */}
         <div
@@ -146,8 +147,8 @@ export function AuthVisualCard({
           style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
         />
 
-        {/* 右上角圆形悬浮控制按钮组 (反转卡片 + 日夜间切换) */}
-        <div className="absolute top-4 right-4 z-banner flex items-center gap-2">
+        {/* 右下角圆形悬浮控制按钮组 (反转卡片 + 日夜间切换)：右上角让位系统窗口控制 */}
+        <div className="absolute bottom-4 right-4 z-banner flex items-center gap-2">
           {/* 1. 双表面反转圆形按钮 (role="switch") */}
           <button
             type="button"

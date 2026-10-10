@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/toast';
 import { useTranslation } from 'react-i18next';
 import { AuthVisualCard } from '../components/auth-visual-card';
 import { LoginWorkspacePicker } from '../components/login-workspace-picker';
@@ -29,7 +29,6 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   // 目标工作区（CAP-A-26）：默认取本机当前选择，用户可在登录前显式改变。
   const [workspaceId, setWorkspaceId] = useState(getCurrentWorkspaceId());
-  const [error, setError] = useState<string | null>(null);
   const { login, isLoading } = useAuth();
 
   /**
@@ -44,7 +43,6 @@ export function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     login(
       { username, password },
@@ -52,7 +50,7 @@ export function LoginPage() {
         onError: (err: unknown) => {
           const apiError = err as ApiClientErrorLike;
           const errorKey = ERROR_MESSAGES[apiError.code || ''];
-          setError(
+          toast.error(
             errorKey
               ? t(errorKey)
               : apiError.message || t('auth.errors.loginFailed'),
@@ -65,12 +63,6 @@ export function LoginPage() {
   return (
     <AuthVisualCard aiPage="auth-login">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
         <div className="space-y-3">
           <LoginWorkspacePicker
             value={workspaceId}
