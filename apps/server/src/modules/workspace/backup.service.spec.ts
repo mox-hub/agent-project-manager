@@ -355,6 +355,32 @@ describe('WorkspaceBackupService', () => {
       service.restoreBackup('..%2Fevil', { confirm: 'x' }),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
+
+  it('损坏备份容错：meta 缺失/损坏的目录不进列表，恢复该目录 404（GAP-T-52）', async () => {
+    // 残次目录：合法 backup-* 命名，但 meta.json 损坏 / 缺失（模拟中断写入）
+    const corruptDir = path.join(backupDir, 'backup-corrupt-meta-case');
+    fs.mkdirSync(corruptDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(corruptDir, 'meta.json'),
+      '{broken json',
+      'utf-8',
+    );
+    const noMetaDir = path.join(backupDir, 'backup-no-meta-case');
+    fs.mkdirSync(noMetaDir, { recursive: true });
+
+    // 列表诚实跳过残次目录（不算有效备份，绝不带病恢复）
+    const names = service.listBackups().map((b) => b.id);
+    expect(names).not.toContain('backup-corrupt-meta-case');
+    expect(names).not.toContain('backup-no-meta-case');
+
+    // 恢复残次目录：meta 不可读 → 404，在任何破坏性动作之前拒绝
+    await expect(
+      service.restoreBackup('backup-corrupt-meta-case', { confirm: 'x' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    await expect(
+      service.restoreBackup('backup-no-meta-case', { confirm: 'x' }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
 });
 
 /** 注册表快照内容 → 工作区 id 列表 */

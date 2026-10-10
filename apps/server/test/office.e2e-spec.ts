@@ -91,7 +91,9 @@ describe('Office (e2e)', () => {
         startedAt: new Date(),
       },
     });
-    await ws.db.execution.create({
+    // 周用量真相源 = AIUsageLog（office 聚合经 executionRun.subjectId 归因；
+    // Execution.totalCost 只是 rollup 冗余不再被消费——P2-04 用量口径迁移）
+    const completedExecution = await ws.db.execution.create({
       data: {
         projectId,
         subjectType: 'platform_ai_member',
@@ -102,6 +104,18 @@ describe('Office (e2e)', () => {
         totalTokens: 1200,
         totalCost: 0.4,
         completedAt: new Date(),
+      },
+    });
+    await ws.db.aIUsageLog.create({
+      data: {
+        executionRunId: completedExecution.id,
+        projectId,
+        modelName: 'gpt-test',
+        provider: 'openai',
+        promptTokens: 800,
+        completionTokens: 400,
+        totalTokens: 1200,
+        estimatedCost: 0.4,
       },
     });
     await ws.db.decisionProposal.create({

@@ -46,6 +46,15 @@ describe('Playbook / expertise / dashboard health (e2e, local-only paths)', () =
       },
     });
     projectId = project.id;
+
+    // R3 决策收件箱项目成员可见性：admin 须为项目成员，
+    // 否则 /decisions/pending 全局视图收敛到 admin 的成员项目集合，闸门/组合件卡不可见
+    const admin = await ws.db.user.findUniqueOrThrow({
+      where: { username: 'admin' },
+    });
+    await ws.db.projectMember.create({
+      data: { projectId: project.id, userId: admin.id, role: 'owner' },
+    });
   });
 
   afterAll(async () => {
