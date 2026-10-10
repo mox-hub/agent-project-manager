@@ -3,13 +3,192 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
 import { MessageBusService } from '../../core/message-bus/message-bus.service';
 
+/**
+ * 内置全局状态种子（task 七态 / project 五态）：桌面版模板库由 db push 生成、
+ * 不含种子数据，首装状态页会完全空白（2026-10-03 桌面真机实测）。蓝本取自
+ * 2026-10-01 状态真实化批在 dev 库落地的种子行（含流转白名单）。
+ */
+const DEFAULT_STATUS_DEFINITIONS: Array<{
+  type: string;
+  key: string;
+  name: string;
+  group: string;
+  color: string;
+  icon: string;
+  description: string;
+  order: number;
+  isFinal: boolean;
+  isBlockedState: boolean;
+  allowedNextStatusKeys: string[];
+}> = [
+  {
+    type: 'task',
+    key: 'backlog',
+    name: '待规划',
+    group: 'backlog',
+    color: '#6b7280',
+    icon: 'CircleDashed',
+    description: '已记录但尚未规划，暂不投入。',
+    order: 5,
+    isFinal: false,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['todo', 'in_progress', 'canceled'],
+  },
+  {
+    type: 'task',
+    key: 'todo',
+    name: '待办',
+    group: 'unstarted',
+    color: '#6b7280',
+    icon: 'Circle',
+    description: '即将开始，可以认领。',
+    order: 10,
+    isFinal: false,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['in_progress', 'canceled'],
+  },
+  {
+    type: 'task',
+    key: 'in_progress',
+    name: '进行中',
+    group: 'started',
+    color: '#3b82f6',
+    icon: 'Loader2',
+    description: '正在执行。',
+    order: 20,
+    isFinal: false,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['in_review', 'blocked', 'done', 'canceled'],
+  },
+  {
+    type: 'task',
+    key: 'in_review',
+    name: '待评审',
+    group: 'started',
+    color: '#f59e0b',
+    icon: 'CircleAlertBig',
+    description: '已提交评审，等待验收结论。',
+    order: 30,
+    isFinal: false,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['in_progress', 'done', 'canceled'],
+  },
+  {
+    type: 'task',
+    key: 'blocked',
+    name: '已阻塞',
+    group: 'started',
+    color: '#ef4444',
+    icon: 'Ban',
+    description: '被外部依赖阻塞，暂无法推进。',
+    order: 40,
+    isFinal: false,
+    isBlockedState: true,
+    allowedNextStatusKeys: ['in_progress', 'canceled'],
+  },
+  {
+    type: 'task',
+    key: 'done',
+    name: '已完成',
+    group: 'completed',
+    color: '#22c55e',
+    icon: 'CircleCheckBig',
+    description: '工作完成并通过验收。',
+    order: 40,
+    isFinal: true,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['in_progress', 'canceled'],
+  },
+  {
+    type: 'task',
+    key: 'canceled',
+    name: '已取消',
+    group: 'canceled',
+    color: '#6b7280',
+    icon: 'CircleXBig',
+    description: '决定不做。',
+    order: 60,
+    isFinal: true,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['todo', 'in_progress'],
+  },
+  {
+    type: 'project',
+    key: 'backlog',
+    name: '待规划',
+    group: 'backlog',
+    color: '#6b7280',
+    icon: 'CircleDashed',
+    description: '已提出但未排期。',
+    order: 10,
+    isFinal: false,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['planned', 'in_progress', 'canceled'],
+  },
+  {
+    type: 'project',
+    key: 'planned',
+    name: '计划中',
+    group: 'unstarted',
+    color: '#f59e0b',
+    icon: 'CalendarClock',
+    description: '已排期，尚未启动。',
+    order: 20,
+    isFinal: false,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['in_progress', 'canceled'],
+  },
+  {
+    type: 'project',
+    key: 'in_progress',
+    name: '进行中',
+    group: 'started',
+    color: '#3b82f6',
+    icon: 'Loader2',
+    description: '项目正在推进。',
+    order: 30,
+    isFinal: false,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['completed', 'canceled'],
+  },
+  {
+    type: 'project',
+    key: 'completed',
+    name: '已完成',
+    group: 'completed',
+    color: '#22c55e',
+    icon: 'CircleCheckBig',
+    description: '项目交付完成。',
+    order: 40,
+    isFinal: true,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['in_progress'],
+  },
+  {
+    type: 'project',
+    key: 'canceled',
+    name: '已取消',
+    group: 'canceled',
+    color: '#6b7280',
+    icon: 'CircleXBig',
+    description: '项目终止。',
+    order: 50,
+    isFinal: true,
+    isBlockedState: false,
+    allowedNextStatusKeys: ['planned', 'in_progress'],
+  },
+];
+
 @Injectable()
 export class MetadataService {
+  private readonly logger = new Logger(MetadataService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly messageBus: MessageBusService,
@@ -168,6 +347,15 @@ export class MetadataService {
 
   // Status Definitions
   async getStatuses(projectId?: string, type?: string) {
+    // 空表补种（首启/新工作区库）：仅全局语境（未指定 projectId）触发，
+    // 项目级状态查询为空是合法状态不补种。幂等：表内有任意行即跳过。
+    if (projectId === undefined) {
+      const total = await this.prisma.statusDefinition.count();
+      if (total === 0) {
+        await this.seedDefaultStatuses();
+      }
+    }
+
     const where: any = {};
     if (projectId !== undefined) {
       where.projectId = projectId;
@@ -180,6 +368,20 @@ export class MetadataService {
       where,
       orderBy: { order: 'asc' },
     });
+  }
+
+  /**
+   * 补种内置全局状态（projectId=null）：DEFAULT_STATUS_DEFINITIONS 全量直插，
+   * SQLite createMany 不支持 skipDuplicates，并发首启靠同键重插风险极低 +
+   * 业务侧无唯一约束（重复行可在状态页手删），不做额外兜底。
+   */
+  private async seedDefaultStatuses(): Promise<void> {
+    await this.prisma.statusDefinition.createMany({
+      data: DEFAULT_STATUS_DEFINITIONS.map((s) => ({ ...s, projectId: null })),
+    });
+    this.logger.log(
+      `已补种 ${DEFAULT_STATUS_DEFINITIONS.length} 条内置全局状态（空表首启自动补齐）`,
+    );
   }
 
   async createOrUpdateStatus(data: any, currentUserId?: string) {

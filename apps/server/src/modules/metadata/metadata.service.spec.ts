@@ -20,6 +20,8 @@ describe('MetadataService', () => {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
+      createMany: vi.fn(),
+      count: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
@@ -249,10 +251,50 @@ describe('MetadataService', () => {
         mockStatuses,
       );
 
+      mockPrismaService.statusDefinition.count.mockResolvedValue(2);
       const result = await service.getStatuses(undefined, 'task');
 
       expect(result).toEqual(mockStatuses);
       expect(mockPrismaService.statusDefinition.findMany).toHaveBeenCalled();
+      // 非空表不触发补种
+      expect(
+        mockPrismaService.statusDefinition.createMany,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('空表首启（全局语境）：补种 12 条内置状态（task 七态 + project 五态）后返回', async () => {
+      mockPrismaService.statusDefinition.count.mockResolvedValue(0);
+      mockPrismaService.statusDefinition.createMany.mockResolvedValue({
+        count: 12,
+      });
+      mockPrismaService.statusDefinition.findMany.mockResolvedValue([]);
+
+      await service.getStatuses(undefined, 'task');
+
+      expect(
+        mockPrismaService.statusDefinition.createMany,
+      ).toHaveBeenCalledTimes(1);
+      const payload =
+        mockPrismaService.statusDefinition.createMany.mock.calls[0][0].data;
+      expect(payload).toHaveLength(12);
+      const taskRows = payload.filter((r) => r.type === 'task');
+      const projectRows = payload.filter((r) => r.type === 'project');
+      expect(taskRows).toHaveLength(7);
+      expect(projectRows).toHaveLength(5);
+      for (const row of payload) {
+        expect(row.projectId).toBeNull();
+      }
+    });
+
+    it('空表但项目级语境（带 projectId）：不触发补种', async () => {
+      mockPrismaService.statusDefinition.findMany.mockResolvedValue([]);
+
+      await service.getStatuses('proj-1');
+
+      expect(mockPrismaService.statusDefinition.count).not.toHaveBeenCalled();
+      expect(
+        mockPrismaService.statusDefinition.createMany,
+      ).not.toHaveBeenCalled();
     });
   });
 });

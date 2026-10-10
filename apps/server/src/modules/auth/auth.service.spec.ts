@@ -36,6 +36,7 @@ describe('AuthService', () => {
     },
     roleAssignment: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
       create: vi.fn(),
     },
     actorClaimSnapshot: {
@@ -282,6 +283,71 @@ describe('AuthService', () => {
       expect(error).toBeInstanceOf(BusinessException);
       expect(error.errorCode).toBe(ErrorCode.EMAIL_ALREADY_REGISTERED);
       expect(error.getStatus()).toBe(HttpStatus.CONFLICT);
+    });
+
+    it('首用户注册（系统无 global admin）：角色直接授予 admin', async () => {
+      mockPrismaService.appConfig.findFirst.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.create.mockResolvedValue({
+        id: 'u-first',
+        username: 'first',
+        email: 'first@example.com',
+      });
+      // 系统中尚无任何 global admin
+      mockPrismaService.roleAssignment.findFirst.mockResolvedValue(null);
+      // 注册链的私有依赖（用户名派生/Member 建档/登录会话）与本用例无关，实例级覆盖
+      (service as any).deriveUniqueUsername = vi
+        .fn()
+        .mockResolvedValue('first');
+      (service as any).deriveUniqueHandle = vi.fn().mockResolvedValue('first');
+      (service as any).ensureMemberForUser = vi
+        .fn()
+        .mockResolvedValue(undefined);
+      (service as any).loginByUserId = vi
+        .fn()
+        .mockResolvedValue({ accessToken: 'tok' });
+
+      await service.register({
+        email: 'first@example.com',
+        password: 'password123',
+      });
+
+      expect(mockPrismaService.roleAssignment.create).toHaveBeenCalledWith({
+        data: { userId: 'u-first', scopeType: 'global', role: 'admin' },
+      });
+    });
+
+    it('非首用户注册（已有 global admin）：角色回落 user', async () => {
+      mockPrismaService.appConfig.findFirst.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
+      mockPrismaService.user.create.mockResolvedValue({
+        id: 'u-second',
+        username: 'second',
+        email: 'second@example.com',
+      });
+      // 系统已有 admin（如首用户）
+      mockPrismaService.roleAssignment.findFirst.mockResolvedValue({
+        id: 'ra-1',
+      });
+      (service as any).deriveUniqueUsername = vi
+        .fn()
+        .mockResolvedValue('second');
+      (service as any).deriveUniqueHandle = vi.fn().mockResolvedValue('second');
+      (service as any).ensureMemberForUser = vi
+        .fn()
+        .mockResolvedValue(undefined);
+      (service as any).loginByUserId = vi
+        .fn()
+        .mockResolvedValue({ accessToken: 'tok' });
+
+      await service.register({
+        email: 'second@example.com',
+        password: 'password123',
+      });
+
+      expect(mockPrismaService.roleAssignment.create).toHaveBeenCalledWith({
+        data: { userId: 'u-second', scopeType: 'global', role: 'user' },
+      });
     });
   });
 

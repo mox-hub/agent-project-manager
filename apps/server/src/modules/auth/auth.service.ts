@@ -212,8 +212,19 @@ export class AuthService {
       },
     });
 
+    // 首个用户自动 admin（2026-10-03 裁决）：系统中尚无任何 global admin 时，
+    // 注册用户直接授予 admin——桌面单机/全新库首装注册即管理员，无提升路径可走；
+    // 已有 admin 的库回落 user（邀请注册路径角色由邀请方指定，不在此列）。
+    const hasAdmin = await this.prisma.roleAssignment.findFirst({
+      where: { scopeType: 'global', role: 'admin' },
+      select: { id: true },
+    });
     await this.prisma.roleAssignment.create({
-      data: { userId: user.id, scopeType: 'global', role: 'user' },
+      data: {
+        userId: user.id,
+        scopeType: 'global',
+        role: hasAdmin ? 'user' : 'admin',
+      },
     });
 
     // 自动创建关联的 human Member（复用短 ID 生成与去重）
