@@ -36,12 +36,13 @@ import { createProjectFixture } from './helpers/fixtures';
 const flush = () =>
   new Promise((resolve) => setImmediate(() => setImmediate(resolve)));
 
-/** 轮询等待异步事件链落位（message-bus 订阅器为 fire-and-forget async） */
-async function waitFor(fn: () => Promise<boolean>, tries = 20): Promise<void> {
+/** 轮询等待异步事件链落位（message-bus 订阅器为 fire-and-forget async；
+ * 绑定 upsert 经工作区代理客户端可能冷启动上百 ms，重试需给足真实等待） */
+async function waitFor(fn: () => Promise<boolean>, tries = 40): Promise<void> {
   for (let i = 0; i < tries; i += 1) {
     if (await fn()) return;
     await flush();
-    await new Promise((resolve) => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 25));
   }
 }
 
@@ -210,14 +211,16 @@ describe('契约与文档知识层 · 实机验收 (e2e)', () => {
         releaseId: release.id,
       });
     });
-    // 订阅器再生为异步事件链，轮询等待 CHANGELOG 落盘
-    await waitFor(() =>
-      Promise.resolve(
-        fs
-          .readFileSync(path.join(workspaceRoot, 'CHANGELOG.md'), 'utf8')
-          .includes('## [0.1.0]'),
-      ),
-    );
+    // 订阅器再生为异步事件链，轮询等待 CHANGELOG 落盘 + 绑定翻转 managed
+    // （文件先落盘、绑定 upsert 稍后到达——只等文件再读绑定会输给竞态）
+    await waitFor(async () => {
+      const binding = await withWs(ws.id, () =>
+        ws.db.contractFileBinding.findUnique({
+          where: { projectId_fileType: { projectId, fileType: 'changelog' } },
+        }),
+      );
+      return binding?.syncMode === 'managed';
+    });
 
     const changelogPath = path.join(workspaceRoot, 'CHANGELOG.md');
     const content = fs.readFileSync(changelogPath, 'utf8');
