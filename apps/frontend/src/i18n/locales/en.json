@@ -451,6 +451,17 @@
   },
   "release": {
     "title": "Releases",
+    "columns": {
+      "version": "Version",
+      "name": "Name",
+      "status": "Status",
+      "project": "Project",
+      "milestone": "Milestone",
+      "platforms": "Platforms",
+      "plannedAt": "Planned",
+      "gitTag": "Git Tag",
+      "releasedAt": "Released"
+    },
     "filter": {
       "project": "Select project",
       "pickProject": "Pick a project…",
@@ -651,7 +662,8 @@
     "description": "Turn AI-drafted engineering flows into orchestrated, resumable, approval-gated execution",
     "view": {
       "grid": "Grid",
-      "list": "List"
+      "list": "List",
+      "table": "Table"
     },
     "filter": {
       "searchPlaceholder": "Search workflows by name, key, or description..."
@@ -1103,6 +1115,18 @@
     "truncated": "truncated"
   },
   "execution": {
+    "columns": {
+      "goal": "Goal",
+      "status": "Status",
+      "agent": "Agent",
+      "project": "Project",
+      "issue": "Issue",
+      "started": "Started",
+      "duration": "Duration",
+      "tokens": "Tokens",
+      "cost": "Cost",
+      "provider": "Provider"
+    },
     "stats": {
       "toggle": "Quick stats"
     },
@@ -1478,7 +1502,11 @@
       "performance": "Team Performance",
       "performanceEncoding": "bar length = score · max 100",
       "cost": "Cost Overview",
-      "costEncoding": "last 30 days · bar length = spend",
+      "costEncoding": "last 30 days · slice = spend share",
+      "costTotal": "30-day total",
+      "priority": "Tasks by Priority",
+      "priorityEncoding": "segment length = share of tasks",
+      "ariaPriority": "Composition of tasks by priority",
       "legendTasks": "Tasks",
       "legendVelocity": "Velocity",
       "lupiExpand": "Deep read",
@@ -3714,7 +3742,15 @@
     },
     "view": {
       "grid": "Cards",
-      "list": "List"
+      "list": "List",
+      "table": "Table"
+    },
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "trust": "Trust",
+      "status": "Status",
+      "id": "ID"
     },
     "stats": {
       "total": "All",
@@ -3865,7 +3901,14 @@
     },
     "view": {
       "grid": "Cards",
-      "list": "List"
+      "list": "List",
+      "table": "Table"
+    },
+    "columns": {
+      "name": "Team",
+      "members": "Members",
+      "projects": "Projects",
+      "status": "Status"
     },
     "stats": {
       "total": "All teams",
@@ -5301,6 +5344,14 @@
   "document": {
     "title": "Documents",
     "description": "Manage project documents, API specifications and technical guides",
+    "columns": {
+      "title": "Title",
+      "status": "Status",
+      "category": "Category",
+      "project": "Project",
+      "id": "ID",
+      "updated": "Updated"
+    },
     "tab": {
       "new": "New Document",
       "edit": "Edit Document"
@@ -6324,7 +6375,10 @@
       "removeAria": "Remove {{root}}",
       "choose": "Choose folder",
       "choosing": "Choosing...",
-      "chooseDialogTitle": "Choose the working folder for AI execution"
+      "chooseDialogTitle": "Choose the working folder for AI execution",
+      "webHint": "Working folders are provided by AI runtime (daemon) registrations. In web mode this step shows online runtimes' working folders read-only; adjust them in the daemon config or Settings → Runtime.",
+      "webRegistered": "Working folders of online runtimes",
+      "webEmpty": "No online AI runtime detected. Working folders follow runtime registrations and per-project workspace settings — you can skip this step for now without blocking anything."
     },
     "createProject": {
       "heading": "Create your first project",
