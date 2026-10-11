@@ -17,6 +17,7 @@ import {
   FolderKanban,
   GitPullRequestArrow,
   Pencil,
+  Rocket,
   Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -185,6 +186,22 @@ export function ReleaseMetaBar({ release }: { release: ReleaseRecord }) {
                   icon={<Clock className="size-3 text-content-text-muted" />}
                 >
                   {new Date(release.releasedAt).toLocaleString()}
+                </MetaPill>
+              ) : null}
+              {release.deployedAt ? (
+                <MetaPill
+                  icon={<Rocket className="size-3 text-accent-green" />}
+                  label={t("release.meta.deployed")}
+                >
+                  {new Date(release.deployedAt).toLocaleString()}
+                  {release.deployNote ? (
+                    <span
+                      className="ml-1 max-w-48 truncate text-content-text-muted"
+                      title={release.deployNote}
+                    >
+                      {release.deployNote}
+                    </span>
+                  ) : null}
                 </MetaPill>
               ) : null}
             </div>

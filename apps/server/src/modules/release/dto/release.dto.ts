@@ -185,6 +185,19 @@ export class RejectReleaseDto {
   reason?: string;
 }
 
+/**
+ * 部署信号标记（交付出口切片 2026-10-11）：发布≠部署，released 后由人手动
+ * 标记实际部署完成。deployedAt 由端点置 now（重复标记=幂等更新时间与备注）。
+ */
+export class MarkReleaseDeployedDto {
+  @ApiPropertyOptional({
+    description: '部署备注：环境/方式/验证入口等自由文本',
+  })
+  @IsOptional()
+  @IsString()
+  deployNote?: string;
+}
+
 export class VersionRecommendRequestDto {
   @ApiProperty({ description: '项目 ID' })
   @IsString()

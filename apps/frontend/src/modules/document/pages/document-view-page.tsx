@@ -2,7 +2,6 @@ import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { EmptyState } from '@/components/semantic/empty-state';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Bookmark,
   Clock,
   Copy,
   Download,
@@ -11,7 +10,6 @@ import {
   GitBranch,
   Link as LinkIcon,
   MoreVertical,
-  Share2,
   Trash2,
   User,
   FileText,
@@ -34,6 +32,7 @@ import { MENU_ITEM_CLASS, MENU_SEPARATOR_CLASS, MENU_SURFACE_CLASS } from '@/com
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { cn } from '@/lib/utils';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
+import { downloadFile } from '@/lib/download';
 import { useDocumentDetail } from '../hooks/use-document-detail';
 import { useUpdateDocument } from '../hooks/use-document-mutations';
 import { useDocumentDeleteFlow } from '../hooks/use-document-delete';
@@ -313,17 +312,27 @@ export function DocumentViewPage() {
 
             {menuOpen ? (
               <div className={`absolute right-0 top-10.5 z-banner w-47.5 p-1 motion-enter ${MENU_SURFACE_CLASS}`}>
-                <button type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
-                  <Share2 size={14} /> 分享
+                {/* 交付出口切片（2026-10-11）：复制链接/导出 Markdown 真实化；
+                    「分享/添加书签」两死按钮移除（无对应能力，占位即欺骗） */}
+                <button
+                  type="button"
+                  className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`}
+                  onClick={() => {
+                    copyToClipboard(window.location.href);
+                    setMenuOpen(false);
+                  }}
+                >
+                  {isCopied ? <Check size={14} /> : <Copy size={14} />} 复制链接
                 </button>
-                <button type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
-                  <Copy size={14} /> 复制链接
-                </button>
-                <button type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
+                <button
+                  type="button"
+                  className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`}
+                  onClick={() => {
+                    if (document) downloadFile(`${document.title || 'document'}.md`, document.content);
+                    setMenuOpen(false);
+                  }}
+                >
                   <Download size={14} /> 导出 Markdown
-                </button>
-                <button type="button" className={`${MENU_ITEM_CLASS} gap-2 justify-start text-left`} onClick={() => setMenuOpen(false)}>
-                  <Bookmark size={14} /> 添加书签
                 </button>
                 <div className={MENU_SEPARATOR_CLASS} />
                 <button

@@ -24,6 +24,7 @@ import { ReleaseService } from './release.service';
 import {
   CreateReleaseDto,
   GateResultDto,
+  MarkReleaseDeployedDto,
   RejectReleaseDto,
   ReleaseDto,
   UpdateReleaseDeliverablesDto,
@@ -146,6 +147,19 @@ export class ReleaseController {
     @Request() req: { user: { id: string } },
   ) {
     return this.releases.updateDeliverables(id, dto.deliverables, req.user.id);
+  }
+
+  @Post(':id/deploy')
+  @ApiOperation({
+    summary:
+      '标记已部署（交付出口 2026-10-11：发布≠部署，仅 released 可标记；重复标记幂等刷新时间与备注）',
+  })
+  @ApiStandardErrors()
+  async markDeployed(
+    @Param('id') id: string,
+    @Body() dto: MarkReleaseDeployedDto,
+  ) {
+    return this.releases.markDeployed(id, dto.deployNote);
   }
 
   @Post(':id/gate')

@@ -145,3 +145,66 @@ describe('ReleaseService.updateDeliverables（交付成果清单存取）', () =
     expect(prisma.releases[0].deliverables).toBeNull();
   });
 });
+
+/**
+ * 部署信号标记（交付出口切片 2026-10-11）：仅 released 可标记（其余 400）、
+ * deployedAt 置当前时间 + 备注落库、重复标记幂等刷新。
+ */
+describe('markDeployed（部署信号）', () => {
+  it('released → 标记成功：deployedAt 非空、deployNote 落库', async () => {
+    const prisma = new StubPrisma();
+    prisma.releases.push({
+      id: 'r-dep',
+      status: 'released',
+      deployedAt: null,
+      deployNote: null,
+    });
+    const svc = buildService(prisma);
+
+    const saved = await svc.markDeployed('r-dep', '生产环境 · Docker');
+    expect(saved.deployedAt).toBeInstanceOf(Date);
+    expect(saved.deployNote).toBe('生产环境 · Docker');
+  });
+
+  it('非 released（draft/gated/publishing）→ 400 且不落库', async () => {
+    for (const status of ['draft', 'gated', 'publishing', 'failed']) {
+      const prisma = new StubPrisma();
+      prisma.releases.push({
+        id: `r-${status}`,
+        status,
+        deployedAt: null,
+        deployNote: null,
+      });
+      const svc = buildService(prisma);
+
+      await expect(svc.markDeployed(`r-${status}`, 'x')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(prisma.releases[0].deployedAt).toBeNull();
+    }
+  });
+
+  it('重复标记幂等：刷新 deployedAt 与备注（回滚重发场景）', async () => {
+    const prisma = new StubPrisma();
+    prisma.releases.push({
+      id: 'r-again',
+      status: 'released',
+      deployedAt: new Date('2026-10-01T00:00:00Z'),
+      deployNote: '第一次',
+    });
+    const svc = buildService(prisma);
+
+    const saved = await svc.markDeployed('r-again', '回滚后重发 · v2 镜像');
+    expect((saved.deployedAt as Date).getTime()).toBeGreaterThan(
+      new Date('2026-10-01T00:00:00Z').getTime(),
+    );
+    expect(saved.deployNote).toBe('回滚后重发 · v2 镜像');
+  });
+
+  it('发版不存在 → 404', async () => {
+    const svc = buildService(new StubPrisma());
+    await expect(svc.markDeployed('r-ghost')).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+});

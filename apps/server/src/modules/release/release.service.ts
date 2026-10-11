@@ -310,6 +310,28 @@ export class ReleaseService {
     });
   }
 
+  /**
+   * 标记已部署（交付出口切片 2026-10-11）：发布≠部署——released 是发版终态，
+   * 部署发生在其后，由人手动补「这个版本真的上去了」的终点信号。仅 released
+   * 可标记（其余状态 400）；重复标记幂等（刷新 deployedAt 与备注）。
+   */
+  async markDeployed(
+    releaseId: string,
+    deployNote?: string,
+  ): Promise<ReleaseModel> {
+    const release = await this.getRelease(releaseId);
+    if (release.status !== 'released') {
+      throw new BadRequestException(
+        `仅 released 状态可标记部署（当前 ${release.status}）——发布完成后再标记实际部署`,
+      );
+    }
+    return this.prisma.release.update({
+      where: { id: releaseId },
+      data: { deployedAt: new Date(), deployNote: deployNote || null },
+      include: RELEASE_INCLUDE,
+    });
+  }
+
   /** 里程碑关联校验（CAP-A-16）：存在 + 同项目（跨项目 400） */
   private async assertMilestoneUsable(
     projectId: string,

@@ -2,13 +2,52 @@
  * AuditReportPanel — 完整性审计报告面板
  * 消费服务端 AuditReport（riskLevel/blockedItems/suggestedItems/passedItems），
  * 建议/阻断项支持采纳（onApplySuggestions 回调，由页面接 mutation）。
+ * 「导出报告」（交付出口切片 2026-10-11）：审计结论拼 Markdown 下载——
+ * 治理结论没有出口就锁死在账号里，这是「能证明做成了」的出口侧。
  */
 import { useTranslation } from 'react-i18next';
 import { AiVerdictPill } from '@/components/semantic/ai-verdict-pill';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { downloadFile } from '@/lib/download';
 import type { AuditReport, AuditItem } from '../api/acceptance-api';
+
+/** 审计报告 → Markdown 文本（纯函数，导出按钮与测试共用同一拼接口径） */
+export function buildAuditReportMarkdown(
+  report: AuditReport,
+  riskLabel: string,
+): string {
+  const itemMd = (title: string, items: AuditItem[], withSuggestion: boolean): string => {
+    const lines: string[] = [`## ${title}（${items.length}）`, ''];
+    for (const item of items) {
+      lines.push(`### [${item.severity}] ${item.content}`);
+      if (item.category) lines.push(`- 分类：${item.category}`);
+      lines.push(`- 来源：${item.source}`);
+      if (withSuggestion && item.suggestion) lines.push(`- 修复建议：${item.suggestion}`);
+      lines.push('');
+    }
+    return lines.join('\n');
+  };
+  const head = [
+    '# 完整性审计报告',
+    '',
+    `- 审计时间：${report.auditDate}`,
+    `- 风险级别：${riskLabel}（${report.riskLevel}）`,
+    report.checklist ? `- 验收清单：${report.checklist.name}` : null,
+    report.summary ? `- 结论摘要：${report.summary}` : null,
+    report.stale ? '- ⚠️ 审计已过期：验收标准在审计后有修订/新增，结论待重审' : null,
+    '',
+  ]
+    .filter((line): line is string => line !== null)
+    .join('\n');
+  return [
+    head,
+    itemMd('阻塞项', report.blockedItems ?? [], true),
+    itemMd('建议项', report.suggestedItems ?? [], true),
+    itemMd('通过项', report.passedItems ?? [], false),
+  ].join('\n');
+}
 
 interface Props {
   report: AuditReport;
@@ -53,6 +92,21 @@ export function AuditReportPanel({
         <Badge variant="outline" className={`px-3 py-1 ${RISK_STYLE[report.riskLevel] ?? ''}`}>
           {riskLabel}
         </Badge>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="ml-auto h-7 gap-1 px-2 text-xs"
+          onClick={() =>
+            downloadFile(
+              `audit-report-${report.acceptanceId.slice(0, 8)}.md`,
+              buildAuditReportMarkdown(report, riskLabel),
+            )
+          }
+        >
+          <Download className="size-3.5" />
+          {t('acceptanceDetail.audit.exportReport')}
+        </Button>
         {/* CAP-B-02：审计后标准修订/新增 → 结论过期待重审 */}
         {report.stale && (
           <Badge

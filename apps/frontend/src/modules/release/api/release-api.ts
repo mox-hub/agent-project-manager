@@ -145,6 +145,10 @@ export interface ReleaseRecord {
   gateFailedChecks?: number | null;
   /** 是否有待审批发布决策卡（批四列表卡点投影；列表接口专属） */
   hasPendingApproval?: boolean;
+  /** 部署信号（交付出口 2026-10-11）：发布≠部署，released 后人工标记实际部署完成 */
+  deployedAt?: string | null;
+  /** 部署备注：环境/方式/验证入口等自由文本 */
+  deployNote?: string | null;
 }
 
 export interface VersionRecommendation {
@@ -206,6 +210,9 @@ export const releaseApi = {
   // 交付成果清单（CAP-K-03 批二）：全量替换，任意状态可改，服务端记录操作人
   updateDeliverables: (id: string, deliverables: ReleaseDeliverableItem[]) =>
     api.put<ReleaseRecord>(`/releases/${id}/deliverables`, { deliverables }),
+  // 部署信号（交付出口 2026-10-11）：仅 released 可标记，重复标记幂等刷新
+  markDeployed: (id: string, deployNote?: string) =>
+    api.post<ReleaseRecord>(`/releases/${id}/deploy`, { deployNote }),
   recommendVersion: (projectId: string, excludeReleaseId?: string) =>
     api.get<VersionRecommendation>('/releases/version-recommend', {
       projectId,

@@ -7208,6 +7208,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/releases/{id}/deploy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 标记已部署（交付出口 2026-10-11：发布≠部署，仅 released 可标记；重复标记幂等刷新时间与备注） */
+        post: operations["ReleaseController_markDeployed"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/releases/{id}/gate": {
         parameters: {
             query?: never;
@@ -16162,6 +16179,10 @@ export interface components {
         UpdateReleaseDeliverablesDto: {
             /** @description 交付成果清单（全量替换；元素必填 name/location/howToVerify） */
             deliverables: components["schemas"]["ReleaseDeliverableItemDto"][];
+        };
+        MarkReleaseDeployedDto: {
+            /** @description 部署备注：环境/方式/验证入口等自由文本 */
+            deployNote?: string;
         };
         ApprovalProposalRequestDto: {
             /** @description 预留：附言 */
@@ -50115,6 +50136,78 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UpdateReleaseDeliverablesDto"];
+            };
+        };
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_markDeployed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReleaseDeployedDto"];
             };
         };
         responses: {

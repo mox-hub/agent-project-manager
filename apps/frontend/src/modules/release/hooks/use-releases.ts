@@ -76,6 +76,15 @@ export function useUpdateDeliverables(releaseId: string) {
   });
 }
 
+/** 标记已部署（交付出口 2026-10-11）：仅 released 可标记，重复标记幂等刷新 */
+export function useMarkDeployed(releaseId: string) {
+  const invalidate = useInvalidateReleases();
+  return useMutation({
+    mutationFn: (deployNote?: string) => releaseApi.markDeployed(releaseId, deployNote),
+    onSuccess: () => invalidate(releaseId),
+  });
+}
+
 export function useGateRelease(releaseId: string) {
   const invalidate = useInvalidateReleases();
   return useMutation({

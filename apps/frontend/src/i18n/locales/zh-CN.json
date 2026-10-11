@@ -558,7 +558,8 @@
     "meta": {
       "edit": "编辑信息",
       "saved": "发版信息已更新",
-      "tagAuto": "发布时自动创建 v{{version}}"
+      "tagAuto": "发布时自动创建 v{{version}}",
+      "deployed": "已部署"
     },
     "gate": {
       "title": "发布门禁",
@@ -629,6 +630,13 @@
       "changelogTitle": "CHANGELOG 预览",
       "changelogHint": "由 Release 实体集合单向再生的全文预览（发布时写入工作区文件，此处只读不改文件）",
       "changelogLoadFailed": "预览加载失败",
+      "markDeployed": "标记已部署",
+      "markDeployedTitle": "标记此版本已部署",
+      "markDeployedDesc": "发布不等于部署——发布完成后，在此标记该版本实际部署上线的终点信号（可随时重复标记刷新时间）",
+      "markDeployedConfirm": "确认已部署",
+      "deployNotePlaceholder": "部署备注（可选）：环境 / 方式 / 验证入口，如「生产环境 · Docker · 已验证健康检查」",
+      "deployMarked": "已标记部署",
+      "deployMarkFailed": "标记失败",
       "github": "GitHub Release",
       "yes": "已创建",
       "no": "未创建",
@@ -5819,6 +5827,7 @@
       "title": "完整性审计报告",
       "run": "运行审计",
       "rerun": "重新审计",
+      "exportReport": "导出报告",
       "empty": "尚未运行审计",
       "emptyHint": "审计将检查任务依赖完备性与工程完备性",
       "lastRun": "上次审计",

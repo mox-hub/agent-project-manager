@@ -135,6 +135,7 @@ vi.mock('../hooks/use-releases', () => ({
   useReopenRelease: () => ({ mutate: vi.fn(), isPending: false }),
   useRecommendVersion: () => ({ mutate: vi.fn(), isPending: false }),
   useUpdateDeliverables: () => ({ mutate: vi.fn(), isPending: false }),
+  useMarkDeployed: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 /** 列表用例的基线发版记录（released v1.0.0，与既有断言兼容） */

@@ -51,9 +51,11 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
+import { Textarea } from "@/components/ui/textarea";
 import {
   useApprovalRequest,
   useGateRelease,
+  useMarkDeployed,
   usePublishRelease,
   useRejectRelease,
   useRelease,
@@ -253,8 +255,11 @@ export function ReleaseDetailPage() {
                 ) : null}
 
                 {/* 基础信息胶囊组（详情页改版）：draft 态可就地编辑版本/名称/计划/平台/里程碑/热修 */}
-                <div id="release-detail-meta">
+                <div id="release-detail-meta" className="space-y-2">
                   <ReleaseMetaBar release={release} />
+                  {release.status === "released" && !release.deployedAt ? (
+                    <MarkDeployedRow releaseId={release.id} />
+                  ) : null}
                 </div>
 
                 {/* 发版说明（详情页改版）：PromptEditor 块级所见即所得——draft 可编辑，
@@ -840,5 +845,65 @@ function ChangelogPreviewDialog({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * 部署信号标记行（交付出口切片 2026-10-11）：发布≠部署——released 后由人
+ * 手动标记「这个版本真的上去了」，交付链条自此有终点信号。仅 released 且
+ * 未标记时出现；重复部署（回滚重发）走 release 重开链路不在本行语义内。
+ */
+function MarkDeployedRow({ releaseId }: { releaseId: string }) {
+  const { t } = useTranslation();
+  const markDeployed = useMarkDeployed(releaseId);
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState("");
+
+  const submit = async () => {
+    try {
+      await markDeployed.mutateAsync(note.trim() || undefined);
+      toast.success(t("release.detail.deployMarked"));
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("release.detail.deployMarkFailed"));
+    }
+  };
+
+  return (
+    <>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          className="flex h-7 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs text-content-text-muted transition-colors hover:bg-muted/50 hover:text-foreground"
+          onClick={() => setOpen(true)}
+          data-testid="release-mark-deployed"
+        >
+          <Rocket className="size-3.5 text-accent-green" />
+          {t("release.detail.markDeployed")}
+        </button>
+      </div>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("release.detail.markDeployedTitle")}</DialogTitle>
+            <DialogDescription>{t("release.detail.markDeployedDesc")}</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={t("release.detail.deployNotePlaceholder")}
+            rows={3}
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button size="sm" disabled={markDeployed.isPending} onClick={() => void submit()}>
+              {markDeployed.isPending ? t("common.saving") : t("release.detail.markDeployedConfirm")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

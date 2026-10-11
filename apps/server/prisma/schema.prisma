@@ -2407,6 +2407,11 @@ model Release {
   hotfixOf     Release?  @relation("ReleaseHotfixLineage", fields: [hotfixOfId], references: [id], onDelete: SetNull)
   hotfixes     Release[] @relation("ReleaseHotfixLineage")
 
+  // ── 部署信号（交付出口切片 2026-10-11）：发布≠部署，released 后由人手动标记
+  // 实际部署完成——交付链条的终点信号位；渠道级/自动回流（外部 CI/CD）待真需求另立子表
+  deployedAt DateTime?
+  deployNote String?   // 部署备注：环境/方式/验证入口等自由文本
+
   // ── 里程碑关联（CAP-A-16 计划-交付轴整合）：Release 挂可选里程碑 ──
   milestoneId String?
   milestone   Milestone? @relation("MilestoneReleases", fields: [milestoneId], references: [id], onDelete: SetNull)

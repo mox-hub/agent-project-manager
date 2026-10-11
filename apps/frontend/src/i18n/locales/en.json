@@ -558,7 +558,8 @@
     "meta": {
       "edit": "Edit info",
       "saved": "Release info updated",
-      "tagAuto": "Auto-created as v{{version}} on publish"
+      "tagAuto": "Auto-created as v{{version}} on publish",
+      "deployed": "Deployed"
     },
     "gate": {
       "title": "Release gate",
@@ -629,6 +630,13 @@
       "changelogTitle": "CHANGELOG preview",
       "changelogHint": "Read-only preview of the full text regenerated from the Release entity (written to the workspace file on publish; nothing is written here)",
       "changelogLoadFailed": "Failed to load preview",
+      "markDeployed": "Mark as deployed",
+      "markDeployedTitle": "Mark this release as deployed",
+      "markDeployedDesc": "A release is not a deployment — after publishing, mark here that this version is actually live. This closes the delivery loop (you can re-mark later to refresh the timestamp)",
+      "markDeployedConfirm": "Confirm deployed",
+      "deployNotePlaceholder": "Deploy note (optional): environment / method / verification entry, e.g. \"production · Docker · health check passed\"",
+      "deployMarked": "Marked as deployed",
+      "deployMarkFailed": "Failed to mark",
       "github": "GitHub Release",
       "yes": "Created",
       "no": "Not created",
@@ -5819,6 +5827,7 @@
       "title": "Integrity Audit Report",
       "run": "Run Audit",
       "rerun": "Re-run Audit",
+      "exportReport": "Export Report",
       "empty": "No audit report yet",
       "emptyHint": "Audit checks dependency and engineering completeness",
       "lastRun": "Last run",
