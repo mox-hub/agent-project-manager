@@ -386,9 +386,10 @@ export function DashboardPage() {
                 />
               </div>
 
-              {/* Trends Rows 3-4：四张趋势面板统一走 ChartCard + ChartContainer 正式图表栈
-                  （2026-09-30 图表栈升级批，手搓 div 条/柱退役） */}
-              <GlobalOverviewPanels trends={data.trends} costByCategory={data.cost.byCategory} />
+              {/* Trends Rows 3-4：五张趋势面板统一走 ChartCard + ChartContainer 正式图表栈
+                  （2026-09-30 图表栈升级批，手搓 div 条/柱退役；2026-10-11 重设计批：
+                  成本改环形占比、新增优先级构成条） */}
+              <GlobalOverviewPanels trends={data.trends} cost={data.cost} delivery={data.delivery} />
 
               {/* Quick Actions */}
               <Card className="py-0">

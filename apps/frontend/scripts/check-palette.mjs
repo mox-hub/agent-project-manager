@@ -142,6 +142,7 @@ const NEUTRAL_LEGACY_ALLOWLIST = new Set([
   "modules/office/components/colleague-card.tsx:text-white",
   "modules/project/components/playbook/interview-chat.tsx:text-white",
   "modules/project/components/project-simple-list.tsx:text-white",
+  "modules/project/components/project-table-view.tsx:text-white", // 项目色块上白图标（与 project-simple-list 同型，CAP-A-29）
   "modules/settings/pages/sections/integrations-section.tsx:text-white",
   "modules/team-member/components/member-avatar.tsx:text-white",
   "modules/team-member/components/team-card.tsx:text-white",

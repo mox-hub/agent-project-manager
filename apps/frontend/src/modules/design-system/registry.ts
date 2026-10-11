@@ -197,6 +197,14 @@ export const COMPONENT_REGISTRY: ComponentEntry[] = [
   // 为封闭可选项。analytics / dashboard-page / settings ai overview / acceptance / team-stats
   // 五处本地与内联实现同批退役，旧 ui/stats-card 十页消费全部改道本件。
   { name: 'stats-card', file: 'semantic/stats-card.tsx', section: 'Semantic', status: 'canonical' },
+  // 图表重设计批（2026-10-11，参考 dsh-context 仪表盘风格）：环形占比图 + 分段比例条
+  // 首消费同批接入（global-overview-charts 成本环形图 + 优先级构成条）。
+  { name: 'donut-chart', file: 'semantic/donut-chart.tsx', section: 'Semantic', status: 'canonical' },
+  { name: 'proportion-bar', file: 'semantic/proportion-bar.tsx', section: 'Semantic', status: 'canonical' },
+  // 图例网格登记 internal（LU 口径：仅被 donut-chart / proportion-bar 两个 semantic 兄弟
+  // 组件内建消费，无 modules/shared 直引——同 checkbox-group 先例「仅被其他组件消费的件
+  // 不占 canonical LU 分母」）；画廊仍陈列 demo（internal 免门禁非禁展示）。
+  { name: 'chart-legend-grid', file: 'semantic/chart-legend-grid.tsx', section: 'Semantic', status: 'internal' },
   // 详情页语义化批（2026-10-02）：详情页主栏统一「可收缩分区」平铺件——收编 task/bug
   // 详情六处手写同构（描述/自定义字段/子任务/执行项/验收预览/依赖）。与 sidebar-panel
   // 同构不同形（平铺无卡底 vs 磨砂圆角卡），各自独立登记（裁决①）；标题档 text-xs（裁决②）。

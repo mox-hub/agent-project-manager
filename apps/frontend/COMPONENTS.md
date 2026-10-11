@@ -14,11 +14,11 @@
 
 | 状态 | 数量 | 计入 LU 分母 | 必须在画廊展示 | 是否需消费方 |
 |---|---|---|---|---|
-| ✅ canonical | 319 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
+| ✅ canonical | 321 | ✅ 计入 | ✅ 必须 | ✅ 必须 ≥1 |
 | 📦 standby | 17 | ❌ 不计 | ✅ 必须 | ❌ 不要求 |
-| 🔒 internal | 5 | ❌ 不计 | ❌ 免 | — |
+| 🔒 internal | 6 | ❌ 不计 | ❌ 免 | — |
 | ⛔ deprecated | 1 | ❌ 不计 | ✅ 标记 deprecated | — |
-| **合计** | **342** | | | |
+| **合计** | **345** | | | |
 
 > **画廊豁免（H 类，2026-09-29 裁决）**：任何状态条目可登记 `galleryExempt`（一句话理由）豁免画廊 demo——豁免后不入覆盖率分母（`check-component-registry.mjs` §4.2 ④ 机器强制），但在设计系统页 Registry 对账区可见；**demo 豁免 ≠ 清退豁免**，五态裁决面不受影响。
 
@@ -35,7 +35,7 @@
 | Layout & Shells | 12 |
 | AI Execution | 25 |
 | App Patterns | 6 |
-| Semantic | 20 |
+| Semantic | 23 |
 | App Components | 203 |
 
 ## 待裁决清单（设计系统页「只看待裁决」视图同源）
@@ -264,9 +264,9 @@
 | sub-page-toolbar | `src/components/semantic/sub-page-toolbar.tsx` | ✅ canonical | — | — |
 | toolbar-row | `src/components/semantic/toolbar-row.tsx` | ✅ canonical | — | — |
 
-### Semantic（20）
+### Semantic（23）
 
-#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（20）
+#### 语义组件层 `src/components/semantic/`（G 类：新增组件默认落点）（23）
 
 | 组件 | 路径 | 状态 | 消费方 | 治理说明 |
 |---|---|---|---|---|
@@ -280,6 +280,9 @@
 | stat-tile | `src/components/semantic/stat-tile.tsx` | ✅ canonical | — | — |
 | metric-row | `src/components/semantic/metric-row.tsx` | ✅ canonical | — | — |
 | stats-card | `src/components/semantic/stats-card.tsx` | ✅ canonical | — | — |
+| donut-chart | `src/components/semantic/donut-chart.tsx` | ✅ canonical | — | — |
+| proportion-bar | `src/components/semantic/proportion-bar.tsx` | ✅ canonical | — | — |
+| chart-legend-grid | `src/components/semantic/chart-legend-grid.tsx` | 🔒 internal | — | — |
 | detail-section | `src/components/semantic/detail-section.tsx` | ✅ canonical | — | — |
 | settings-header | `src/components/semantic/settings-header.tsx` | ✅ canonical | — | — |
 | section-scrubber | `src/components/semantic/section-scrubber.tsx` | ✅ canonical | — | — |

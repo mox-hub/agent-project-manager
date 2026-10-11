@@ -338,6 +338,9 @@ import { CheckboxGroup } from '@/components/ui/checkbox-group'
 import { Meter, MeterIndicator, MeterLabel, MeterTrack, MeterValue } from '@/components/ui/meter'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { StatsCard } from '@/components/semantic/stats-card'
+import { ChartLegendGrid, SERIES_COLORS } from '@/components/semantic/chart-legend-grid'
+import { DonutChart } from '@/components/semantic/donut-chart'
+import { ProportionBar } from '@/components/semantic/proportion-bar'
 import { IconMetric } from '@/components/semantic/icon-metric'
 import { DataTableShell } from '@/components/semantic/data-table-shell'
 import { EmptyState } from '@/components/semantic/empty-state'
@@ -478,6 +481,9 @@ const SECTIONS = [
   { id: 'chart-card', label: 'Chart Card', group: 'Semantic' },
   { id: 'stat-tile', label: 'Stat Tile', group: 'Semantic' },
   { id: 'metric-row', label: 'Metric Row', group: 'Semantic' },
+  { id: 'chart-legend-grid', label: 'Chart Legend Grid', group: 'Semantic' },
+  { id: 'donut-chart', label: 'Donut Chart', group: 'Semantic' },
+  { id: 'proportion-bar', label: 'Proportion Bar', group: 'Semantic' },
   { id: 'subtask-badge', label: 'Subtask Badge', group: 'Semantic' },
   { id: 'ai-verdict-pill', label: 'AI Verdict Pill', group: 'Semantic' },
   { id: 'confidence-bar', label: 'Confidence Bar', group: 'Semantic' },
@@ -6936,6 +6942,106 @@ export function DesignSystemPage() {
               <p className="text-2xs text-muted-foreground/70">
                 value/max 换算为百分数（max 默认 100），tone 走 ui/progress indicator
                 既有色档选择器；label 可选（表格进度列形态），trailing 放原文案附加。
+              </p>
+            </div>
+            </SectionAnchor>
+            <SectionAnchor id="chart-legend-grid">
+            <div className="mb-4">
+              <SubLabel>ChartLegendGrid — 图表图例网格（色点 + 标签 + 数值 + 占比）</SubLabel>
+              <div className="mb-2 grid max-w-2xl gap-3 md:grid-cols-2">
+                <ChartLegendGrid
+                  columns={1}
+                  items={[
+                    { key: 'a', label: 'System Prompt', color: SERIES_COLORS[0], value: '47.4k', percentage: '18%' },
+                    { key: 'b', label: 'Tool Results', color: SERIES_COLORS[1], value: '≈1.8M', percentage: '68%' },
+                    { key: 'c', label: 'Assistant Messages', color: SERIES_COLORS[2], value: '≈355k', percentage: '13%' },
+                    { key: 'd', label: 'Output', color: SERIES_COLORS[3], value: '15.6k', percentage: '1%' },
+                  ]}
+                />
+                <ChartLegendGrid
+                  columns={2}
+                  items={[
+                    { key: 'a', label: '已完成', color: SERIES_COLORS[0], value: '32', percentage: '64%' },
+                    { key: 'b', label: '进行中', color: SERIES_COLORS[1], value: '10', percentage: '20%' },
+                    { key: 'c', label: '待评审', color: SERIES_COLORS[2], value: '5', percentage: '10%' },
+                    { key: 'd', label: '待办', color: SERIES_COLORS[3], value: '3', percentage: '6%' },
+                  ]}
+                />
+              </div>
+              <p className="text-2xs text-muted-foreground/70">
+                donut-chart / proportion-bar 内建消费，也可独立用于分段着色图；色值只收语义
+                token 引用（SERIES_COLORS = --chart-1..5，§17.2 序列顺序即色序），禁字面色；
+                列数 1/2/3 封闭档。
+              </p>
+            </div>
+            </SectionAnchor>
+            <SectionAnchor id="donut-chart">
+            <div className="mb-4">
+              <SubLabel>DonutChart — 环形占比图（中心总计 + 图例网格）</SubLabel>
+              <div className="mb-2 grid max-w-3xl gap-3 md:grid-cols-2">
+                <div className="rounded-lg border border-border p-4">
+                  <DonutChart
+                    size="md"
+                    totalLabel="合计"
+                    ariaLabel="各系列占比环形图"
+                    items={[
+                      { key: 'tools', label: 'Tool Results', value: 1_800_000 },
+                      { key: 'assistant', label: 'Assistant Messages', value: 355_000 },
+                      { key: 'system', label: 'System Prompt', value: 47_400 },
+                      { key: 'schema', label: 'Tool Schemas', value: 21_600 },
+                    ]}
+                  />
+                </div>
+                <div className="rounded-lg border border-border p-4">
+                  <DonutChart
+                    size="sm"
+                    legendColumns={1}
+                    total="$13.91"
+                    totalLabel="30 天合计"
+                    formatValue={(v) => `$${v.toFixed(2)}`}
+                    ariaLabel="各模型支出构成"
+                    items={[
+                      { key: 'claude', label: 'claude-code', value: 13.91 },
+                      { key: 'deepseek', label: 'deepseek', value: 0.11 },
+                    ]}
+                  />
+                </div>
+              </div>
+              <p className="text-2xs text-muted-foreground/70">
+                recharts Pie 走 ui/chart 唯一封装（§17.1），环心叠放总计（total 缺省 = 合计走
+                formatValue）；环径 sm=size-28 / md=size-40；合计为 0 时渲染 empty 槽位
+                （§17.5 禁空白坐标系），不留样式透传口子（G8）。
+              </p>
+            </div>
+            </SectionAnchor>
+            <SectionAnchor id="proportion-bar">
+            <div className="mb-4">
+              <SubLabel>ProportionBar — 分段比例条（斜纹余量 + 图例网格）</SubLabel>
+              <div className="mb-2 max-w-2xl space-y-6">
+                <ProportionBar
+                  ariaLabel="工单按优先级的占比构成"
+                  segments={[
+                    { key: 'urgent', label: 'Urgent', value: 120 },
+                    { key: 'high', label: 'High', value: 340 },
+                    { key: 'medium', label: 'Medium', value: 860 },
+                    { key: 'low', label: 'Low', value: 480 },
+                  ]}
+                  total={2400}
+                />
+                <ProportionBar
+                  legendColumns={1}
+                  ariaLabel="模型支出构成条"
+                  formatValue={(v) => `$${v.toFixed(2)}`}
+                  segments={[
+                    { key: 'claude', label: 'claude-code', value: 13.91 },
+                    { key: 'deepseek', label: 'deepseek', value: 0.11 },
+                  ]}
+                />
+              </div>
+              <p className="text-2xs text-muted-foreground/70">
+                各段按占比拼接，total 大于各段合计时余量以斜纹呈现（repeating-linear-gradient
+                + border token，无字面色）；纯 div 实现不进坐标系，段色序走 SERIES_COLORS；
+                总量为 0 时渲染 empty 槽位。
               </p>
             </div>
             </SectionAnchor>
