@@ -7,7 +7,7 @@
  * 同时覆盖内容同步两处新卡：Welcome 数据安全卡 / Complete 决策收件箱指引卡。
  */
 import { render, screen, fireEvent } from '@testing-library/react';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { OnboardingWizard } from './onboarding-wizard';
 import { useAppStore } from '@/infrastructure/store/app-store';
@@ -75,6 +75,17 @@ vi.mock('@/shared/ai-providers/provider-meta', () => ({
   }),
 }));
 
+// 工作目录步 web 变体消费 runtime 注册查询——mock 掉真发请求，注册数据按用例注入
+const registrationsMock = vi.hoisted(() => vi.fn());
+
+vi.mock('@/shared/runtime/runtime-api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/shared/runtime/runtime-api')>();
+  return {
+    ...actual,
+    useRuntimeRegistrations: () => ({ data: registrationsMock() }),
+  };
+});
+
 function mockStateAt(stepIndex: number, data: Record<string, unknown> = {}) {
   useOnboardingMock.mockReturnValue({
     state: {
@@ -87,6 +98,7 @@ function mockStateAt(stepIndex: number, data: Record<string, unknown> = {}) {
     },
     currentStepData: steps[stepIndex],
     isLastStep: stepIndex === steps.length - 1,
+    isFirstStep: stepIndex === 0,
     nextStep: vi.fn(),
     prevStep: vi.fn(),
     skipStep: vi.fn(),
@@ -200,21 +212,21 @@ describe('OnboardingWizard 关闭即触及（2026-10-03 触发一次性改版）
   });
 });
 
-describe('OnboardingWizard 步骤真实化回归（2026-10-04 实机验收反馈）', () => {
-  /** 连接仓库/配置 AI 步消费 react-query——挂 QueryClientProvider 再渲染向导 */
-  function renderWizardAt(stepIndex: number, data: Record<string, unknown> = {}) {
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    useAppStore.setState({ onboardingCompleted: false, onboardingOpen: true });
-    mockStateAt(stepIndex, data);
-    return render(
-      <QueryClientProvider client={queryClient}>
-        <OnboardingWizard />
-      </QueryClientProvider>,
-    );
-  }
+/** 连接仓库/配置 AI/工作目录(web 变体)步消费 react-query——挂 QueryClientProvider 再渲染向导 */
+function renderWizardAt(stepIndex: number, data: Record<string, unknown> = {}) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  useAppStore.setState({ onboardingCompleted: false, onboardingOpen: true });
+  mockStateAt(stepIndex, data);
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <OnboardingWizard />
+    </QueryClientProvider>,
+  );
+}
 
+describe('OnboardingWizard 步骤真实化回归（2026-10-04 实机验收反馈）', () => {
   it('连接仓库步：有 projectId 时出真实绑定入口（复用 BindRepositoryDialog），空仓库给绑定提示', () => {
     const { baseElement } = renderWizardAt(4, { projectId: 'proj-1' });
 
@@ -239,5 +251,65 @@ describe('OnboardingWizard 步骤真实化回归（2026-10-04 实机验收反馈
     expect(screen.getByText('onboarding.configureAi.quick.configured')).toBeTruthy();
     expect(screen.getByText('onboarding.configureAi.quick.hint')).toBeTruthy();
     assertNoHardcodedChinese(baseElement);
+  });
+});
+
+describe('OnboardingWizard 统一底部操作栏（2026-10-11 七步对齐批）', () => {
+  beforeEach(() => {
+    registrationsMock.mockReset().mockReturnValue([]);
+  });
+
+  it('欢迎步：底栏「稍后设置+开始设置」，上一步常驻但禁用', () => {
+    renderWizardAt(0);
+
+    expect(screen.getByText('onboarding.welcome.later')).toBeTruthy();
+    expect(screen.getByText('onboarding.welcome.start')).toBeTruthy();
+    const prevButton = screen.getByText('onboarding.common.prev').closest('button');
+    expect(prevButton?.disabled).toBe(true);
+  });
+
+  it('中间步（创建项目）：底栏「跳过+创建项目（submit 提交表单）」，上一步可用', () => {
+    renderWizardAt(3);
+
+    expect(screen.getByText('onboarding.common.skip')).toBeTruthy();
+    const submitButton = screen.getByText('onboarding.createProject.submit').closest('button');
+    expect(submitButton?.getAttribute('type')).toBe('submit');
+    expect(submitButton?.getAttribute('form')).toBe('onboarding-create-project-form');
+    const prevButton = screen.getByText('onboarding.common.prev').closest('button');
+    expect(prevButton?.disabled).toBe(false);
+  });
+
+  it('完成步不出底栏（三颗 CTA 由完成步内容自承载）', () => {
+    renderWizardAt(6);
+
+    expect(screen.queryByText('onboarding.common.skip')).toBeNull();
+    expect(screen.queryByText('onboarding.common.next')).toBeNull();
+    expect(screen.queryByText('onboarding.common.prev')).toBeNull();
+  });
+
+  it('工作目录步（web 无壳）：无在线运行时给诚实空态指引，不出桌面选择器', () => {
+    const { baseElement } = renderWizardAt(1);
+
+    expect(screen.getByText('onboarding.workspaceRoot.webHint')).toBeTruthy();
+    expect(screen.getByText('onboarding.workspaceRoot.webEmpty')).toBeTruthy();
+    expect(screen.queryByText('onboarding.workspaceRoot.choose')).toBeNull();
+    assertNoHardcodedChinese(baseElement);
+  });
+
+  it('工作目录步（web 无壳）：有在线注册时只读列出其机器与工作目录', () => {
+    registrationsMock.mockReturnValue([
+      {
+        runtimeId: 'rt-1',
+        deviceId: 'device-TESTBOX',
+        status: 'online',
+        workspaceRoots: ['D:\\ws'],
+      },
+    ]);
+    renderWizardAt(1);
+
+    expect(screen.getByText('onboarding.workspaceRoot.webRegistered')).toBeTruthy();
+    expect(screen.getByText('TESTBOX')).toBeTruthy();
+    expect(screen.getByText('D:\\ws')).toBeTruthy();
+    expect(screen.queryByText('onboarding.workspaceRoot.webEmpty')).toBeNull();
   });
 });

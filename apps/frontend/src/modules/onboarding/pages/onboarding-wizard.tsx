@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useOnboarding } from '../hooks/use-onboarding';
 import type { CreateProjectData } from '../api/onboarding-api';
 import { EnvironmentStep } from '../components/environment-step';
+import { WorkspaceRootStep } from '../components/workspace-root-step';
 import { ConnectRepositoryStep } from '../components/connect-repository-step';
 import { ConfigureAiStep } from '../components/configure-ai-step';
 import { Button } from '@/components/ui/button';
@@ -12,12 +13,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { invoke } from '@/shared/types/electron-api';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { persistOnboardingToShell } from '@/shared/lib/desktop-session';
 import { IconStack } from '@/components/semantic/icon-stack';
@@ -36,18 +35,12 @@ import {
   Users,
   Zap,
   Shield,
-  FolderOpen,
-  Plus,
-  Trash2,
 } from 'lucide-react';
 
-interface StepContentProps {
-  onNext: () => void;
-  onSkip: () => void;
-  isPending: boolean;
-}
+/** 创建项目表单 id：底部操作栏的「下一步」在该步以 form 关联远程提交（按钮在表单外） */
+const CREATE_PROJECT_FORM_ID = 'onboarding-create-project-form';
 
-function WelcomeStep({ onNext, onSkip }: StepContentProps) {
+function WelcomeStep() {
   const { t } = useTranslation();
   const features = [
     { icon: FolderPlus, titleKey: 'onboarding.welcome.features.projects.title', descriptionKey: 'onboarding.welcome.features.projects.description' },
@@ -60,31 +53,36 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       <div className="text-center">
-        <IconStack aria-hidden="true" className="mx-auto mb-4 text-primary">
+        <IconStack aria-hidden="true" className="mx-auto mb-3 text-primary">
           <Rocket className="size-4 text-primary" />
         </IconStack>
-        <h2 className="text-2xl font-semibold">{t('onboarding.welcome.title')}</h2>
+        <h2 className="text-xl font-semibold">{t('onboarding.welcome.title')}</h2>
         <p className="mt-2 text-muted-foreground">
           {t('onboarding.welcome.subtitle')}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      {/* 特性卡横排（图标左+文案右）：竖排三行在 85vh 视口必滚，横排省 ~110px 保一页 */}
+      <div className="grid grid-cols-2 gap-3">
         {features.map((feature) => (
           <div
             key={feature.titleKey}
-            className="rounded-lg border border-border bg-muted/30 p-4 transition-colors hover:bg-muted/50"
+            className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3 transition-colors hover:bg-muted/50"
           >
-            <feature.icon className="mb-2 h-5 w-5 text-primary" />
-            <h3 className="font-medium">{t(feature.titleKey)}</h3>
-            <p className="mt-1 text-xs text-muted-foreground">{t(feature.descriptionKey)}</p>
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10">
+              <feature.icon className="h-4 w-4 text-primary" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="text-sm font-medium">{t(feature.titleKey)}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{t(feature.descriptionKey)}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+      <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
         <div className="flex items-start gap-3">
           <Bot className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
@@ -96,144 +94,25 @@ function WelcomeStep({ onNext, onSkip }: StepContentProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 rounded-lg bg-muted/30 p-4">
+      <div className="flex items-center gap-2 rounded-lg bg-muted/30 p-3">
         <Sparkles className="h-5 w-5 text-primary" />
         <p className="text-sm text-muted-foreground">
           {t('onboarding.welcome.durationHint')}
         </p>
       </div>
-
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button variant="outline" onClick={onSkip}>
-          {t('onboarding.welcome.later')}
-        </Button>
-        <Button onClick={onNext}>
-          {t('onboarding.welcome.start')}
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
-      </DialogFooter>
     </div>
   );
 }
 
-function WorkspaceRootStep({ onNext, onSkip }: StepContentProps) {
-  const { t } = useTranslation();
-  const [roots, setRoots] = useState<string[]>([]);
-  const [isChoosing, setIsChoosing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    invoke<{ roots: string[] }>('get_workspace_roots')
-      .then((r) => setRoots(r.roots))
-      .catch(() => setRoots([]));
-  }, []);
-
-  const handleChoose = async () => {
-    setError(null);
-    setIsChoosing(true);
-    try {
-      const { path } = await invoke<{ path: string | null }>('choose_directory', {
-        title: t('onboarding.workspaceRoot.chooseDialogTitle'),
-      });
-      if (path && !roots.includes(path)) {
-        const next = [...roots, path];
-        const { roots: saved } = await invoke<{ roots: string[] }>('set_workspace_roots', {
-          roots: next,
-        });
-        setRoots(saved);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsChoosing(false);
-    }
-  };
-
-  const handleRemove = async (root: string) => {
-    const next = roots.filter((r) => r !== root);
-    try {
-      const { roots: saved } = await invoke<{ roots: string[] }>('set_workspace_roots', {
-        roots: next,
-      });
-      setRoots(saved);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <DialogHeader>
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-          <FolderOpen className="h-7 w-7 text-primary" />
-        </div>
-        <DialogTitle className="text-center text-xl">{t('onboarding.workspaceRoot.heading')}</DialogTitle>
-        <DialogDescription className="text-center">
-          {t('onboarding.workspaceRoot.description')}
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          {t('onboarding.workspaceRoot.hint')}
-        </p>
-
-        {roots.length > 0 && (
-          <div className="space-y-1.5">
-            {roots.map((root) => (
-              <div
-                key={root}
-                className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2"
-              >
-                <span className="truncate font-mono text-xs text-foreground">{root}</span>
-                <button
-                  type="button"
-                  onClick={() => void handleRemove(root)}
-                  className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                  aria-label={t('onboarding.workspaceRoot.removeAria', { root })}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <Button type="button" variant="outline" onClick={() => void handleChoose()} disabled={isChoosing} className="w-full">
-          <Plus className="mr-1 h-4 w-4" />
-          {isChoosing ? t('onboarding.workspaceRoot.choosing') : t('onboarding.workspaceRoot.choose')}
-        </Button>
-
-        {error && (
-          <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
-        )}
-      </div>
-
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button type="button" variant="outline" onClick={onSkip}>
-          {t('onboarding.common.skip')}
-        </Button>
-        <Button onClick={onNext}>
-          {t('onboarding.common.next')}
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
-      </DialogFooter>
-    </div>
-  );
-}
-
-interface CreateProjectStepProps extends StepContentProps {
+interface CreateProjectStepProps {
   isPending: boolean;
   /** 父级（wizard 挂钩实例）的建项 mutation：内建 onSuccess 落 data.projectId 并前进，
    *  保证 projectId 传导到「连接仓库」步——此前步骤内自建挂钩实例，projectId 落在了孤儿 state 上 */
   createProject: { mutate: (data: CreateProjectData) => void };
 }
 
-function CreateProjectStep({
-  onSkip,
-  isPending,
-  createProject,
-}: CreateProjectStepProps) {
+/** 提交动作由底部操作栏的「下一步」以 form 关联触发（按钮在表单外），本组件只铺表单体 */
+function CreateProjectStep({ isPending, createProject }: CreateProjectStepProps) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -251,7 +130,7 @@ function CreateProjectStep({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form id={CREATE_PROJECT_FORM_ID} onSubmit={handleSubmit} className="space-y-6">
       <DialogHeader>
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <FolderPlus className="h-7 w-7 text-primary" />
@@ -314,15 +193,6 @@ function CreateProjectStep({
           </div>
         </div>
       </div>
-
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button type="button" variant="outline" onClick={onSkip}>
-          {t('onboarding.common.skip')}
-        </Button>
-        <Button type="submit" disabled={!name.trim() || isPending}>
-          {isPending ? t('onboarding.createProject.creating') : t('onboarding.createProject.submit')}
-        </Button>
-      </DialogFooter>
     </form>
   );
 }
@@ -346,12 +216,12 @@ function CompleteStep({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       <div className="text-center">
-        <IconStack aria-hidden="true" className="mx-auto mb-4 text-accent-green">
+        <IconStack aria-hidden="true" className="mx-auto mb-3 text-accent-green">
           <CheckCircle className="size-4 text-accent-green" />
         </IconStack>
-        <h2 className="text-2xl font-semibold">{t('onboarding.complete.heading')}</h2>
+        <h2 className="text-xl font-semibold">{t('onboarding.complete.heading')}</h2>
         {/* 原来这里写的是「您已准备好开始使用 APM」——一句没有依据的断言：
             上一步「配置 AI」是**可跳过**的，跳过之后这条链路一步也跑不起来。
             改为说清"现在能做什么、还差什么"，而"还差什么"由下方那张卡自己去说 */}
@@ -360,50 +230,51 @@ function CompleteStep({
         </p>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center gap-3 rounded-lg border border-border p-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+      {/* 就绪卡 2×2 网格（竖排四行在小视口必滚）；行动引导卡跨双列收尾 */}
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
             <FolderPlus className="h-4 w-4 text-primary" />
           </div>
-          <div>
-            <p className="font-medium">{t('onboarding.complete.projectReady.title')}</p>
-            <p className="text-xs text-muted-foreground">{t('onboarding.complete.projectReady.description')}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-medium">{t('onboarding.complete.projectReady.title')}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t('onboarding.complete.projectReady.description')}</p>
           </div>
-          <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
+          <CheckCircle className="ml-auto h-5 w-5 shrink-0 text-accent-green" />
         </div>
 
-        <div className="flex items-center gap-3 rounded-lg border border-border p-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+        <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
             <GitBranch className="h-4 w-4 text-primary" />
           </div>
-          <div>
-            <p className="font-medium">{t('onboarding.complete.repoReady.title')}</p>
-            <p className="text-xs text-muted-foreground">{t('onboarding.complete.repoReady.description')}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-medium">{t('onboarding.complete.repoReady.title')}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t('onboarding.complete.repoReady.description')}</p>
           </div>
-          <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
+          <CheckCircle className="ml-auto h-5 w-5 shrink-0 text-accent-green" />
         </div>
 
-        <div className="flex items-center gap-3 rounded-lg border border-border p-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+        <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
             <Bot className="h-4 w-4 text-primary" />
           </div>
-          <div>
-            <p className="font-medium">{t('onboarding.complete.aiReady.title')}</p>
-            <p className="text-xs text-muted-foreground">{t('onboarding.complete.aiReady.description')}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-medium">{t('onboarding.complete.aiReady.title')}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t('onboarding.complete.aiReady.description')}</p>
           </div>
-          <CheckCircle className="ml-auto h-5 w-5 text-accent-green" />
+          <CheckCircle className="ml-auto h-5 w-5 shrink-0 text-accent-green" />
         </div>
 
         {/* 完成后第一站指引（CAP-A-18 内容同步）：G5-b integration 卡是新手
             第一个 AI 确认时刻——AI 干完活发来合入提议，人确认才生效。
-            形态与上面三张「已就绪」卡区分：行动引导（Inbox 图标），非完成态 */}
-        <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+            形态与「已就绪」卡区分：行动引导（primary 弱底），非完成态 */}
+        <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
             <Inbox className="h-4 w-4 text-primary" />
           </div>
-          <div>
-            <p className="font-medium">{t('onboarding.complete.inboxHint.title')}</p>
-            <p className="text-xs leading-relaxed text-muted-foreground">
+          <div className="min-w-0">
+            <p className="text-sm font-medium">{t('onboarding.complete.inboxHint.title')}</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
               {t('onboarding.complete.inboxHint.description')}
             </p>
           </div>
@@ -416,7 +287,7 @@ function CompleteStep({
             用户会合理地认为这东西坏了。回放不需要 runtime、不需要 API key，
             在任何机器上都放得完——它是唯一能在第一分钟就说清"这东西能干什么"的东西。
             按钮文案承担全部说明责任（含"不需要配置"），避免主键变成一个语焉不详的跳转 */}
-        <Button onClick={onWatchReplay} size="lg" className="w-full">
+        <Button onClick={onWatchReplay} className="w-full">
           <Sparkles className="mr-2 h-4 w-4" />
           {t('onboarding.complete.watchReplay')}
         </Button>
@@ -440,6 +311,7 @@ export function OnboardingWizard() {
     state,
     currentStepData,
     isLastStep,
+    isFirstStep,
     nextStep,
     prevStep,
     skipStep,
@@ -462,31 +334,22 @@ export function OnboardingWizard() {
   };
 
   const renderStepContent = () => {
-    const commonProps = {
-      onNext: nextStep,
-      onSkip: () => skipStep(currentStepData?.id || ''),
-    };
-
-    // 按步骤 id 分发（桌面模式会在 welcome 后插入 workspace-root 与 environment 步骤，索引随模式漂移）
+    // 按步骤 id 分发；跳过/下一步由底部操作栏统一承载，步骤组件不再自带 footer
     switch (currentStepData?.id) {
       case 'welcome':
-        return <WelcomeStep {...commonProps} isPending={false} />;
+        return <WelcomeStep />;
       case 'workspace-root':
-        return <WorkspaceRootStep {...commonProps} isPending={false} />;
+        return <WorkspaceRootStep />;
       case 'environment':
-        return <EnvironmentStep {...commonProps} />;
+        return <EnvironmentStep />;
       case 'create-project':
         return (
-          <CreateProjectStep
-            {...commonProps}
-            isPending={createProject.isPending}
-            createProject={createProject}
-          />
+          <CreateProjectStep isPending={createProject.isPending} createProject={createProject} />
         );
       case 'connect-repository':
-        return <ConnectRepositoryStep {...commonProps} projectId={state.data.projectId} />;
+        return <ConnectRepositoryStep projectId={state.data.projectId} />;
       case 'add-ai':
-        return <ConfigureAiStep {...commonProps} />;
+        return <ConfigureAiStep />;
       case 'complete':
         return (
           <CompleteStep
@@ -499,6 +362,19 @@ export function OnboardingWizard() {
     }
   };
 
+  /** 底部操作栏按钮文案：欢迎步沿用「稍后设置/开始设置」，创建项目步主键走建项提交，其余统一跳过/下一步 */
+  const skipLabel = isFirstStep
+    ? t('onboarding.welcome.later')
+    : t('onboarding.common.skip');
+  const isCreateProjectStep = currentStepData?.id === 'create-project';
+  const nextLabel = isCreateProjectStep
+    ? createProject.isPending
+      ? t('onboarding.createProject.creating')
+      : t('onboarding.createProject.submit')
+    : isFirstStep
+      ? t('onboarding.welcome.start')
+      : t('onboarding.common.next');
+
   return (
     <Dialog
       open
@@ -508,9 +384,11 @@ export function OnboardingWizard() {
         }
       }}
     >
-      {/* 双栏规格（2026-10-03 改版，896px=Dialog wide 档）：左竖步骤轨（可点回跳）+ 右内容区内滚 */}
+      {/* 双栏规格（2026-10-11 七步统一批，896px=Dialog wide 档；高度升 760px 档，
+          85vh 上限走既有 dialog-scroll 语义 token）：左竖步骤轨（可点回跳）
+          + 右内容区内滚 + 固定底部操作栏（跳过/下一步收栏，不再随内容滚动） */}
       <DialogContent size="wide" className="gap-0 overflow-hidden p-0">
-        <div className="flex h-150 max-h-[85vh]">
+        <div className="flex h-190 max-h-dialog-scroll">
           <aside className="flex w-56 shrink-0 flex-col border-r border-border/60 bg-muted/30 p-4">
             <div className="mb-3 flex items-center gap-2 px-1">
               <IconStack aria-hidden="true" className="text-primary">
@@ -589,20 +467,37 @@ export function OnboardingWizard() {
             {/* min-h-0 必须在 flex 链上逐层声明：缺了会被内容撑破父高、被 DialogContent
                 的 overflow-hidden 裁掉且不出现滚动条（实机验收暴露的「高度不正确」） */}
             <div className="min-h-0 flex-1 overflow-y-auto p-6">
-              <div className="mx-auto max-w-xl">{renderStepContent()}</div>
+              <div className="mx-auto max-w-2xl">{renderStepContent()}</div>
             </div>
-            {!isLastStep && state.currentStep > 0 && (
-              <div className="flex items-center border-t px-6 py-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={prevStep}
-                  disabled={state.currentStep === 0}
-                >
+            {/* 底部操作栏（§20.8：justify-between 对齐，禁 ml-auto 手摊；按钮 gap-2 唯一档）：
+                上一步常驻（首步禁用保布局稳定），跳过/下一步右侧成组。
+                最后一步（完成）不出栏——三颗 CTA 由完成步内容自承载 */}
+            {!isLastStep && (
+              <footer className="flex items-center justify-between border-t px-6 py-3">
+                <Button variant="ghost" onClick={prevStep} disabled={isFirstStep}>
                   <ChevronLeft className="mr-1 h-4 w-4" />
                   {t('onboarding.common.prev')}
                 </Button>
-              </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => skipStep(currentStepData?.id || '')}>
+                    {skipLabel}
+                  </Button>
+                  {isCreateProjectStep ? (
+                    <Button
+                      type="submit"
+                      form={CREATE_PROJECT_FORM_ID}
+                      disabled={createProject.isPending}
+                    >
+                      {nextLabel}
+                    </Button>
+                  ) : (
+                    <Button onClick={nextStep}>
+                      {nextLabel}
+                      <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </footer>
             )}
           </section>
         </div>

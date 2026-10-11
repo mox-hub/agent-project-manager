@@ -1,8 +1,8 @@
 /**
  * 初始化向导测试：
- * ① 步骤构建——桌面模式工作目录步骤插入（GAP-T-20）。回归背景：首版实机
- *    冒烟发现桌面模式向导仍是 5 步——DESKTOP_EXTRA_STEPS 以步骤自身 id 为
- *    key 而查找用锚点 id，插入永不命中。
+ * ① 步骤构建——七步序列 web/桌面统一（2026-10-11 对齐批；历史 GAP-T-20 桌面
+ *    插步回归与 2026-10-03 前的「web 5 步 / 桌面 7 步」分叉均随统一裁决消亡，
+ *    步骤序列不再随模式漂移，web 降级在步骤组件内部诚实分叉）。
  * ② 完成/建项回归（2026-09-12 实机暴露）——向导 API 层曾指向服务端从未实现
  *    的 /onboarding/* 五端点（恒 404）：「进入 APM」静默失败无法进入；建项
  *    提交永远不前进。修复后 finish 纯前端/壳侧完成（零网络依赖）、建项落
@@ -13,7 +13,6 @@ import { act, createElement, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 
-const isDesktopShellAvailableMock = vi.hoisted(() => vi.fn(() => false));
 const postMock = vi.hoisted(() => vi.fn());
 const navigateMock = vi.hoisted(() => vi.fn());
 const setOnboardingCompletedMock = vi.hoisted(() => vi.fn());
@@ -21,7 +20,7 @@ const setOnboardingOpenMock = vi.hoisted(() => vi.fn());
 const persistOnboardingMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/shared/types/electron-api', () => ({
-  isDesktopShellAvailable: () => isDesktopShellAvailableMock(),
+  isDesktopShellAvailable: () => false,
   invoke: vi.fn(),
 }));
 
@@ -67,20 +66,8 @@ beforeEach(() => {
 });
 
 describe('buildSteps（初始化向导步骤序列）', () => {
-  it('web 模式：5 步，无工作目录步骤', () => {
-    isDesktopShellAvailableMock.mockReturnValue(false);
-    const steps = buildSteps(false);
-    expect(steps.map((s) => s.id)).toEqual([
-      'welcome',
-      'create-project',
-      'connect-repository',
-      'add-ai',
-      'complete',
-    ]);
-  });
-
-  it('桌面模式：在欢迎步骤后插入工作目录与环境检查步骤（共 7 步）', () => {
-    const steps = buildSteps(true);
+  it('七步统一（web/桌面同序）：欢迎 → 工作目录 → 环境检查 → 建项 → 连仓库 → 配 AI → 完成', () => {
+    const steps = buildSteps();
     expect(steps.map((s) => s.id)).toEqual([
       'welcome',
       'workspace-root',

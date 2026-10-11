@@ -62,7 +62,7 @@ function renderStep(): { baseElement: HTMLElement } {
   const utils = render(
     <Dialog open>
       <DialogContent>
-        <EnvironmentStep onNext={vi.fn()} onSkip={vi.fn()} />
+        <EnvironmentStep />
       </DialogContent>
     </Dialog>,
     { wrapper },

@@ -13,22 +13,18 @@ import { CheckCircle2, GitBranch, Link2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { BindRepositoryDialog } from '@/modules/git/components/bind-repository-dialog';
 import { gitApi } from '@/modules/git/api/git-api';
-import { ChevronRight } from 'lucide-react';
 
-interface StepContentProps {
-  onNext: () => void;
-  onSkip: () => void;
+interface ConnectRepositoryStepProps {
   /** 创建项目步落库的项目 id（跳过创建时为空 → 退回静态指引） */
   projectId?: string;
 }
 
-export function ConnectRepositoryStep({ onNext, onSkip, projectId }: StepContentProps) {
+export function ConnectRepositoryStep({ projectId }: ConnectRepositoryStepProps) {
   const { t } = useTranslation();
   const [bindOpen, setBindOpen] = useState(false);
   const reposQuery = useQuery({
@@ -98,16 +94,6 @@ export function ConnectRepositoryStep({ onNext, onSkip, projectId }: StepContent
           }}
         />
       ) : null}
-
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button type="button" variant="outline" onClick={onSkip}>
-          {t('onboarding.common.skip')}
-        </Button>
-        <Button type="button" onClick={onNext}>
-          {t('onboarding.common.next')}
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
-      </DialogFooter>
     </div>
   );
 }

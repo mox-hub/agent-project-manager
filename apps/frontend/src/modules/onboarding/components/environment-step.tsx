@@ -1,17 +1,16 @@
 /**
- * 引导「环境检查」步骤（2026-10-03 改版切片，桌面模式专用）。
+ * 引导「环境检查」步骤（2026-10-03 改版切片；2026-10-11 七步统一批起双端共用）。
  *
  * 聚合 GET /environment 六项检测（node/git/claude-code/codex/zcode/opencode）：
  * 已装显版本；未装给平台对应安装命令（复制）+ 官方下载链接 + 重新检测。
  * 诚实化原则延续：APM 只检测+指引，不代装环境；步骤可跳过、不设门禁，
- * 检测结果不影响引导完成流程。
+ * 检测结果不影响引导完成流程。检测走 server 端点，web/桌面天然同源。
  */
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   CheckCircle,
-  ChevronRight,
   Copy,
   ExternalLink,
   GitBranch,
@@ -22,7 +21,6 @@ import {
 import { Button } from '@/components/ui/button';
 import {
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -32,11 +30,6 @@ import {
   onboardingApi,
   type EnvironmentToolInfo,
 } from '../api/onboarding-api';
-
-interface StepContentProps {
-  onNext: () => void;
-  onSkip: () => void;
-}
 
 type Platform = 'windows' | 'macos' | 'linux';
 
@@ -224,7 +217,7 @@ function EnvironmentToolCard({
   );
 }
 
-export function EnvironmentStep({ onNext, onSkip }: StepContentProps) {
+export function EnvironmentStep() {
   const { t } = useTranslation();
   const query = useQuery({
     queryKey: ['environment'],
@@ -283,16 +276,6 @@ export function EnvironmentStep({ onNext, onSkip }: StepContentProps) {
       <p className="rounded-lg bg-muted/30 p-3 text-xs text-muted-foreground">
         {t('onboarding.environment.installHint')}
       </p>
-
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button type="button" variant="outline" onClick={onSkip}>
-          {t('onboarding.common.skip')}
-        </Button>
-        <Button type="button" onClick={onNext}>
-          {t('onboarding.common.next')}
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
-      </DialogFooter>
     </div>
   );
 }

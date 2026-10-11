@@ -14,7 +14,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -30,12 +29,6 @@ import {
   useSetDefaultModel,
   useUpdateProvider,
 } from '@/modules/ai-hub/hooks/use-ai-providers';
-import { ChevronRight } from 'lucide-react';
-
-interface StepContentProps {
-  onNext: () => void;
-  onSkip: () => void;
-}
 
 /** 引导快捷入口的四家（与设置 → AI 管理同一批 provider 记录；baseUrl 为各家默认接入点）。
  *  名称保持 ASCII（PROVIDER_INFO 同款惯例）——组件渲染区零中文字符是结构性回归红线 */
@@ -48,7 +41,7 @@ const QUICK_PROVIDERS: { key: string; name: string; baseUrl: string }[] = [
 
 type TestResult = { ok: boolean; models: string[]; error?: string };
 
-export function ConfigureAiStep({ onNext, onSkip }: StepContentProps) {
+export function ConfigureAiStep() {
   const { t } = useTranslation();
   const providersQuery = useAiProviders();
   const updateProvider = useUpdateProvider();
@@ -134,7 +127,7 @@ export function ConfigureAiStep({ onNext, onSkip }: StepContentProps) {
   const configuredRecords = records.filter((r) => r.hasApiKey);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <DialogHeader>
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
           <Bot className="h-7 w-7 text-primary" />
@@ -264,16 +257,6 @@ export function ConfigureAiStep({ onNext, onSkip }: StepContentProps) {
           </div>
         )}
       </div>
-
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button type="button" variant="outline" onClick={onSkip}>
-          {t('onboarding.common.skip')}
-        </Button>
-        <Button type="button" onClick={onNext}>
-          {t('onboarding.common.next')}
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
-      </DialogFooter>
     </div>
   );
 }
