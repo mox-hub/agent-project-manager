@@ -24,6 +24,20 @@ tags: "changelog,release"
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
 | --- | --- | --- | --- | --- |
 
+## [0.8.0] - 2026-10-11
+
+### v0.8.0 发版总览——内测版：第一公里闭环 + 交付出口 + 未成熟面收缩（0.7.15 归版同日连发）
+
+> 内测声明随 Release 发布（pre-release 标记）：已知限制 = gemini/qwen/codebuddy/grok 四家 CLI Provider 文档级接入未实机验证（Windows 长 prompt 由派发预检拦截并指引切换）；发布部署为手动标记信号，无 CI/CD 自动回流；无远程/移动端访问（M 线已立项）；AI 表面盯盘处于实验期已收起（DEV 可达）。反馈渠道：GitHub issue 模板 + 产品内帮助页。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
+| frontend app/shared/onboarding | **AI 表面转 DEV-only（CAP-C-08 形态收缩，ADR-019）**：实况盯盘与回放双路由转 `import.meta.env.DEV` 条件注册（照 delivery/design-system 先例），侧栏一级入口撤下（'exp' 徽标消亡）挪 DEV 组，命令面板入口同步条件化；引导完成步连带重设计——回放 CTA 仅 DEV 渲染（S6「先回放后实况」在生产被本裁决取代），生产主键提升「进入 APM」；生产直链 errorElement 兜底。用户裁决「不够成熟先打入 exp 实验」；回归路径=watch-deck 接真实数据后反转 | CAP-C-08 收缩（批三 P2「不扩大形态」兑现） | onboarding/layout 37 例绿（新生产态模拟：stubEnv DEV=false 断言回放零渲染）；tsc -b 0 错 | 决策日志 ADR-019（本地）；能力清单 §七变更记录 |
+| frontend document/acceptance + server release | **交付出口三件——治理结论自此拿得出去**：①文档详情页「复制链接/导出 Markdown」真实化（新共享 util lib/download.ts；「分享/添加书签」两死按钮移除）②验收审计报告「导出报告」（buildAuditReportMarkdown 纯函数拼接口径：头部+阻塞/建议/通过三组，过期警示）③Release 部署信号：schema 加 deployedAt/deployNote（migration 20261011120000）+ POST :id/deploy（仅 released 可标否则 400，重复标记幂等）+ 详情页「标记已部署」按钮/备注对话框 + MetaBar 已部署胶囊——发布≠部署的终点信号位，兑现 2026-09-30 Lupi「导出预留」注记与 K-03 部署缺口手动正解 | 交付出口切片（C-08/K-03 出口侧；能力清单 §七登记） | 审计拼接 spec 2 例 + markDeployed spec 4 例（成功/四态 400/幂等/404）+ release/acceptance/document 三模块 85 例回归绿；契约三件套零漂移；双端 tsc 0 错；e2e release-pipeline 7 例绿 | 能力清单 §七交付出口登记；测试映射 GAP-T-68 相邻 |
+| server cli-dispatch | **Windows argv 通道 prompt 上限预检**：argv 七家（codex/opencode/cursor-agent/gemini-cli/qwen-code/codebuddy/grok）prompt 超 8000 字符派发前结构化 400（报错含长度/上限/切 claude-code 指引），替代「烧一次执行才发现截断」；claude-code（stdin）/zcode（node 直启）免疫。扩容批一已知边界的派发侧守门 | CAP-B-05 扩容批一收尾 | 预检纯函数 spec 4 例；server tsc 0 错 | 各家 adapter「已知边界」同源 |
+| docs/readme + help + .github | **内测反馈渠道三件（出口条件③清偿）**：README 快速上手章节（桌面四步/开发态/前置条件/已知限制）+ .github/ISSUE_TEMPLATE（bug 六字段/feature 四字段/config Discussions 兜底）+ 帮助页常驻反馈卡（issue 模板直达，双语三键）——此前 README 无上手路径、issue 模板缺失、产品内无反馈入口 | 出口条件③ | help 6 例回归绿；i18n JSON 无损 | README 入库更新 |
+| desktop | 桌面版本对齐 0.8.0（v0.7.15 同日先行发布：工作树收口四批 + AI 员工引导闭环 + 门禁钉子清偿，见 [0.7.15]） | 版本对齐 | quality:gate 全绿（type-check/lint/test 全仓/contract/e2e 423 例[assistant-cli-chat 环境豁免]/api-audit 96.7%/docs-sync）+ template.db 重建（部署信号列同步） | — |
+
 ## [0.7.15] - 2026-10-11
 
 ### v0.7.15 发版总览——工作树收口四批 + AI 员工引导闭环 + 发版门禁钉子清偿
