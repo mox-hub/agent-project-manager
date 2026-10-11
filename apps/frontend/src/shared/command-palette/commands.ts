@@ -129,7 +129,19 @@ export const commandEntries: CommandEntry[] = [
     action: 'openGlobalSearch',
     hotkeyId: 'global-search',
   },
-  { id: 'cmd-ai-surface', labelKey: 'nav.aiSurface', to: '/app/ai-surface', group: 'collaboration', icon: Sparkles, keywords: ['ai', 'surface', '表面', '同事'] },
+  // AI 表面随路由 DEV-only 化（2026-10-11 裁决）：生产命令面板不再出现死入口
+  ...(import.meta.env.DEV
+    ? [
+        {
+          id: 'cmd-ai-surface',
+          labelKey: 'nav.aiSurface',
+          to: '/app/ai-surface',
+          group: 'collaboration' as const,
+          icon: Sparkles,
+          keywords: ['ai', 'surface', '表面', '同事'],
+        },
+      ]
+    : []),
   // —— 设置（二级页全量登记，路由与 router.tsx 对齐）——
   { id: 'cmd-ai', labelKey: 'shell.openAiSpace', to: '/app/settings/ai', group: 'settings', icon: Sparkles, keywords: ['ai', 'assistant', 'agent', 'mcp', '助手', '智能体', '模型'] },
   { id: 'cmd-settings-integrations', labelKey: 'settings.integrations', to: '/app/settings/integrations', group: 'settings', icon: Plug, keywords: ['integration', 'github', 'linear', '集成'] },

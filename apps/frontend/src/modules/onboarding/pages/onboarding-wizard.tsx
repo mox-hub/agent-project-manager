@@ -310,16 +310,21 @@ function CompleteStep({
       </div>
 
       <div className="flex flex-col gap-2">
-        {/* 主键给"看一遍"，不给"进入 APM"（S6，设计纪要 §3.4「先回放、后实况」）：
-            刚装好的机器上模型多半还没配、runtime 还没起，此时进真实项目看到的是一片空，
-            用户会合理地认为这东西坏了。回放不需要 runtime、不需要 API key，
-            在任何机器上都放得完——它是唯一能在第一分钟就说清"这东西能干什么"的东西。
-            按钮文案承担全部说明责任（含"不需要配置"），避免主键变成一个语焉不详的跳转 */}
-        <Button onClick={onWatchReplay} className="w-full">
-          <Sparkles className="mr-2 h-4 w-4" />
-          {t('onboarding.complete.watchReplay')}
-        </Button>
-        <Button variant="outline" onClick={handleFinish} className="w-full">
+        {/* AI 表面随 2026-10-11 裁决转 DEV-only（CAP-C-08 形态收缩）：回放 CTA 仅 DEV
+            渲染，生产主键提升为「进入 APM」（原 S6「先回放、后实况」裁决在生产构建被
+            收缩裁决取代——回放路由已不存在，入口必须同批撤除）。DEV 内保留 S6 次序：
+            刚装好的机器模型多半没配，回放是唯一能在一分钟内说清产品能干什么的路径 */}
+        {import.meta.env.DEV ? (
+          <Button onClick={onWatchReplay} className="w-full">
+            <Sparkles className="mr-2 h-4 w-4" />
+            {t('onboarding.complete.watchReplay')}
+          </Button>
+        ) : null}
+        <Button
+          variant={import.meta.env.DEV ? 'outline' : 'default'}
+          onClick={handleFinish}
+          className="w-full"
+        >
           <Rocket className="mr-2 h-4 w-4" />
           {t('onboarding.complete.enterApp')}
         </Button>

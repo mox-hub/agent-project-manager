@@ -181,6 +181,19 @@ describe('OnboardingWizard i18n 结构性回归（CAP-A-18）', () => {
     expect(screen.queryByText('onboarding.complete.createAgent.title')).toBeNull();
   });
 
+  it('complete 步（生产构建模拟）：回放 CTA 不渲染、进入 APM 提升为主键（CAP-C-08 形态收缩，AI 表面 DEV-only 连带）', () => {
+    vi.stubEnv('DEV', false);
+    try {
+      mockStateAt(6);
+      render(<OnboardingWizard />);
+
+      expect(screen.queryByText('onboarding.complete.watchReplay')).toBeNull();
+      expect(screen.getByText('onboarding.complete.enterApp')).toBeTruthy();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it('create-project 步：表单标签/占位符/类型选项全键名，零硬编码中文', () => {
     // 桌面 7 步序（welcome/workspace-root/environment/create-project/...）中 create-project 是 index 3
     mockStateAt(3);

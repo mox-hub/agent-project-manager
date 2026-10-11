@@ -446,27 +446,35 @@ export const router = createBrowserRouter([
         ),
         errorElement: <ErrorPage />,
       },
-      {
-        path: 'ai-surface',
-        element: (
-          <Suspense fallback={null}>
-            <AiSurfacePage />
-          </Suspense>
-        ),
-        errorElement: <ErrorPage />,
-      },
-      {
-        // 回放演示（S5）。独立路由而非盯盘面的一个"模式开关"：回放页不连 WS、
-        // 不取任何数、也不会因为断线而变样——把它塞进盯盘面的状态机里，
-        // 反而会让"回放为什么不需要连接"这件事说不清楚
-        path: 'ai-surface/replay',
-        element: (
-          <Suspense fallback={null}>
-            <AiSurfaceReplayPage />
-          </Suspense>
-        ),
-        errorElement: <ErrorPage />,
-      },
+      // AI 表面（实况盯盘 + 回放）：形态未成熟（watch-deck 仍带 mock 数据），仅 DEV
+      // 注册不暴露给生产用户（2026-10-11 用户裁决「打入 exp 实验」，CAP-C-08 形态收缩；
+      // 批三 P2「接真实数据完成前不扩大形态」的兑现）。生产直链由 errorElement 兜底；
+      // 引导完成步的回放 CTA 同步 DEV 条件渲染（onboarding-wizard CompleteStep）
+      ...(import.meta.env.DEV
+        ? [
+            {
+              path: 'ai-surface',
+              element: (
+                <Suspense fallback={null}>
+                  <AiSurfacePage />
+                </Suspense>
+              ),
+              errorElement: <ErrorPage />,
+            },
+            {
+              // 回放演示（S5）。独立路由而非盯盘面的一个"模式开关"：回放页不连 WS、
+              // 不取任何数、也不会因为断线而变样——把它塞进盯盘面的状态机里，
+              // 反而会让"回放为什么不需要连接"这件事说不清楚
+              path: 'ai-surface/replay',
+              element: (
+                <Suspense fallback={null}>
+                  <AiSurfaceReplayPage />
+                </Suspense>
+              ),
+              errorElement: <ErrorPage />,
+            },
+          ]
+        : []),
       {
         path: 'intake',
         element: (

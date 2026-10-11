@@ -197,14 +197,6 @@ export function ShellLayout() {
           { to: '/app/members', icon: getEntityIcon('member').icon, label: t('nav.members') },
           { to: '/app/teams', icon: getEntityIcon('team').icon, label: t('nav.teams') },
           { to: '/app/workflows', icon: getEntityIcon('workflow').icon, label: t('nav.workflow') },
-          // AI 表面：候补区 pending 形态实验（非流程站），带 exp 徽标放协同组
-          {
-            to: '/app/ai-surface',
-            icon: Sparkles,
-            label: t('nav.aiSurface'),
-            color: 'hsl(var(--accent-purple))',
-            capsule: 'exp',
-          },
           { to: '/app/analytics', icon: BarChart3, label: t('nav.analytics') },
         ],
       },
@@ -243,6 +235,15 @@ export function ShellLayout() {
                 { to: '/app/design-system', icon: Palette, label: 'Design System', capsule: 'dev' },
                 // 交付视图：mock 还原页（data-mock），不进正式导航（CAP-A-15），仅 DEV 可达
                 { to: '/app/delivery', icon: ListTree, label: t('nav.delivery', '交付视图'), capsule: 'dev' },
+                // AI 表面：形态未成熟撤出常规导航（2026-10-11 裁决「打入 exp 实验」，
+                // CAP-C-08 形态收缩），仅 DEV 组可达；生产直链由 errorElement 兜底
+                {
+                  to: '/app/ai-surface',
+                  icon: Sparkles,
+                  label: t('nav.aiSurface'),
+                  color: 'hsl(var(--accent-purple))',
+                  capsule: 'dev',
+                },
               ]
             : []),
         ],
