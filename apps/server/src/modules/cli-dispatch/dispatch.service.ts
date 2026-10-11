@@ -159,6 +159,40 @@ const TRUST_GATE_CONFIG_KEY = 'dispatch.trustGateEnabled';
 /** 技能注入开关的项目配置键（scope=project；缺省开启，false/'false' 关闭） */
 const SKILLS_CONFIG_KEY = 'dispatch.skillsEnabled';
 
+/**
+ * prompt 走 argv 通道的 provider 集（2026-10-11 扩容批一协议事实）：
+ * claude-code 走 stdin、zcode 走 node 直启免疫；其余七家 prompt 作为位置参数
+ * / -p 旗标进 argv，受 Windows cmd.exe ~8K 命令行长度上限约束（各家 adapter
+ * 文件头「已知边界」同源记载）。
+ */
+export const ARGV_PROMPT_PROVIDER_IDS: ReadonlySet<string> = new Set([
+  'codex',
+  'opencode',
+  'cursor-agent',
+  'gemini-cli',
+  'qwen-code',
+  'codebuddy',
+  'grok',
+]);
+
+/** Windows cmd.exe 命令行长度安全上限（8K 字符；prompt 仅占其中一段，留余量） */
+export const ARGV_PROMPT_CHAR_LIMIT = 8000;
+
+/**
+ * Windows argv 上限预检：argv 通道 provider 的超限任务必然被 cmd.exe 截断
+ * 失败——派发前结构化拒绝并给出换 provider 指引，而不是烧一次执行才发现。
+ */
+export function assertPromptFitsArgvChannel(
+  providerId: string,
+  prompt: string,
+): void {
+  if (!ARGV_PROMPT_PROVIDER_IDS.has(providerId)) return;
+  if (prompt.length <= ARGV_PROMPT_CHAR_LIMIT) return;
+  throw new BadRequestException(
+    `任务 prompt 长度 ${prompt.length} 字符，超出 provider ${providerId} 在 Windows 下的 argv 通道上限（~${ARGV_PROMPT_CHAR_LIMIT}，cmd.exe 命令行长度约束）——请精简任务描述/上下文，或将该成员的默认 CLI Provider 切换为 claude-code（stdin 通道免疫此限制）`,
+  );
+}
+
 @Injectable()
 export class CliDispatchService {
   private readonly logger = new Logger(CliDispatchService.name);
@@ -902,6 +936,11 @@ export class CliDispatchService {
         skillsSection,
         governance,
       );
+    // 11.2 Windows argv 上限预检（2026-10-11）：prompt 走 argv 的 provider 受
+    // Windows cmd.exe ~8K 字符上限约束（claude-code 走 stdin / zcode 走 node 直启
+    // 免疫；七家 argv 通道见 ARGV_PROMPT_PROVIDER_IDS，协议事实源 CHANGELOG 0.7.15
+    // 已知限制）——超限任务必然截断失败，派发前结构化拒绝并给出换 provider 指引
+    assertPromptFitsArgvChannel(resolvedProviderId, prompt);
     const cliInput = {
       workspaceRoot: execWorkspaceRoot,
       prompt,
