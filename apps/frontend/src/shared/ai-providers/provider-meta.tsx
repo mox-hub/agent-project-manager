@@ -35,7 +35,8 @@ const PROVIDER_META: Record<string, ProviderMeta> = {
   // 2026-10-11 扩容批一（cursor-agent/gemini-cli 已有预留条目）
   'qwen-code': { label: 'Qwen Code', Icon: Qwen, Color: Qwen.Color },
   codebuddy: { label: 'CodeBuddy', Icon: CodeBuddy, Color: CodeBuddy.Color },
-  grok: { label: 'Grok', Icon: Grok, Color: Grok.Color },
+  // Grok 图标无 Color 子组件（@lobehub/icons CompoundedIcon 仅 Avatar/Combine/Text）
+  grok: { label: 'Grok', Icon: Grok },
 };
 
 export function getProviderMeta(providerId: string): ProviderMeta {
