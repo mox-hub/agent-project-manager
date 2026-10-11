@@ -4698,7 +4698,12 @@
       "closeDialog": "Close dialog / panel"
     },
     "readMore": "Read more",
-    "backTo": "Back to {{section}}"
+    "backTo": "Back to {{section}}",
+    "feedback": {
+      "title": "Still stuck?",
+      "description": "During the beta, every issue you hit is valuable — use the issue templates to tell us: repro steps + version + logs. We follow up fast.",
+      "action": "Open GitHub feedback"
+    }
   },
   "terminal": {
     "title": "Terminal",

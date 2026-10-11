@@ -1,0 +1,35 @@
+name: 💡 功能建议
+description: 提出新功能想法或改进建议
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 你想解决什么问题？
+      description: 描述你正在试图完成的任务，以及当前做不到/很麻烦的地方
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 期望的解决方案
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 你目前怎么绕过它？
+    validations:
+      required: false
+  - type: dropdown
+    id: user-type
+    attributes:
+      label: 你的使用场景
+      options:
+        - 独立开发者（一人 + AI 开发）
+        - 小团队负责人/成员
+        - 给客户交付项目
+        - 其他
+    validations:
+      required: false

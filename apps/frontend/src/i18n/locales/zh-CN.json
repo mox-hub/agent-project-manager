@@ -4698,7 +4698,12 @@
       "closeDialog": "关闭对话框 / 面板"
     },
     "readMore": "阅读更多",
-    "backTo": "返回 {{section}}"
+    "backTo": "返回 {{section}}",
+    "feedback": {
+      "title": "问题没解决？",
+      "description": "在内测期，你遇到的每一个问题都很有价值——用 issue 模板告诉我们：复现步骤 + 版本号 + 日志，我们会尽快跟进。",
+      "action": "前往 GitHub 提交反馈"
+    }
   },
   "terminal": {
     "title": "终端",

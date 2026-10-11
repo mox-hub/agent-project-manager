@@ -323,6 +323,23 @@ export function HelpPage() {
               </div>
             </div>
           )}
+
+          {/* 反馈入口（交付出口切片 2026-10-11）：内测反馈渠道常驻——issue 模板直达 */}
+          <div className="mt-8 rounded-lg border border-border bg-muted/20 p-4">
+            <h3 className="text-sm font-semibold">{t('help.feedback.title')}</h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {t('help.feedback.description')}
+            </p>
+            <a
+              href="https://github.com/mox-hub/agent-project-manager/issues/new/choose"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/50"
+            >
+              <ExternalLink className="size-3" />
+              {t('help.feedback.action')}
+            </a>
+          </div>
           </div>
         </div>
       </div>

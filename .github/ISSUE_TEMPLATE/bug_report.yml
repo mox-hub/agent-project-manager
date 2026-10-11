@@ -1,0 +1,72 @@
+name: 🐛 缺陷报告
+description: 报告 APM 的功能缺陷或异常行为
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请尽量填写以下信息——复现步骤越具体，修复越快。
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 发生了什么？
+      description: 期望的行为 vs 实际的行为
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 打开 …
+        2. 点击 …
+        3. 出现 …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: 问题区域
+      options:
+        - 引导/首启
+        - 项目/工单
+        - AI 派发/执行
+        - 验收/门禁
+        - 发版中心
+        - AI 同事/助理面板
+        - 设置/集成
+        - 桌面壳（安装/更新/窗口）
+        - 其他
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: APM 版本
+      description: 设置 → 关于 页可见
+      options:
+        - 0.8.0（内测）
+        - 0.7.x
+        - 开发态（main 分支自建）
+        - 不确定
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: 操作系统
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS
+        - Linux
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志/截图
+      description: 桌面版日志位于 %USERPROFILE%/.apm/logs（脱敏后粘贴或拖入截图）
+    validations:
+      required: false
