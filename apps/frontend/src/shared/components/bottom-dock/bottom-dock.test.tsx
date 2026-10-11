@@ -237,7 +237,9 @@ describe('BottomDock —— 发送后输入栏保持展开（dock 是唯一对�
 
     const input = screen.getByPlaceholderText('向小周提问或安排任务...');
     fireEvent.input(input, { target: { value: '帮我盘点今天的风险' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
+    // 受控更新触发重渲染后 React 会替换 input 的 DOM 节点——必须重取引用再派发
+    // keyDown，否则事件落在 detached 旧节点上被 React 静默忽略（2026-10-11 门禁暴露）
+    fireEvent.keyDown(screen.getByPlaceholderText('向小周提问或安排任务...'), { key: 'Enter' });
 
     expect(openAssistantWithDraft).toHaveBeenCalledWith('帮我盘点今天的风险');
     // 发送后不收缩（曾收起输入栏打断连续追问）；文本清空承接下一条输入
