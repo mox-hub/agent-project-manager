@@ -104,6 +104,12 @@ function makeBenchService(
     {
       listAdapters: () => [{ provider: 'qa-bench', model: 'qa-bench-stub' }],
       getAdapter: () => ({ getProvider: () => 'qa-bench', chat }),
+      // 内置模型静默解析链（da39ed71）：run 主路径先经此取 adapter，
+      // 缺 mock 会以 TypeError 抢在业务 400 之前炸掉（2026-10-11 门禁暴露）
+      resolveBuiltinAdapter: async () => ({
+        getProvider: () => 'qa-bench',
+        chat,
+      }),
     } as never,
     { estimateCostUsd: vi.fn().mockResolvedValue(null) } as never,
   );
