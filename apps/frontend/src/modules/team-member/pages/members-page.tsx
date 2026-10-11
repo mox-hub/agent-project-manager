@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Bot, LayoutGrid, List, Plus, TableProperties, User, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader, nodeToText } from '@/components/semantic/page-header';
@@ -35,6 +35,21 @@ export default function MembersPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showCreate, setShowCreate] = useState(false);
   const stats = usePersistentToggle('members-page.stats');
+
+  // query 深链：?create=ai 直达 AI 员工创建对话框（引导完成步出口，CAP-A-18
+  // AI 员工引导闭环切片；location.state.openCreate 是另一条既有深链）。
+  // 打开即清参数——对话框关闭后刷新不会再次自动弹。
+  const [searchParams, setSearchParams] = useSearchParams();
+  const createAiFromQuery = searchParams.get('create') === 'ai';
+  const [createDefaultType, setCreateDefaultType] = useState<'human' | 'ai_agent' | undefined>(
+    createAiFromQuery ? 'ai_agent' : undefined,
+  );
+  useEffect(() => {
+    if (createAiFromQuery) {
+      setShowCreate(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [createAiFromQuery, setSearchParams]);
 
   // 深链入口：location.state 携带 openCreate 时自动打开创建弹窗（刷新不重复打开）。
   // 渲染期间检测 state 变化调整 showCreate，replaceState 副作用留在独立 effect。
@@ -159,7 +174,14 @@ export default function MembersPage() {
       />
 
       {isAdmin && (
-        <MemberCreateDialog open={showCreate} onOpenChange={setShowCreate} />
+        <MemberCreateDialog
+          open={showCreate}
+          onOpenChange={(open) => {
+            setShowCreate(open);
+            if (!open) setCreateDefaultType(undefined);
+          }}
+          defaultType={createDefaultType}
+        />
       )}
 
       {/* 统计卡区（默认隐藏，页头幽灵按钮切换） */}

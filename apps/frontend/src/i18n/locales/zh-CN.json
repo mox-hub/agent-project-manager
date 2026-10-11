@@ -6423,7 +6423,12 @@
         "modelsFound": "连接成功，检测到 {{count}} 个可用模型，已将第一个设为主 AI",
         "savedToast": "{{name}} 已保存并设为主 AI",
         "defaultModelFailed": "Key 已保存，但主 AI 设置未成功——可在「设置 → AI 管理」中补设",
+        "agentCreateFailed": "Key 已保存，但默认 AI 员工创建未成功——可稍后到「成员」页手动创建",
         "hint": "选择一家模型服务并填入 API Key，测试通过后会自动保存并设为主 AI（内置模型）。此后可随时在「设置 → AI 管理」中调整多槽位、模型清单与端点——此步可以先跳过。"
+      },
+      "agentDefaults": {
+        "displayName": "AI 助手",
+        "title": "通用 AI 执行者"
       }
     },
     "complete": {
@@ -6442,8 +6447,12 @@
         "description": "在「设置 → AI 管理」配置模型后即可执行任务"
       },
       "inboxHint": {
-        "title": "第一站：决策收件箱",
-        "description": "AI 完成工作后会发来合入提议，您确认后才会真正生效——去决策收件箱看看 AI 的合入提议，这是您的第一个确认时刻"
+        "title": "第一站：通知中心",
+        "description": "AI 完成工作后会发来合入提议，您确认后才会真正生效——去通知中心看看 AI 的合入提议，这是您的第一个确认时刻"
+      },
+      "createAgent": {
+        "title": "创建你的第一个 AI 员工",
+        "description": "刚才跳过了模型配置——没有 AI 员工就无法给 AI 派活。点击前往成员页创建，之后可再回「设置 → AI 管理」补配模型"
       },
       "watchReplay": "先看一遍它怎么干活（90 秒 · 不需要配置模型）",
       "enterApp": "直接进入 APM",

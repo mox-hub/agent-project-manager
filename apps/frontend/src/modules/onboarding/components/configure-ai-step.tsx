@@ -29,6 +29,7 @@ import {
   useSetDefaultModel,
   useUpdateProvider,
 } from '@/modules/ai-hub/hooks/use-ai-providers';
+import { createMember } from '@/modules/team-member/api/team-member-api';
 
 /** 引导快捷入口的四家（与设置 → AI 管理同一批 provider 记录；baseUrl 为各家默认接入点）。
  *  名称保持 ASCII（PROVIDER_INFO 同款惯例）——组件渲染区零中文字符是结构性回归红线 */
@@ -40,6 +41,45 @@ const QUICK_PROVIDERS: { key: string; name: string; baseUrl: string }[] = [
 ];
 
 type TestResult = { ok: boolean; models: string[]; error?: string };
+
+/** 引导默认 AI 员工的固定 handle：重复配置 AI 时不重复建（服务端 handle 唯一，409 视为目标已达成） */
+const DEFAULT_AGENT_HANDLE = 'ai-assistant';
+
+/**
+ * 配置成功后确保系统里存在一个可派活的 AI 员工（CAP-A-18 AI 员工引导闭环切片）。
+ *
+ * 背景：新库零 Member，用户走完引导去「指派 AI」必撞空态——首装硬阻断
+ * （2026-10-11 评审）。模型 Key 刚落库、默认模型刚设好，此刻顺手建员工是
+ * 依赖最顺的位置。aiModelConfigId 为服务端必填：优先取该 provider 下的
+ * 真实库记录（AIModelConfig，cuid），无则回落模型清单同构的合成 id
+ * （GET /ai/models 对适配器模型返回 `${provider}_${model}`，显示侧走
+ * metadata.model 拼装不回查库，悬空无实害）。409（handle 已存在）视为成功。
+ */
+export async function createDefaultAgent(input: {
+  provider: string;
+  model: string;
+  displayName: string;
+  title: string;
+}): Promise<'created' | 'exists'> {
+  const models = await aiHubApi.getModels(input.provider).catch(() => []);
+  const dbModel = models.find((m) => !m.id.startsWith(`${input.provider}_`));
+  try {
+    await createMember({
+      type: 'ai_agent',
+      displayName: input.displayName,
+      handle: DEFAULT_AGENT_HANDLE,
+      title: input.title,
+      aiModelConfigId: dbModel?.id ?? `${input.provider}_${input.model}`,
+      metadata: { model: input.model, provider: input.provider },
+    });
+    return 'created';
+  } catch (err) {
+    if ((err as { status?: number } | undefined)?.status === 409) {
+      return 'exists';
+    }
+    throw err;
+  }
+}
 
 export function ConfigureAiStep() {
   const { t } = useTranslation();
@@ -108,6 +148,17 @@ export function ConfigureAiStep() {
         } catch {
           // Key 已保存、仅默认模型设置失败：不回滚不假报——提示可去设置里补设
           toast.warning(t('onboarding.configureAi.quick.defaultModelFailed'));
+        }
+        // 顺手建默认 AI 员工（首装硬阻断清偿）：失败不回滚已保存的 Key，只提示去成员页手动建
+        try {
+          await createDefaultAgent({
+            provider: selected.provider,
+            model: firstModel,
+            displayName: t('onboarding.configureAi.agentDefaults.displayName'),
+            title: t('onboarding.configureAi.agentDefaults.title'),
+          });
+        } catch {
+          toast.warning(t('onboarding.configureAi.quick.agentCreateFailed'));
         }
       }
       setSavedProviderId(selected.id);

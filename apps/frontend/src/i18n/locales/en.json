@@ -6423,7 +6423,12 @@
         "modelsFound": "Connected. {{count}} models available; the first one is now your primary AI",
         "savedToast": "{{name}} saved and set as primary AI",
         "defaultModelFailed": "Key saved, but setting the primary AI failed — you can set it later in Settings → AI Management",
+        "agentCreateFailed": "Key saved, but creating the default AI teammate failed — you can create one later on the Members page",
         "hint": "Pick a service, paste your API key — once the test passes it's saved and set as your primary AI (the built-in default). Fine-tune multiple slots, model lists and endpoints anytime in Settings → AI Management. It's safe to skip this step for now."
+      },
+      "agentDefaults": {
+        "displayName": "AI Assistant",
+        "title": "General AI Worker"
       }
     },
     "complete": {
@@ -6442,8 +6447,12 @@
         "description": "Configure a model in Settings → AI Management to start executing tasks"
       },
       "inboxHint": {
-        "title": "First stop: the decision inbox",
-        "description": "When the AI finishes work it sends a merge proposal that only takes effect after your approval — check the decision inbox to see your first AI proposal, your first confirmation moment"
+        "title": "First stop: the notification center",
+        "description": "When the AI finishes work it sends a merge proposal that only takes effect after your approval — check the notification center to see your first AI proposal, your first confirmation moment"
+      },
+      "createAgent": {
+        "title": "Create your first AI teammate",
+        "description": "You skipped model configuration — without an AI teammate there is no one to assign work to. Click to create one on the Members page; you can configure a model later in Settings → AI Management"
       },
       "watchReplay": "Watch how it works first (90 sec · no model config needed)",
       "enterApp": "Enter APM directly",

@@ -200,10 +200,16 @@ function CreateProjectStep({ isPending, createProject }: CreateProjectStepProps)
 function CompleteStep({
   onFinish,
   onWatchReplay,
+  onCreateAgent,
+  aiStepSkipped,
 }: {
   onFinish: () => void;
   /** 向导完成 → 先看回放（S6）。次序见 `use-onboarding.watchReplayThenStart` */
   onWatchReplay: () => void;
+  /** 跳过配置 AI 者的出口：落完成标记 → 成员页自动弹 AI 员工创建（见 use-onboarding.finishToCreateAgent） */
+  onCreateAgent: () => void;
+  /** 「配置 AI」步是否被跳过——跳过者系统里没有 AI 员工，完成步补行动卡 */
+  aiStepSkipped: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -279,6 +285,28 @@ function CompleteStep({
             </p>
           </div>
         </div>
+
+        {/* AI 员工补建行动卡（CAP-A-18 AI 员工引导闭环切片）：仅当「配置 AI」步被
+            跳过时出现——跳过者系统里零 Member，「指派 AI」必撞空态。配置成功路径
+            已在 configure-ai-step.createDefaultAgent 自动建员工，无需此卡 */}
+        {aiStepSkipped ? (
+          <button
+            type="button"
+            onClick={onCreateAgent}
+            className="flex w-full items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 text-left transition-colors hover:bg-primary/10"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <Bot className="h-4 w-4 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">{t('onboarding.complete.createAgent.title')}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                {t('onboarding.complete.createAgent.description')}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </button>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -317,6 +345,7 @@ export function OnboardingWizard() {
     skipStep,
     finishOnboarding,
     watchReplayThenStart,
+    finishToCreateAgent,
     createProject,
     goToStep,
   } = useOnboarding();
@@ -355,6 +384,10 @@ export function OnboardingWizard() {
           <CompleteStep
             onFinish={() => finishOnboarding.mutate()}
             onWatchReplay={watchReplayThenStart}
+            onCreateAgent={finishToCreateAgent}
+            aiStepSkipped={
+              state.steps.find((step) => step.id === 'add-ai')?.status === 'skipped'
+            }
           />
         );
       default:

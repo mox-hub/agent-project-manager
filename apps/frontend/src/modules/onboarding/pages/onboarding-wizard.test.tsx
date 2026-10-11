@@ -86,13 +86,20 @@ vi.mock('@/shared/runtime/runtime-api', async (importOriginal) => {
   };
 });
 
-function mockStateAt(stepIndex: number, data: Record<string, unknown> = {}) {
+function mockStateAt(
+  stepIndex: number,
+  data: Record<string, unknown> = {},
+  stepStatusOverrides: Record<number, 'skipped'> = {},
+) {
+  const finishToCreateAgent = vi.fn();
   useOnboardingMock.mockReturnValue({
     state: {
       currentStep: stepIndex,
       steps: steps.map((s, i) => ({
         ...s,
-        status: i < stepIndex ? ('completed' as const) : i === stepIndex ? ('current' as const) : ('pending' as const),
+        status:
+          stepStatusOverrides[i] ??
+          (i < stepIndex ? ('completed' as const) : i === stepIndex ? ('current' as const) : ('pending' as const)),
       })),
       data,
     },
@@ -104,9 +111,11 @@ function mockStateAt(stepIndex: number, data: Record<string, unknown> = {}) {
     skipStep: vi.fn(),
     finishOnboarding: { mutate: vi.fn(), isPending: false, error: null },
     watchReplayThenStart: vi.fn(),
+    finishToCreateAgent,
     createProject: { mutate: vi.fn(), isPending: false, error: null },
     goToStep: vi.fn(),
   });
+  return { finishToCreateAgent };
 }
 
 /** 结构性断言：透传键名模式下渲染区不得出现任何中文字符（硬编码文案 = 违规）。
@@ -153,6 +162,23 @@ describe('OnboardingWizard i18n 结构性回归（CAP-A-18）', () => {
     expect(screen.getByText('onboarding.complete.viewDocs')).toBeTruthy();
 
     assertNoHardcodedChinese(baseElement);
+  });
+
+  it('complete 步（配置 AI 被跳过）：出现「创建 AI 员工」行动卡，点击走深链出口（CAP-A-18 AI 员工引导闭环）', () => {
+    // 跳过路径：add-ai（index 5）置 skipped → 行动卡出现，点击调 finishToCreateAgent
+    const { finishToCreateAgent } = mockStateAt(6, {}, { 5: 'skipped' });
+    render(<OnboardingWizard />);
+
+    expect(screen.getByText('onboarding.complete.createAgent.title')).toBeTruthy();
+    fireEvent.click(screen.getByText('onboarding.complete.createAgent.title'));
+    expect(finishToCreateAgent).toHaveBeenCalledTimes(1);
+  });
+
+  it('complete 步（配置 AI 成功路径）：行动卡不得出现——成功链已自动建员工，无补建必要', () => {
+    mockStateAt(6);
+    render(<OnboardingWizard />);
+
+    expect(screen.queryByText('onboarding.complete.createAgent.title')).toBeNull();
   });
 
   it('create-project 步：表单标签/占位符/类型选项全键名，零硬编码中文', () => {

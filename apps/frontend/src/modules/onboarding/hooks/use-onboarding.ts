@@ -218,6 +218,17 @@ export function useOnboarding() {
     navigate('/app/ai-surface/replay');
   }, [completeOnboarding, navigate]);
 
+  /**
+   * 跳过了「配置 AI」的用户在完成步的出口（CAP-A-18 AI 员工引导闭环切片）：
+   * 落完成标记关向导 → 直达成员页并自动弹「新建成员」对话框（AI 页签预填，
+   * members-page 消费 ?create=ai）。没有 AI 员工，「指派 AI」必撞空态——
+   * 与配置成功路径的自动建员工（configure-ai-step.createDefaultAgent）互为两翼。
+   */
+  const finishToCreateAgent = useCallback(() => {
+    completeOnboarding();
+    navigate('/app/members?create=ai');
+  }, [completeOnboarding, navigate]);
+
   const resetOnboarding = useCallback(() => {
     setState({
       currentStep: 0,
@@ -270,5 +281,6 @@ export function useOnboarding() {
       error: null,
     },
     watchReplayThenStart,
+    finishToCreateAgent,
   };
 }
