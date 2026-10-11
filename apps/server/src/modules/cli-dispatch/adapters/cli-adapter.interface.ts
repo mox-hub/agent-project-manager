@@ -3,7 +3,16 @@
  * 严格对齐设计文档 CLI适配器模型-v1.md §7 的 7 方法
  */
 
-export type ProviderId = 'claude-code' | 'codex' | 'zcode' | 'opencode';
+export type ProviderId =
+  | 'claude-code'
+  | 'codex'
+  | 'zcode'
+  | 'opencode'
+  | 'cursor-agent'
+  | 'gemini-cli'
+  | 'qwen-code'
+  | 'codebuddy'
+  | 'grok';
 
 /**
  * CLI adapter 治理语义能力位（P1-22a）。
@@ -21,7 +30,7 @@ export interface CliAdapterCapabilities {
   mcpTools: boolean;
 }
 
-/** 四家 adapter 能力位总表（镜像 shared 单源事实） */
+/** 九家 adapter 能力位总表（镜像 shared 单源事实） */
 export const CLI_ADAPTER_CAPABILITIES: Record<
   ProviderId,
   CliAdapterCapabilities
@@ -41,6 +50,38 @@ export const CLI_ADAPTER_CAPABILITIES: Record<
     usage: true,
     approval: false,
     mcpTools: true,
+  },
+  // 以下五家为 2026-10-11 扩容批一（镜像 packages/apm-shared src/cli/adapters/interface.ts，
+  // 证据分级与逐家判定依据见 shared 侧同表注）
+  'cursor-agent': {
+    allowedTools: false,
+    usage: true,
+    approval: false,
+    mcpTools: false,
+  },
+  'gemini-cli': {
+    allowedTools: false,
+    usage: true,
+    approval: false,
+    mcpTools: false,
+  },
+  'qwen-code': {
+    allowedTools: false,
+    usage: true,
+    approval: false,
+    mcpTools: false,
+  },
+  codebuddy: {
+    allowedTools: true,
+    usage: true,
+    approval: false,
+    mcpTools: false,
+  },
+  grok: {
+    allowedTools: false,
+    usage: true,
+    approval: false,
+    mcpTools: false,
   },
 };
 

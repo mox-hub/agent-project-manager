@@ -17,6 +17,11 @@ import { ClaudeCodeAdapter } from './adapters/claude-code.adapter';
 import { CodexAdapter } from './adapters/codex.adapter';
 import { ZCodeAdapter } from './adapters/zcode.adapter';
 import { OpenCodeAdapter } from './adapters/opencode.adapter';
+import { CursorAgentAdapter } from './adapters/cursor-agent.adapter';
+import { GeminiCliAdapter } from './adapters/gemini-cli.adapter';
+import { QwenCodeAdapter } from './adapters/qwen-code.adapter';
+import { CodeBuddyAdapter } from './adapters/codebuddy.adapter';
+import { GrokAdapter } from './adapters/grok.adapter';
 
 @Module({
   imports: [
@@ -36,6 +41,11 @@ import { OpenCodeAdapter } from './adapters/opencode.adapter';
     CodexAdapter,
     ZCodeAdapter,
     OpenCodeAdapter,
+    CursorAgentAdapter,
+    GeminiCliAdapter,
+    QwenCodeAdapter,
+    CodeBuddyAdapter,
+    GrokAdapter,
     // Services
     CliExecutorService,
     CliDispatchService,
@@ -56,11 +66,21 @@ export class CliDispatchModule {
     private readonly codexAdapter: CodexAdapter,
     private readonly zcodeAdapter: ZCodeAdapter,
     private readonly opencodeAdapter: OpenCodeAdapter,
+    private readonly cursorAgentAdapter: CursorAgentAdapter,
+    private readonly geminiCliAdapter: GeminiCliAdapter,
+    private readonly qwenCodeAdapter: QwenCodeAdapter,
+    private readonly codeBuddyAdapter: CodeBuddyAdapter,
+    private readonly grokAdapter: GrokAdapter,
   ) {
     // Register adapters on module init
     registry.registerAdapter(claudeAdapter);
     registry.registerAdapter(codexAdapter);
     registry.registerAdapter(zcodeAdapter);
     registry.registerAdapter(opencodeAdapter);
+    registry.registerAdapter(cursorAgentAdapter);
+    registry.registerAdapter(geminiCliAdapter);
+    registry.registerAdapter(qwenCodeAdapter);
+    registry.registerAdapter(codeBuddyAdapter);
+    registry.registerAdapter(grokAdapter);
   }
 }

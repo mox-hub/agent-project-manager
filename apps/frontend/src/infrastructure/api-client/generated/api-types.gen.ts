@@ -10633,7 +10633,7 @@ export interface components {
              * @description AI 员工级默认 CLI Provider（覆盖项目级角色）
              * @enum {string}
              */
-            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode";
+            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             /**
              * @description AI 员工默认执行角色
              * @enum {string}
@@ -10812,7 +10812,7 @@ export interface components {
             costRatePerDay?: number;
             aiModelConfigId?: string;
             /** @enum {string} */
-            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode";
+            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             /** @enum {string} */
             defaultExecutionRole?: "coder" | "reviewer" | "pm" | "qa" | "general";
             metadata?: {
@@ -11130,7 +11130,7 @@ export interface components {
              * @description 默认 Provider（claude-code/codex 均不可用时为 null）
              * @enum {string|null}
              */
-            defaultProvider: "claude-code" | "codex" | "zcode" | "opencode" | null;
+            defaultProvider: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok" | null;
         };
         DetectedCliProviderDto: {
             providerId: string;
@@ -15440,7 +15440,7 @@ export interface components {
              * @description Provider ID
              * @enum {string}
              */
-            providerId: "claude-code" | "codex" | "zcode" | "opencode";
+            providerId: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             /** @description 二进制是否可用（且未被禁用） */
             available: boolean;
             /** @description 探测到的版本号 */
@@ -15491,7 +15491,7 @@ export interface components {
              * @description Provider ID (must match path param :id)
              * @enum {string}
              */
-            providerId: "claude-code" | "codex" | "zcode" | "opencode";
+            providerId: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             /** @description Display name override */
             displayName?: string;
             /** @description Custom command path; if empty, fall back to PATH lookup */
@@ -47622,7 +47622,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode" | "opencode";
+                id: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             };
             cookie?: never;
         };
@@ -47703,7 +47703,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode" | "opencode";
+                id: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             };
             cookie?: never;
         };
@@ -47780,7 +47780,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode" | "opencode";
+                id: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             };
             cookie?: never;
         };
@@ -47865,7 +47865,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode" | "opencode";
+                id: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             };
             cookie?: never;
         };

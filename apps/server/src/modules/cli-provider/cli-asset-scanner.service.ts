@@ -88,6 +88,32 @@ export class CliAssetScannerService {
         return this.scanZcode();
       case 'opencode':
         return this.scanOpencode();
+      case 'cursor-agent':
+        return this.scanJsonMcpConfig(
+          'cursor-agent',
+          join(homedir(), '.cursor', 'mcp.json'),
+          '~/.cursor/mcp.json 未发现 mcpServers 配置',
+        );
+      case 'gemini-cli':
+        return this.scanJsonMcpConfig(
+          'gemini-cli',
+          join(homedir(), '.gemini', 'settings.json'),
+          '~/.gemini/settings.json 未发现 mcpServers 配置',
+        );
+      case 'qwen-code':
+        return this.scanJsonMcpConfig(
+          'qwen-code',
+          join(homedir(), '.qwen', 'settings.json'),
+          '~/.qwen/settings.json 未发现 mcpServers 配置',
+        );
+      case 'codebuddy':
+      case 'grok':
+        return {
+          providerId,
+          skills: [],
+          mcpServers: [],
+          notes: [`${providerId} 本地资产发现待接入层演进（配置路径未校准）`],
+        };
       default:
         return {
           providerId,
@@ -96,6 +122,24 @@ export class CliAssetScannerService {
           notes: [`未知 CLI provider：${providerId}`],
         };
     }
+  }
+
+  /** 通用 JSON mcpServers 配置扫描（cursor/gemini/qwen 同构：顶层 mcpServers 键名） */
+  private scanJsonMcpConfig(
+    providerId: string,
+    configPath: string,
+    emptyNote: string,
+  ): CliAssetsResult {
+    const notes: string[] = [];
+    const mcpServers: CliAssetItem[] = [];
+    const configJson = readTextIfPresent(configPath);
+    if (configJson) {
+      for (const key of jsonMcpServerKeys(configJson)) {
+        mcpServers.push({ key, name: key, description: null });
+      }
+    }
+    if (mcpServers.length === 0) notes.push(emptyNote);
+    return { providerId, skills: [], mcpServers, notes };
   }
 
   private scanClaudeCode(): CliAssetsResult {

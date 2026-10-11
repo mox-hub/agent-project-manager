@@ -55801,7 +55801,12 @@
                 "claude-code",
                 "codex",
                 "zcode",
-                "opencode"
+                "opencode",
+                "cursor-agent",
+                "gemini-cli",
+                "qwen-code",
+                "codebuddy",
+                "grok"
               ],
               "type": "string"
             }
@@ -55948,7 +55953,12 @@
                 "claude-code",
                 "codex",
                 "zcode",
-                "opencode"
+                "opencode",
+                "cursor-agent",
+                "gemini-cli",
+                "qwen-code",
+                "codebuddy",
+                "grok"
               ],
               "type": "string"
             }
@@ -56095,7 +56105,12 @@
                 "claude-code",
                 "codex",
                 "zcode",
-                "opencode"
+                "opencode",
+                "cursor-agent",
+                "gemini-cli",
+                "qwen-code",
+                "codebuddy",
+                "grok"
               ],
               "type": "string"
             }
@@ -56250,7 +56265,12 @@
                 "claude-code",
                 "codex",
                 "zcode",
-                "opencode"
+                "opencode",
+                "cursor-agent",
+                "gemini-cli",
+                "qwen-code",
+                "codebuddy",
+                "grok"
               ],
               "type": "string"
             }
@@ -69582,7 +69602,12 @@
               "claude-code",
               "codex",
               "zcode",
-              "opencode"
+              "opencode",
+              "cursor-agent",
+              "gemini-cli",
+              "qwen-code",
+              "codebuddy",
+              "grok"
             ],
             "description": "AI 员工级默认 CLI Provider（覆盖项目级角色）"
           },
@@ -70142,7 +70167,12 @@
               "claude-code",
               "codex",
               "zcode",
-              "opencode"
+              "opencode",
+              "cursor-agent",
+              "gemini-cli",
+              "qwen-code",
+              "codebuddy",
+              "grok"
             ]
           },
           "defaultExecutionRole": {
@@ -71076,7 +71106,12 @@
               "claude-code",
               "codex",
               "zcode",
-              "opencode"
+              "opencode",
+              "cursor-agent",
+              "gemini-cli",
+              "qwen-code",
+              "codebuddy",
+              "grok"
             ]
           }
         },
@@ -81865,7 +81900,12 @@
               "claude-code",
               "codex",
               "zcode",
-              "opencode"
+              "opencode",
+              "cursor-agent",
+              "gemini-cli",
+              "qwen-code",
+              "codebuddy",
+              "grok"
             ]
           },
           "available": {
@@ -82006,7 +82046,12 @@
               "claude-code",
               "codex",
               "zcode",
-              "opencode"
+              "opencode",
+              "cursor-agent",
+              "gemini-cli",
+              "qwen-code",
+              "codebuddy",
+              "grok"
             ]
           },
           "displayName": {

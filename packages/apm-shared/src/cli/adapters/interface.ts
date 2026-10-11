@@ -6,7 +6,16 @@
  * prompt 传递缺陷。
  */
 
-export type ProviderId = 'claude-code' | 'codex' | 'zcode' | 'opencode';
+export type ProviderId =
+  | 'claude-code'
+  | 'codex'
+  | 'zcode'
+  | 'opencode'
+  | 'cursor-agent'
+  | 'gemini-cli'
+  | 'qwen-code'
+  | 'codebuddy'
+  | 'grok';
 
 export interface Artifact {
   type: string;
@@ -180,7 +189,7 @@ export interface CliAdapterCapabilities {
   mcpTools: boolean;
 }
 
-/** 四家 adapter 能力位总表（单源事实，server 侧派发告警与 daemon worker 均按此读） */
+/** 九家 adapter 能力位总表（单源事实，server 侧派发告警与 daemon worker 均按此读） */
 export const CLI_ADAPTER_CAPABILITIES: Record<ProviderId, CliAdapterCapabilities> = {
   'claude-code': { allowedTools: true, usage: true, approval: true, mcpTools: true },
   // codex：usage 无任何提取路径；--non-interactive 排除交互审批（approval_required 分支不可达）
@@ -191,6 +200,23 @@ export const CLI_ADAPTER_CAPABILITIES: Record<ProviderId, CliAdapterCapabilities
   zcode: { allowedTools: false, usage: true, approval: false, mcpTools: true },
   // opencode：buildCommand 不消费 allowedTools（权限走全局配置）；usage 经 step_finish 实跑采样校准；无审批事件
   opencode: { allowedTools: false, usage: true, approval: false, mcpTools: true },
+  // cursor-agent：本机 2026.07.16-899851b 安装产物源码级实证——result 终事件条件携带 usage
+  // （Se?{usage:Se}，官方文档滞后未记载）；无 --allowedTools 旗标；headless -p 全工具 +
+  // --yolo 无交互审批面；mcpTools 未收录（mcp-server 模块枚举另行校准）
+  'cursor-agent': { allowedTools: false, usage: true, approval: false, mcpTools: false },
+  // gemini-cli：官方 headless 文档级确认——result 终事件带 stats.models.<m>.tokens（适配器
+  // 负责映射为统一 usage 口径）；无 allowedTools 透传旗标；--approval-mode yolo 全放行无审批事件
+  'gemini-cli': { allowedTools: false, usage: true, approval: false, mcpTools: false },
+  // qwen-code：官方 headless 文档级确认——Claude 风格信封 result.usage 直读；--allowedTools
+  // 有旗标（同 claude 逗号语法）但 qwen 侧行为未实机校准，保守 false；--yolo 全放行无审批事件
+  'qwen-code': { allowedTools: false, usage: true, approval: false, mcpTools: false },
+  // codebuddy：Claude Code 兼容接口（官方 cli-reference 确认 --allowedTools 逗号语法与
+  // --permission-mode）——allowedTools true；headless 必需 -y 跳过审批，无审批事件
+  codebuddy: { allowedTools: true, usage: true, approval: false, mcpTools: false },
+  // grok（xAI Grok Build）：官方 headless 文档字段级保真——streaming-messages-json 信封
+  // result.usage 直读；--allow/--deny 是 glob 规则语义与 allowedTools 列表不一一对应，保守
+  // false；--yolo 全放行无审批事件
+  grok: { allowedTools: false, usage: true, approval: false, mcpTools: false },
 };
 
 export interface CliAdapter {

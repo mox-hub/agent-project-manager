@@ -6,6 +6,11 @@ import { ClaudeCodeAdapter } from './claude-code';
 import { CodexAdapter } from './codex';
 import { ZCodeAdapter } from './zcode';
 import { OpenCodeAdapter } from './opencode';
+import { CursorAgentAdapter } from './cursor-agent';
+import { GeminiCliAdapter } from './gemini-cli';
+import { QwenCodeAdapter } from './qwen-code';
+import { CodeBuddyAdapter } from './codebuddy';
+import { GrokAdapter } from './grok';
 import {
   CLI_ADAPTER_CAPABILITIES,
   type CliExecutionInput,
@@ -47,6 +52,43 @@ describe('adapter 治理语义能力位（P1-22a）', () => {
       approval: false,
       mcpTools: true,
     });
+    // 扩容五家（批一 2026-10-11）：mcpTools 全部未收录；headless 全放行无审批事件
+    // cursor-agent：本机安装产物源码级实证——result 条件携带 usage；无 --allowedTools 旗标
+    expect(CLI_ADAPTER_CAPABILITIES['cursor-agent']).toEqual({
+      allowedTools: false,
+      usage: true,
+      approval: false,
+      mcpTools: false,
+    });
+    // gemini-cli：文档级确认——result.stats.models 求和映射；--approval-mode yolo
+    expect(CLI_ADAPTER_CAPABILITIES['gemini-cli']).toEqual({
+      allowedTools: false,
+      usage: true,
+      approval: false,
+      mcpTools: false,
+    });
+    // qwen-code：文档级确认——Claude 风格信封 result.usage 直读；allowedTools 保守 false
+    expect(CLI_ADAPTER_CAPABILITIES['qwen-code']).toEqual({
+      allowedTools: false,
+      usage: true,
+      approval: false,
+      mcpTools: false,
+    });
+    // codebuddy：Claude 兼容接口——--allowedTools 逗号语法透传；headless 必需 -y
+    expect(CLI_ADAPTER_CAPABILITIES.codebuddy).toEqual({
+      allowedTools: true,
+      usage: true,
+      approval: false,
+      mcpTools: false,
+    });
+    // grok：文档字段级保真——streaming-messages-json result.usage 直读；--allow 是
+    // glob 语义不消费 allowedTools 列表
+    expect(CLI_ADAPTER_CAPABILITIES.grok).toEqual({
+      allowedTools: false,
+      usage: true,
+      approval: false,
+      mcpTools: false,
+    });
   });
 
   it('每家 adapter 的 getCapabilities 与总表对应项一致', () => {
@@ -61,6 +103,21 @@ describe('adapter 治理语义能力位（P1-22a）', () => {
     );
     expect(new OpenCodeAdapter().getCapabilities()).toBe(
       CLI_ADAPTER_CAPABILITIES.opencode,
+    );
+    expect(new CursorAgentAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES['cursor-agent'],
+    );
+    expect(new GeminiCliAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES['gemini-cli'],
+    );
+    expect(new QwenCodeAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES['qwen-code'],
+    );
+    expect(new CodeBuddyAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES.codebuddy,
+    );
+    expect(new GrokAdapter().getCapabilities()).toBe(
+      CLI_ADAPTER_CAPABILITIES.grok,
     );
   });
 
@@ -83,6 +140,22 @@ describe('adapter 治理语义能力位（P1-22a）', () => {
     expect(
       new OpenCodeAdapter().buildCommand(opts).args.join(' '),
     ).not.toContain('allowedTools');
+    expect(
+      new CursorAgentAdapter().buildCommand(opts).args.join(' '),
+    ).not.toContain('allowedTools');
+    expect(
+      new GeminiCliAdapter().buildCommand(opts).args.join(' '),
+    ).not.toContain('allowedTools');
+    expect(
+      new QwenCodeAdapter().buildCommand(opts).args.join(' '),
+    ).not.toContain('allowedTools');
+    expect(
+      new GrokAdapter().buildCommand(opts).args.join(' '),
+    ).not.toContain('allowedTools');
+    // 扩容批一唯一声明透传的：codebuddy（Claude 兼容 --allowedTools 逗号语法）
+    const codebuddy = new CodeBuddyAdapter().buildCommand(opts);
+    expect(codebuddy.args).toContain('--allowedTools');
+    expect(codebuddy.args).toContain('Bash,Read');
   });
 });
 
@@ -683,5 +756,372 @@ describe('OpenCodeAdapter', () => {
     const res = a.parseFinalResult(stdout, 1);
     expect(res.status).toBe('failed');
     expect(res.error).toContain('exited with code 1');
+  });
+});
+
+// ===== 扩容批一（2026-10-11）：cursor-agent / gemini-cli / qwen-code / codebuddy / grok =====
+
+describe('CursorAgentAdapter', () => {
+  it('buildCommand：-p 位置参数 + --yolo/--trust 旗标面 + resume/model 映射', () => {
+    const a = new CursorAgentAdapter();
+    const built = a.buildCommand(input('实现登录页'));
+    expect(built.cmd).toBe('cursor-agent');
+    expect(built.args).toContain('-p');
+    expect(built.args).toContain('--output-format');
+    expect(built.args).toContain('stream-json');
+    expect(built.args).toContain('--yolo');
+    expect(built.args).toContain('--trust');
+    expect(built.args[built.args.length - 1]).toBe('实现登录页');
+
+    const resumed = a.buildCommand({
+      ...input('继续'),
+      sessionId: 'chat-1',
+      model: 'gpt-5',
+      permissionMode: 'plan',
+    });
+    expect(resumed.args).toContain('--resume');
+    expect(resumed.args).toContain('chat-1');
+    expect(resumed.args).toContain('--model');
+    expect(resumed.args).toContain('gpt-5');
+    // plan 档只读：不出现 --yolo
+    expect(resumed.args).not.toContain('--yolo');
+    expect(resumed.args).toContain('--mode');
+  });
+
+  it('parseStream：tool_call started/completed 外围事件 + 共同面回落', () => {
+    const a = new CursorAgentAdapter();
+    const { emit, step, token, usage } = makeEmit();
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'system',
+        subtype: 'init',
+        session_id: 's1',
+        model: 'composer-1',
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'observation', name: 'session_init' }),
+    );
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'tool_call',
+        subtype: 'started',
+        call_id: 'c1',
+        tool_call: { toolName: 'read_file' },
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stepType: 'tool_call',
+        name: 'read_file',
+        status: 'running',
+      }),
+    );
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'tool_call',
+        subtype: 'completed',
+        call_id: 'c1',
+        tool_call: { toolName: 'read_file' },
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'observation', status: 'completed' }),
+    );
+
+    // 共同面：assistant 文本
+    a.parseStream(
+      JSON.stringify({
+        type: 'assistant',
+        message: { role: 'assistant', content: [{ type: 'text', text: 'done' }] },
+      }),
+      emit,
+    );
+    expect(token).toHaveBeenCalledWith('done');
+
+    // result 终行 usage（本机产物条件携带，有则提）
+    a.parseStream(
+      JSON.stringify({
+        type: 'result',
+        subtype: 'success',
+        is_error: false,
+        result: 'ok',
+        session_id: 's1',
+        usage: { input_tokens: 10, output_tokens: 5 },
+      }),
+      emit,
+    );
+    expect(usage).toHaveBeenCalledWith(
+      expect.objectContaining({ promptTokens: 10, completionTokens: 5 }),
+    );
+  });
+
+  it('parseFinalResult：result 终行成功 / is_error 失败 / 缺终行失败', () => {
+    const a = new CursorAgentAdapter();
+    const ok = a.parseFinalResult(
+      JSON.stringify({
+        type: 'result',
+        subtype: 'success',
+        is_error: false,
+        result: '任务完成',
+        session_id: 's1',
+        duration_ms: 100,
+      }),
+      0,
+    );
+    expect(ok.status).toBe('completed');
+    expect(ok.output).toMatchObject({ response: '任务完成', sessionId: 's1' });
+    expect(ok.artifacts[0]).toMatchObject({
+      name: 'execution_summary',
+      content: '任务完成',
+    });
+
+    const errored = a.parseFinalResult(
+      JSON.stringify({ type: 'result', subtype: 'error', is_error: true, result: '炸了' }),
+      0,
+    );
+    expect(errored.status).toBe('failed');
+
+    const empty = a.parseFinalResult('', 1);
+    expect(empty.status).toBe('failed');
+    expect(empty.error).toContain('缺少 result 终行');
+  });
+});
+
+describe('GeminiCliAdapter', () => {
+  it('buildCommand：--approval-mode 闭集映射（非法回落 yolo）+ -r resume', () => {
+    const a = new GeminiCliAdapter();
+    const built = a.buildCommand(input('实现登录页'));
+    expect(built.cmd).toBe('gemini');
+    expect(built.args).toContain('--approval-mode');
+    expect(built.args[built.args.indexOf('--approval-mode') + 1]).toBe('yolo');
+    expect(built.args).toContain('--prompt');
+    expect(built.args[built.args.length - 1]).toBe('实现登录页');
+
+    const resumed = a.buildCommand({
+      ...input('x'),
+      sessionId: 'abc',
+      permissionMode: 'auto_edit',
+    });
+    expect(resumed.args).toContain('--resume');
+    expect(resumed.args).toContain('abc');
+    expect(resumed.args[resumed.args.indexOf('--approval-mode') + 1]).toBe(
+      'auto_edit',
+    );
+
+    // 带空白的非法值回落 yolo（不透传垃圾到 CLI）
+    const invalid = a.buildCommand({ ...input('x'), permissionMode: 'bogus' });
+    expect(invalid.args[invalid.args.indexOf('--approval-mode') + 1]).toBe('yolo');
+  });
+
+  it('parseStream：原生信封 init/message/tool_use/tool_result/error', () => {
+    const a = new GeminiCliAdapter();
+    const { emit, step, token } = makeEmit();
+
+    a.parseStream(JSON.stringify({ type: 'init', session_id: 'g1', model: 'gemini-3' }), emit);
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'observation', name: 'session_init' }),
+    );
+
+    a.parseStream(
+      JSON.stringify({ type: 'message', role: 'assistant', content: '你好' }),
+      emit,
+    );
+    expect(token).toHaveBeenCalledWith('你好');
+
+    a.parseStream(
+      JSON.stringify({ type: 'tool_use', tool_id: 't1', tool_name: 'write_file', parameters: {} }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'tool_call', name: 'write_file' }),
+    );
+
+    a.parseStream(
+      JSON.stringify({ type: 'tool_result', tool_id: 't1', output: 'ok' }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'observation', name: 't1' }),
+    );
+
+    a.parseStream(
+      JSON.stringify({ type: 'error', severity: 'error', message: 'quota' }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'error' }),
+    );
+  });
+
+  it('parseFinalResult：stats.models 求和映射 usage + response 缺省回退 message 累积', () => {
+    const a = new GeminiCliAdapter();
+    const stdout = [
+      JSON.stringify({ type: 'message', role: 'assistant', content: '第一段' }),
+      JSON.stringify({
+        type: 'result',
+        stats: {
+          models: {
+            'gemini-3-pro': {
+              tokens: { input_tokens: 30, output_tokens: 20, total_tokens: 50 },
+            },
+            'gemini-3-flash': {
+              tokens: { input_tokens: 10, output_tokens: 5, total_tokens: 15 },
+            },
+          },
+        },
+        session_id: 'g1',
+        duration_ms: 200,
+      }),
+    ].join('\n');
+    const res = a.parseFinalResult(stdout, 0);
+    expect(res.status).toBe('completed');
+    // result.response 缺省：回落 assistant message 文本累积
+    expect(res.output).toMatchObject({ response: '第一段', sessionId: 'g1' });
+    expect(res.usage).toMatchObject({ promptTokens: 40, completionTokens: 25, totalTokens: 65 });
+  });
+});
+
+describe('QwenCodeAdapter', () => {
+  it('buildCommand：--approval-mode yolo + --resume（值闭集与 gemini 不同源）', () => {
+    const a = new QwenCodeAdapter();
+    const built = a.buildCommand(input('实现登录页'));
+    expect(built.cmd).toBe('qwen');
+    expect(built.args).toContain('--approval-mode');
+    expect(built.args[built.args.indexOf('--approval-mode') + 1]).toBe('yolo');
+    const resumed = a.buildCommand({ ...input('x'), sessionId: 'q1' });
+    expect(resumed.args).toContain('--resume');
+    expect(resumed.args).toContain('q1');
+  });
+
+  it('parseStream/parseFinalResult：Claude 风格信封（session_start/assistant usage/result）', () => {
+    const a = new QwenCodeAdapter();
+    const { emit, step, usage } = makeEmit();
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'system',
+        subtype: 'session_start',
+        session_id: 'q1',
+        model: 'qwen3-coder',
+      }),
+      emit,
+    );
+    expect(step).toHaveBeenCalledWith(
+      expect.objectContaining({ stepType: 'observation', name: 'session_init' }),
+    );
+
+    a.parseStream(
+      JSON.stringify({
+        type: 'assistant',
+        message: {
+          role: 'assistant',
+          content: [{ type: 'text', text: '进展' }],
+          usage: { input_tokens: 7, output_tokens: 3 },
+        },
+      }),
+      emit,
+    );
+    expect(usage).toHaveBeenCalledWith(
+      expect.objectContaining({ promptTokens: 7, completionTokens: 3 }),
+    );
+
+    const res = a.parseFinalResult(
+      JSON.stringify({
+        type: 'result',
+        subtype: 'success',
+        is_error: false,
+        result: '完成',
+        session_id: 'q1',
+        usage: { input_tokens: 7, output_tokens: 3 },
+      }),
+      0,
+    );
+    expect(res.status).toBe('completed');
+    expect(res.output).toMatchObject({ response: '完成', sessionId: 'q1' });
+  });
+});
+
+describe('CodeBuddyAdapter', () => {
+  it('buildCommand：headless 必需 -y + --resume/--model 透传', () => {
+    const a = new CodeBuddyAdapter();
+    const built = a.buildCommand(input('实现登录页'));
+    expect(built.cmd).toBe('codebuddy');
+    expect(built.args).toContain('--print');
+    expect(built.args).toContain('--dangerously-skip-permissions');
+    expect(built.args[built.args.length - 1]).toBe('实现登录页');
+
+    const resumed = a.buildCommand({ ...input('x'), sessionId: 'cb1', model: 'glm-5' });
+    expect(resumed.args).toContain('--resume');
+    expect(resumed.args).toContain('cb1');
+    expect(resumed.args).toContain('--model');
+  });
+
+  it('parseFinalResult：Claude 风格 result 终行', () => {
+    const a = new CodeBuddyAdapter();
+    const res = a.parseFinalResult(
+      JSON.stringify({
+        type: 'result',
+        subtype: 'success',
+        is_error: false,
+        result: 'done',
+        session_id: 'cb1',
+        usage: { input_tokens: 5, output_tokens: 2, total_cost_usd: 0.01 },
+      }),
+      0,
+    );
+    expect(res.status).toBe('completed');
+    expect(res.usage).toMatchObject({ promptTokens: 5, completionTokens: 2, costUsd: 0.01 });
+  });
+});
+
+describe('GrokAdapter', () => {
+  it('buildCommand：streaming-messages-json 信封 + --yolo + -r resume', () => {
+    const a = new GrokAdapter();
+    const built = a.buildCommand(input('实现登录页'));
+    expect(built.cmd).toBe('grok');
+    expect(built.args).toContain('streaming-messages-json');
+    expect(built.args).toContain('--yolo');
+    expect(built.args).toContain('--prompt');
+    expect(built.args[built.args.length - 1]).toBe('实现登录页');
+
+    const resumed = a.buildCommand({ ...input('x'), sessionId: 'gk1' });
+    expect(resumed.args).toContain('--resume');
+    expect(resumed.args).toContain('gk1');
+
+    const planned = a.buildCommand({ ...input('x'), permissionMode: 'plan' });
+    expect(planned.args).not.toContain('--yolo');
+    expect(planned.args).toContain('--permission-mode');
+  });
+
+  it('parseFinalResult：Claude 兼容信封 result.usage + 顶层 total_cost_usd', () => {
+    const a = new GrokAdapter();
+    const res = a.parseFinalResult(
+      JSON.stringify({
+        type: 'result',
+        subtype: 'success',
+        is_error: false,
+        result: '完工',
+        session_id: 'gk1',
+        num_turns: 2,
+        usage: {
+          input_tokens: 100,
+          cache_read_input_tokens: 40,
+          output_tokens: 20,
+          total_tokens: 120,
+        },
+        total_cost_usd: 0.02,
+      }),
+      0,
+    );
+    expect(res.status).toBe('completed');
+    expect(res.output).toMatchObject({ response: '完工', sessionId: 'gk1' });
+    expect(res.usage).toMatchObject({ promptTokens: 100, completionTokens: 20, costUsd: 0.02 });
   });
 });

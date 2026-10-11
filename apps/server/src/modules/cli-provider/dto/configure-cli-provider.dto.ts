@@ -13,6 +13,11 @@ export const CLI_PROVIDER_IDS = [
   'codex',
   'zcode',
   'opencode',
+  'cursor-agent',
+  'gemini-cli',
+  'qwen-code',
+  'codebuddy',
+  'grok',
 ] as const;
 export type CliProviderId = (typeof CLI_PROVIDER_IDS)[number];
 

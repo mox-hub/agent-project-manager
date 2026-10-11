@@ -4,7 +4,17 @@
  */
 import type { ComponentType } from 'react';
 import { Bot } from 'lucide-react';
-import { ClaudeCode, Codex, Cursor, Gemini, OpenCode, Zhipu } from '@lobehub/icons';
+import {
+  ClaudeCode,
+  CodeBuddy,
+  Codex,
+  Cursor,
+  Gemini,
+  Grok,
+  OpenCode,
+  Qwen,
+  Zhipu,
+} from '@lobehub/icons';
 
 export interface ProviderMeta {
   label: string;
@@ -22,6 +32,10 @@ const PROVIDER_META: Record<string, ProviderMeta> = {
   opencode: { label: 'OpenCode', Icon: OpenCode },
   // zcode 无独立品牌标：回落智谱 GLM 家族标（宪法 §6.1 品牌家族可用厂家 logo）
   zcode: { label: 'ZCode', Icon: Zhipu, Color: Zhipu.Color },
+  // 2026-10-11 扩容批一（cursor-agent/gemini-cli 已有预留条目）
+  'qwen-code': { label: 'Qwen Code', Icon: Qwen, Color: Qwen.Color },
+  codebuddy: { label: 'CodeBuddy', Icon: CodeBuddy, Color: CodeBuddy.Color },
+  grok: { label: 'Grok', Icon: Grok, Color: Grok.Color },
 };
 
 export function getProviderMeta(providerId: string): ProviderMeta {

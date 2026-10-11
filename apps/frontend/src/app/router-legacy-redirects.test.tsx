@@ -23,6 +23,9 @@ vi.mock('@lobehub/icons', () => {
     Codex: make(),
     Cursor: make(),
     OpenCode: make(),
+    Qwen: make(),
+    CodeBuddy: make(),
+    Grok: make(),
   };
 });
 

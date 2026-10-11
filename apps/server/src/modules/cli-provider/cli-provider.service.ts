@@ -67,6 +67,11 @@ export class CliProviderService {
       'codex',
       'zcode',
       'opencode',
+      'cursor-agent',
+      'gemini-cli',
+      'qwen-code',
+      'codebuddy',
+      'grok',
     ];
     const providers: CliProviderStatus[] = providerIds.map((pid) => {
       const info = this.registry.getAdapter(pid)
@@ -192,6 +197,11 @@ export class CliProviderService {
       'codex',
       'zcode',
       'opencode',
+      'cursor-agent',
+      'gemini-cli',
+      'qwen-code',
+      'codebuddy',
+      'grok',
     ];
     const now = new Date();
     for (const pid of providerIds) {

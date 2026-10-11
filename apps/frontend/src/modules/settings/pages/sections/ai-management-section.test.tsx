@@ -50,6 +50,9 @@ vi.mock('@lobehub/icons', () => {
     Codex: make('codex'),
     Cursor: make('cursor'),
     OpenCode: make('opencode'),
+    Qwen: make('qwen'),
+    CodeBuddy: make('codebuddy'),
+    Grok: make('grok'),
   };
 });
 

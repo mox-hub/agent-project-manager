@@ -69,7 +69,19 @@ export class CliProviderRegistry implements OnModuleInit {
       this.overrides.clear();
       for (const cfg of configs) {
         const pid = cfg.providerId as ProviderId;
-        if (!['claude-code', 'codex', 'zcode', 'opencode'].includes(pid))
+        if (
+          ![
+            'claude-code',
+            'codex',
+            'zcode',
+            'opencode',
+            'cursor-agent',
+            'gemini-cli',
+            'qwen-code',
+            'codebuddy',
+            'grok',
+          ].includes(pid)
+        )
           continue;
         this.overrides.set(pid, {
           commandPath: cfg.commandPath ?? undefined,
