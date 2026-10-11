@@ -26,6 +26,7 @@ import {
   RotateCcw,
   SearchX,
   SquareTerminal,
+  TableProperties,
   Target,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -51,6 +52,7 @@ import {
 } from '../api/execution-api';
 import { RunDetailsDialog } from '../components/run-details-dialog';
 import { RunOverviewCard } from '../components/run-overview-card';
+import { ExecutionTableView } from '../components/execution-table-view';
 import {
   RUN_STATUS_CONFIG,
   RunStatusBadge,
@@ -70,6 +72,9 @@ import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
 
 const STATUS_KEYS = Object.keys(RUN_STATUS_CONFIG) as ExecutionRunStatus[];
 
+/** 视图形态词表（CAP-A-29 扩展切片：执行记录 list/table 双档） */
+type ViewMode = 'list' | 'table';
+
 /**
  * 状态视觉映射见 components/run-status.tsx（执行 run 状态 ≠ 任务状态，独立口径）。
  */
@@ -84,6 +89,7 @@ export function ExecutionsPage() {
   const [statusFilter, setStatusFilter] = useState<ExecutionRunStatus | 'all'>('all');
   const [agentFilter, setAgentFilter] = useState<string>('all');
   const [projectFilter, setProjectFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [detailRunId, setDetailRunId] = useState<string | null>(null);
   const [overviewRun, setOverviewRun] = useState<ExecutionRunRecord | null>(null);
 
@@ -181,7 +187,7 @@ export function ExecutionsPage() {
     setProjectFilter('all');
   };
 
-  // 已保存视图：快照记忆当前页全部筛选
+  // 已保存视图：快照记忆当前页全部筛选 + 视图形态
   const toolbar = useToolbarViews({
     key: 'executions-page',
     defaults: [
@@ -190,7 +196,7 @@ export function ExecutionsPage() {
         name: t('common.all'),
         icon: 'list',
         builtIn: true,
-        snapshot: { search: '', status: 'all', agent: 'all', project: 'all' },
+        snapshot: { search: '', status: 'all', agent: 'all', project: 'all', viewMode: 'list' },
       },
     ],
     onApply: (snapshot) => {
@@ -199,18 +205,20 @@ export function ExecutionsPage() {
         status: ExecutionRunStatus | 'all';
         agent: string;
         project: string;
+        viewMode: ViewMode;
       }>;
       setSearch(snap.search ?? '');
       setStatusFilter(snap.status ?? 'all');
       setAgentFilter(snap.agent ?? 'all');
       setProjectFilter(snap.project ?? 'all');
+      setViewMode(snap.viewMode ?? 'list');
     },
   });
   const { updateActiveSnapshot } = toolbar;
 
   useEffect(() => {
-    updateActiveSnapshot({ search, status: statusFilter, agent: agentFilter, project: projectFilter });
-  }, [updateActiveSnapshot, search, statusFilter, agentFilter, projectFilter]);
+    updateActiveSnapshot({ search, status: statusFilter, agent: agentFilter, project: projectFilter, viewMode });
+  }, [updateActiveSnapshot, search, statusFilter, agentFilter, projectFilter, viewMode]);
 
   const entity = getEntityIcon('execution');
 
@@ -386,9 +394,12 @@ export function ExecutionsPage() {
         onUpdateView={toolbar.updateView}
         onDeleteView={toolbar.deleteView}
         viewStyle={{
-          value: 'list',
-          onChange: () => {},
-          options: [{ value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List }],
+          value: viewMode,
+          onChange: (v) => setViewMode(v as ViewMode),
+          options: [
+            { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+            { value: 'table', label: t('viewDisplay.views.table', 'Table'), icon: TableProperties },
+          ],
         }}
         filterMenu={{
           badge: [
@@ -485,6 +496,13 @@ export function ExecutionsPage() {
               }
             />
           )
+        ) : viewMode === 'table' ? (
+          <ExecutionTableView
+            runs={filteredRuns}
+            loading={isLoading}
+            onRunClick={(run) => setDetailRunId(run.id)}
+            onRowContextMenu={rowMenuItems}
+          />
         ) : (
           <DataList
             items={filteredRuns}

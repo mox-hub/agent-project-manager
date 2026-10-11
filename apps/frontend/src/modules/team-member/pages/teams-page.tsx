@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Archive, CheckCircle2, LayoutGrid, List, Plus, Users } from 'lucide-react';
+import { Archive, CheckCircle2, LayoutGrid, List, Plus, TableProperties, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader, nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
@@ -17,10 +17,11 @@ import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
 import { useTeams, useArchiveTeam } from '../hooks';
 import { TeamCard } from '../components/team-card';
 import { TeamList, type TeamListItem } from '../components/team-list';
+import { TeamTableView } from '../components/team-table-view';
 import { TeamCreateDialog } from '../components/team-create-dialog';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 
-type ViewMode = 'grid' | 'list';
+type ViewMode = 'grid' | 'list' | 'table';
 type StatusFilter = 'all' | 'active' | 'archived';
 
 export default function TeamsPage() {
@@ -185,6 +186,7 @@ export default function TeamsPage() {
           options: [
             { value: 'grid', label: t('teams.view.grid', '卡片'), icon: LayoutGrid },
             { value: 'list', label: t('teams.view.list', '列表'), icon: List },
+            { value: 'table', label: t('teams.view.table', '表格'), icon: TableProperties },
           ],
         }}
         filterMenu={{
@@ -210,7 +212,7 @@ export default function TeamsPage() {
         }}
       />
 
-      {/* 内容区：卡片/列表双视图 */}
+      {/* 内容区：卡片/列表/表格三视图 */}
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
         {viewMode === 'grid' ? (
           isLoading ? (
@@ -232,6 +234,24 @@ export default function TeamsPage() {
               ))}
             </div>
           )
+        ) : viewMode === 'table' ? (
+          <TeamTableView
+            teams={teams}
+            loading={isLoading}
+            onTeamClick={(team) => navigate(`/app/teams/${team.id}`)}
+            onArchive={handleArchive}
+            selectionActions={(selected, close) =>
+              selected.some((tm) => tm.status === 'active') ? (
+                <ListActionButton
+                  onClick={() => handleBatchArchive(selected.filter((tm) => tm.status === 'active'), close)}
+                  title={t('teams.archive', '归档')}
+                  className="text-accent-red"
+                >
+                  {t('teams.archive', '归档')}
+                </ListActionButton>
+              ) : null
+            }
+          />
         ) : (
           <TeamList
             teams={teams}

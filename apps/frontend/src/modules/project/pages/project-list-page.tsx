@@ -6,6 +6,7 @@ import { useProjectFilterOptions } from '../hooks/use-project-filter-options';
 import { ProjectSimpleList } from '../components/project-simple-list';
 import { ProjectBoard } from '../components/project-board';
 import { ProjectGantt } from '../components/project-gantt';
+import { ProjectTableView } from '../components/project-table-view';
 import type { ProjectListParams, ProjectWorkflowStatus } from '../api/project-api';
 import { useAppStore } from '@/infrastructure/store/app-store';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,10 @@ import {
 } from '@/components/ui/pagination';
 import { buildFilterStateFromQuery, buildQueryFromFilterState } from '@/shared/filters/adapters';
 import type { FilterState } from '@/shared/filters/types';
+import type { MenuItem } from '@/components/ui/context-menu';
+import { buildProjectRowMenu } from '@/shared/context-menu/row-context-menu';
+import { useMembers } from '@/modules/team-member/hooks';
+import type { Project } from '../api/project-api';
 import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
@@ -39,6 +44,7 @@ import {
   CalendarRange,
   Archive,
   Bot,
+  TableProperties,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ListActionButton } from '@/shared/components/data-list';
@@ -73,7 +79,7 @@ type ProjectListColumnKey =
   | 'status';
 
 /** 视图形态词表（J10：view-switcher 清退后本地定义，与各列表页本地 ViewMode 同构；grid 档去留待后续裁决，暂保留） */
-type ViewMode = 'list' | 'grid' | 'board' | 'gantt';
+type ViewMode = 'list' | 'grid' | 'board' | 'gantt' | 'table';
 
 const getColumnOptions = (t: (key: string) => string): { key: ProjectListColumnKey; label: string }[] => [
   { key: 'icon', label: t("project.columns.icon") },
@@ -136,6 +142,17 @@ export function ProjectListPage() {
   const updateProject = useUpdateProject();
   const confirmAction = useConfirm();
   const { getProjectExecutionCount, activeCount } = useActiveExecutionsMap();
+  const { data: membersData } = useMembers({ limit: 200 });
+
+  // 表格视图行右键菜单（与列表视图同源：buildProjectRowMenu 枚举直改）
+  const handleTableRowContextMenu = (project: Project): MenuItem[] =>
+    buildProjectRowMenu({
+      linkPath: `/app/projects/${project.id}`,
+      project,
+      t,
+      owners: membersData?.items ?? [],
+      onUpdate: (menuData) => updateProject.mutate({ projectId: project.id, data: menuData }),
+    });
 
   const projects = data?.items ?? [];
   const projectFilterGroups = useProjectFilterOptions({ projects });
@@ -268,6 +285,7 @@ export function ProjectListPage() {
           options: [
             { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
             { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
+            { value: 'table', label: t('viewDisplay.views.table', 'Table'), icon: TableProperties },
             { value: 'gantt', label: t('viewDisplay.views.gantt', 'Gantt'), icon: CalendarRange },
           ],
         }}
@@ -386,6 +404,41 @@ export function ProjectListPage() {
                     })
                     .then(() => undefined)
                 }
+              />
+            ) : viewMode === 'table' ? (
+              <ProjectTableView
+                projects={projects}
+                loading={isLoading}
+                visibleColumns={visibleColumns}
+                onProjectClick={(project) => navigate(`/app/projects/${project.id}`)}
+                onRowContextMenu={handleTableRowContextMenu}
+                selectionActions={(selected, close) => (
+                  <ListActionButton
+                    onClick={async () => {
+                      const ok = await confirmAction({
+                        title: t('project.archive.confirmTitle', { count: selected.length }),
+                        description: t('project.archive.confirmDescription'),
+                        confirmText: t('project.archive.label'),
+                        cancelText: t('common.cancel'),
+                      });
+                      if (!ok) return;
+                      await Promise.allSettled(
+                        selected.map((project) =>
+                          updateProject.mutateAsync({
+                            projectId: project.id,
+                            data: { status: 'archived' as const },
+                          }),
+                        ),
+                      );
+                      close();
+                      refetch();
+                    }}
+                    title={t('project.archive.label')}
+                    className="text-muted-foreground"
+                  >
+                    <Archive className="size-4" /> {t('project.archive.label')}
+                  </ListActionButton>
+                )}
               />
             ) : (
               <ProjectSimpleList

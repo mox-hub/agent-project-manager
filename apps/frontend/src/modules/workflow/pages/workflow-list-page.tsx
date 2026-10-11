@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { GitBranch, LayoutGrid, List, Play, Plus, SearchX, Sparkles, Workflow as WorkflowIcon } from 'lucide-react';
+import { GitBranch, LayoutGrid, List, Play, Plus, SearchX, Sparkles, TableProperties, Workflow as WorkflowIcon } from 'lucide-react';
 import { PageHeader, nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { HeaderActionButton } from '@/components/semantic/header-action-button';
@@ -36,9 +36,10 @@ import {
 } from '@/components/ui/dialog';
 import { useWorkflowDraft } from '../hooks/use-workflow-draft';
 import { WorkflowTriggerDialog } from '../components/workflow-trigger-dialog';
+import { WorkflowTableView } from '../components/workflow-table-view';
 import type { WorkflowSummary } from '../api/workflow-api';
 
-type WorkflowViewMode = 'grid' | 'list';
+type WorkflowViewMode = 'grid' | 'list' | 'table';
 
 export function WorkflowListPage() {
   const { t } = useTranslation();
@@ -124,6 +125,7 @@ export function WorkflowListPage() {
           options: [
             { value: 'grid', label: t('workflow.view.grid'), icon: LayoutGrid },
             { value: 'list', label: t('workflow.view.list'), icon: List },
+            { value: 'table', label: t('workflow.view.table', '表格'), icon: TableProperties },
           ],
         }}
         filterMenu={{
@@ -169,6 +171,13 @@ export function WorkflowListPage() {
               description={t('workflow.emptyHint')}
             />
           )
+        ) : viewMode === 'table' ? (
+          <WorkflowTableView
+            workflows={filteredWorkflows}
+            loading={isLoading}
+            onWorkflowClick={(wf) => navigate(`/app/workflows/${wf.id}`)}
+            onTrigger={setTriggerTarget}
+          />
         ) : viewMode === 'list' ? (
           <div className="space-y-2">
             {filteredWorkflows.map((wf) => (

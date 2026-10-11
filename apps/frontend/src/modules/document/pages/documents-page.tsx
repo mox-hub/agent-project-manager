@@ -21,6 +21,7 @@ import {
   Palette,
   Plus,
   SearchX,
+  TableProperties,
   TestTube2,
   Trash2,
   Eye,
@@ -36,6 +37,7 @@ import { StatsCard } from '@/components/semantic/stats-card';
 import { ToolbarRow, useToolbarViews } from '@/components/semantic/toolbar-row';
 import { MENU_ITEM_CLASS, MENU_SURFACE_CLASS } from '@/components/ui/menu-surface';
 import { DocumentPreviewDialog } from '@/modules/document/components/document-preview-dialog';
+import { DocumentTableView } from '@/modules/document/components/document-table-view';
 import { UnifiedCreateDialog } from '@/shared/components/create-dialog';
 import { cn } from '@/lib/utils';
 import { CORE_AI_PAGE_IDS } from '@/shared/ai/identifiers';
@@ -46,7 +48,7 @@ import type { DocumentCategory, DocumentStatus, DocumentListItem } from '../api/
 
 type StatusFilter = DocumentStatus | 'all';
 type CategoryFilter = DocumentCategory | 'all';
-type ViewMode = 'grid' | 'list';
+type ViewMode = 'grid' | 'list' | 'table';
 
 // label 一律存 i18n 键（document.categories.* / document.*），渲染处经 t() 解析
 const CATEGORY_CONFIG: Record<string, { labelKey: string; icon: typeof FileText; color: string; bg: string }> = {
@@ -263,6 +265,7 @@ export function DocumentsPage() {
             options: [
               { value: 'grid', label: t('viewDisplay.views.grid', '卡片'), icon: LayoutGrid },
               { value: 'list', label: t('viewDisplay.views.list', '列表'), icon: List },
+              { value: 'table', label: t('viewDisplay.views.table', '表格'), icon: TableProperties },
             ],
           }}
           filterMenu={{
@@ -345,6 +348,12 @@ export function DocumentsPage() {
                 />
               ))}
             </div>
+          ) : viewMode === 'table' ? (
+            <DocumentTableView
+              documents={documents}
+              onPreview={setPreviewDocument}
+              onDelete={handleDeleteDocument}
+            />
           ) : (
             <div className="space-y-2">
               {documents.map((document) => (

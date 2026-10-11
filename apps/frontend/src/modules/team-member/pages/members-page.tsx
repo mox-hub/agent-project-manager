@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/semantic/empty-state';
 import { IconStack } from '@/components/semantic/icon-stack';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bot, LayoutGrid, List, Plus, User, Users } from 'lucide-react';
+import { Bot, LayoutGrid, List, Plus, TableProperties, User, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader, nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';
@@ -17,10 +17,11 @@ import { usePersistentToggle } from '@/shared/hooks/use-persistent-toggle';
 import { useMembers, useDeactivateMember } from '../hooks';
 import { MemberCard } from '../components/member-card';
 import { MemberList, type MemberListItem } from '../components/member-list';
+import { MemberTableView } from '../components/member-table-view';
 import { MemberCreateDialog } from '../components/member-create-dialog';
 import { useAuth } from '@/modules/auth/hooks/use-auth';
 
-type ViewMode = 'grid' | 'list';
+type ViewMode = 'grid' | 'list' | 'table';
 type TypeFilter = 'all' | 'human' | 'ai_agent';
 
 export default function MembersPage() {
@@ -183,6 +184,7 @@ export default function MembersPage() {
           options: [
             { value: 'grid', label: t('members.view.grid', '卡片'), icon: LayoutGrid },
             { value: 'list', label: t('members.view.list', '列表'), icon: List },
+            { value: 'table', label: t('members.view.table', '表格'), icon: TableProperties },
           ],
         }}
         filterMenu={{
@@ -208,7 +210,7 @@ export default function MembersPage() {
         }}
       />
 
-      {/* 内容区：卡片/列表双视图 */}
+      {/* 内容区：卡片/列表/表格三视图 */}
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
         {viewMode === 'grid' ? (
           isLoading ? (
@@ -230,6 +232,25 @@ export default function MembersPage() {
               ))}
             </div>
           )
+        ) : viewMode === 'table' ? (
+          <MemberTableView
+            members={members}
+            loading={isLoading}
+            onMemberClick={(m) => navigate(`/app/members/${m.id}`)}
+            isAdmin={isAdmin}
+            onDeactivate={handleDeactivate}
+            selectionActions={(selected, close) =>
+              isAdmin && selected.some((m) => m.status === 'active') ? (
+                <ListActionButton
+                  onClick={() => handleBatchDeactivate(selected.filter((m) => m.status === 'active'), close)}
+                  title={t('members.deactivate', '停用')}
+                  className="text-accent-red"
+                >
+                  {t('members.deactivate', '停用')}
+                </ListActionButton>
+              ) : null
+            }
+          />
         ) : (
           <MemberList
             members={members}

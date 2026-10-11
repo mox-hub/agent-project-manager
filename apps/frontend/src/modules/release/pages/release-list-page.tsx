@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { List, Rocket, Sparkles } from 'lucide-react';
+import { List, Rocket, Sparkles, TableProperties } from 'lucide-react';
 import { DomainEventTypes } from '@apm/shared/events/domain-events';
 import { PageShell } from '@/components/semantic/page-shell';
 import { PageHeader, nodeToText } from '@/components/semantic/page-header';
@@ -42,10 +42,14 @@ import {
 import { RELEASE_STATUSES, RELEASE_STATUS_VISUALS, isPlannedOverdue, statusLabelKey } from '../release-status-meta';
 import { ReleaseChannelChip, ReleasePlatformBadges } from '../components/release-platform-badges';
 import { ReleaseUpcomingSection } from '../components/release-upcoming-section';
+import { ReleaseTableView } from '../components/release-table-view';
 import { cn } from '@/lib/utils';
 
 // 兼容既有消费方（详情页/测试从本页导入）：视觉元信息已抽至 release-status-meta
 export { RELEASE_STATUS_TONE, RELEASE_STATUS_VISUALS, RELEASE_STATUSES, statusLabelKey, isPlannedOverdue } from '../release-status-meta';
+
+/** 视图形态词表（CAP-A-29 扩展切片：发版列表 list/table 双档） */
+type ViewMode = 'list' | 'table';
 
 export function ReleaseListPage() {
   const { t } = useTranslation();
@@ -60,6 +64,7 @@ export function ReleaseListPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<ReleasePlatform | 'all'>('all');
   const [channelFilter, setChannelFilter] = useState<ReleaseChannel | 'all'>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   // 筛选参数统一写回 URL（replace 不留历史；null = 删除该参数）
   const patchParams = (patch: Record<string, string | null>) => {
@@ -163,6 +168,7 @@ export function ReleaseListPage() {
           platform: 'all',
           channel: 'all',
           projectId: '',
+          viewMode: 'list',
         },
       },
     ],
@@ -173,11 +179,13 @@ export function ReleaseListPage() {
         platform: ReleasePlatform | 'all';
         channel: ReleaseChannel | 'all';
         projectId: string;
+        viewMode: ViewMode;
       }>;
       setSearch(snap.search ?? '');
       setStatusFilter(snap.status ?? 'all');
       setPlatformFilter(snap.platform ?? 'all');
       setChannelFilter(snap.channel ?? 'all');
+      setViewMode(snap.viewMode ?? 'list');
       const nextPid = snap.projectId ?? '';
       if (nextPid !== projectId) setProjectFilter(nextPid);
     },
@@ -185,8 +193,8 @@ export function ReleaseListPage() {
   const { updateActiveSnapshot } = toolbar;
 
   useEffect(() => {
-    updateActiveSnapshot({ search, status: statusFilter, platform: platformFilter, channel: channelFilter, projectId });
-  }, [updateActiveSnapshot, search, statusFilter, platformFilter, channelFilter, projectId]);
+    updateActiveSnapshot({ search, status: statusFilter, platform: platformFilter, channel: channelFilter, projectId, viewMode });
+  }, [updateActiveSnapshot, search, statusFilter, platformFilter, channelFilter, projectId, viewMode]);
 
   const hasActiveFilters =
     statusFilter !== 'all' || !!search || !!projectId || platformFilter !== 'all' || channelFilter !== 'all';
@@ -229,9 +237,12 @@ export function ReleaseListPage() {
         onUpdateView={toolbar.updateView}
         onDeleteView={toolbar.deleteView}
         viewStyle={{
-          value: 'list',
-          onChange: () => {},
-          options: [{ value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List }],
+          value: viewMode,
+          onChange: (v) => setViewMode(v as ViewMode),
+          options: [
+            { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
+            { value: 'table', label: t('viewDisplay.views.table', 'Table'), icon: TableProperties },
+          ],
         }}
         filterMenu={{
           badge: hasActiveFilters ? 1 : 0,
@@ -351,7 +362,13 @@ export function ReleaseListPage() {
               releases={filtered}
               onItemClick={(r) => navigate(`/app/releases/${r.id}`)}
             />
-            <DataList
+            {viewMode === 'table' ? (
+              <ReleaseTableView
+                releases={filtered}
+                onReleaseClick={(r) => navigate(`/app/releases/${r.id}`)}
+              />
+            ) : (
+              <DataList
               items={filtered}
               onItemClick={(r) => navigate(`/app/releases/${r.id}`)}
               renderLeading={(r) => {
@@ -410,6 +427,7 @@ export function ReleaseListPage() {
                 </>
               )}
             />
+            )}
           </>
         )}
       </div>

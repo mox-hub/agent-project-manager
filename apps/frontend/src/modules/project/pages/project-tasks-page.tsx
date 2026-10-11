@@ -15,6 +15,7 @@ import {
   Trash2,
   CircleDashed,
   AlertTriangle,
+  TableProperties,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ToolbarRow, useToolbarViews, normalizeFilterSelection } from '@/components/semantic/toolbar-row';
@@ -42,6 +43,7 @@ import {
 import type { Task } from '@/modules/issue/api/issue-api';
 import { AiAssignDialog } from '@/modules/issue/components/ai-assign-dialog';
 import { TaskSimpleList } from '@/modules/issue/components/task-simple-list';
+import { TaskTableView } from '@/modules/issue/components/task-table-view';
 import { BoardView, type BoardColumnDef } from '@/shared/components/board-view/board-view';
 import { useIssueRowMenu } from '@/shared/context-menu/use-issue-row-menu';
 import {
@@ -52,7 +54,7 @@ import {
 } from '@/modules/issue/components/board-presets';
 import { useLinearSyncEvents } from '@/modules/linear/hooks/use-linear-events';
 
-type ViewMode = 'list' | 'board';
+type ViewMode = 'list' | 'board' | 'table';
 type GroupBy = 'none' | 'status' | 'severity';
 type Severity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -253,6 +255,7 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
               options: [
                 { value: 'list', label: t('viewDisplay.views.list', 'List'), icon: List },
                 { value: 'board', label: t('viewDisplay.views.board', 'Board'), icon: Kanban },
+                { value: 'table', label: t('viewDisplay.views.table', 'Table'), icon: TableProperties },
               ],
             }}
             filterMenu={{
@@ -326,6 +329,47 @@ export function ProjectTasksPage() {  const { t } = useTranslation();
             onTaskClick={handleTaskClick}
             groupBy={groupBy}
             onGroupCreate={() => setShowCreateDialog(true)}
+            selectionActions={(selected, close) => (
+              <>
+                <ListActionButton
+                  onClick={() => {
+                    const [first] = selected;
+                    if (first) setDispatchTask(first);
+                  }}
+                  disabled={selected.length === 0}
+                  title={t('task.dispatchToAi')}
+                  className="text-accent-purple"
+                >
+                  <BotIcon className="size-3.5" /> {t('task.dispatchToAi')}
+                </ListActionButton>
+                <ListActionButton
+                  onClick={async () => {
+                    const ok = await confirmAction({
+                      title: t('task.selection.confirmTitle', { count: selected.length }),
+                      description: t('task.selection.confirmDescription'),
+                      confirmText: t('task.selection.confirmText'),
+                      cancelText: t('task.selection.cancelText'),
+                      variant: 'destructive',
+                    });
+                    if (!ok) return;
+                    await Promise.allSettled(selected.map((task) => deleteTask.mutateAsync(task.id)));
+                    close();
+                    refetch();
+                  }}
+                  title={t('task.selection.confirmText')}
+                  className="text-destructive"
+                >
+                  <Trash2 className="size-3.5" /> {t('task.selection.confirmText')}
+                </ListActionButton>
+              </>
+            )}
+          />
+        ) : viewMode === 'table' ? (
+          <TaskTableView
+            tasks={filteredTasks}
+            loading={isLoading}
+            onTaskClick={handleTaskClick}
+            contextMenuKind="task"
             selectionActions={(selected, close) => (
               <>
                 <ListActionButton
