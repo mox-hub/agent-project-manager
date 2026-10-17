@@ -1,6 +1,6 @@
 /**
  * HelpPage - 帮助中心页面
- * 参考: refers/APM/SETTINGS_AND_HELP.md
+ * 参考: refers/Ordo/SETTINGS_AND_HELP.md
  * 按照 Figma 设计实现
  *
  * 内容原则（help 不说谎，P2-26 重写）：
@@ -84,7 +84,7 @@ const HELP_SECTIONS: HelpSectionDef[] = [
   {
     id: 'getting-started',
     icon: <Book className="w-5 h-5" />,
-    articles: [{ id: 'what-is-apm' }, { id: 'quick-start' }, { id: 'navigation' }],
+    articles: [{ id: 'what-is-ordo' }, { id: 'quick-start' }, { id: 'navigation' }],
   },
   {
     id: 'projects-issues',

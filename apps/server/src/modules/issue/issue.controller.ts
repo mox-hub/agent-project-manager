@@ -110,11 +110,11 @@ export class IssueController {
 
   /**
    * 通过 shortId 查找任务
-   * shortId 格式如 "APM-PF-001"
+   * shortId 格式如 "ORDO-PF-001"
    */
   @Get('by-short-id/:shortId')
   @ApiOperation({ summary: 'Get task by short ID' })
-  @ApiParam({ name: 'shortId', description: 'Short ID (e.g. APM-PF-001)' })
+  @ApiParam({ name: 'shortId', description: 'Short ID (e.g. ORDO-PF-001)' })
   @ApiStandardErrors()
   @ApiOkResponse({ type: IssueDetailResponseDto, description: '返回任务详情' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

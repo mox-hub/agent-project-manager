@@ -18,7 +18,7 @@ const integrationDecision: Decision = {
     '分支 ordo/exec/abcd1234（基于 base12345）共 2 个提交。合入将对主工作区执行 git merge --no-ff。',
   urgency: 'advisory',
   projectId: 'p1',
-  projectName: 'APM',
+  projectName: 'Ordo',
   issueId: 'issue-1',
   taskTitle: '实现登录页',
   proposer: { type: 'system' },

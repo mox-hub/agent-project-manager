@@ -400,7 +400,7 @@ export function CentralWatchDial({
                     <div className="min-w-0">
                       <div className="flex items-center gap-1">
                         <span className="font-mono font-semibold" style={{ fontSize: 10 }}>
-                          APM-101
+                          Ordo-101
                         </span>
                         <span className="truncate font-medium" style={{ fontSize: 10 }}>
                           需求管道与验收契约定义
@@ -446,7 +446,7 @@ export function CentralWatchDial({
                     <div className="min-w-0">
                       <div className="flex items-center gap-1">
                         <span className="font-mono font-semibold" style={{ fontSize: 10 }}>
-                          APM-102
+                          Ordo-102
                         </span>
                         <span className="truncate font-medium" style={{ fontSize: 10 }}>
                           多工作区 ALS 隔离路由加固
@@ -497,7 +497,7 @@ export function CentralWatchDial({
                     <div className="min-w-0">
                       <div className="flex items-center gap-1">
                         <span className="font-mono font-semibold" style={{ fontSize: 10 }}>
-                          APM-103
+                          Ordo-103
                         </span>
                         <span className="truncate font-medium" style={{ fontSize: 10 }}>
                           AI 表面全屏手表表盘落地

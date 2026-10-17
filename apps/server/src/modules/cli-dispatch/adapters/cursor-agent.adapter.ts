@@ -6,7 +6,7 @@
  * - 版本探测：`cursor-agent --version`（实测输出 `2026.07.16-899851b`）
  * - 非交互入口：`-p/--print` 旗标 + prompt 为**位置参数**（`cursor-agent -p [flags] <prompt>`）
  * - 全权限：`--yolo`（= -f/--force，Force allow commands）；`--trust` 免工作区信任提示
- *   （headless 专用）；`--mode plan` 为只读规划档（APM permissionMode='plan' 映射）
+ *   （headless 专用）；`--mode plan` 为只读规划档（Ordo permissionMode='plan' 映射）
  * - `--output-format stream-json`：stdout 为 NDJSON 事件流，**Claude Code 兼容信封**
  *   `{type:"system",subtype:"init",session_id,model,permissionMode,cwd,apiKeySource}` →
  *   `{type:"user"}` → `{type:"assistant",message:{role,content:[{type:"text",text}]},session_id}` →

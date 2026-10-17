@@ -64,7 +64,7 @@ export class CreateProjectDto {
   @IsOptional()
   templateId?: string;
 
-  @ApiProperty({ required: false, example: 'APM-123' })
+  @ApiProperty({ required: false, example: 'ORDO-123' })
   @IsString()
   @IsOptional()
   projectCode?: string;

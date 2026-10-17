@@ -218,7 +218,7 @@ export class ContractSeedService {
     const content = [
       '# CLAUDE.md — 派生别名',
       '',
-      '本文件由 APM 生成，是 `AGENTS.md` 的派生别名（apm 托管，请勿直接编辑）。',
+      '本文件由 APM 生成，是 `AGENTS.md` 的派生别名（ordo 托管，请勿直接编辑）。',
       'AI 指令请编辑 `AGENTS.md`；本文件将随其托管区变更而重写。',
       '',
       '@AGENTS.md',
@@ -249,7 +249,7 @@ export class ContractSeedService {
         '',
         `项目发版日志。`,
         '',
-        '> APM 过渡说明：Release 联动导出尚未启用，本文件暂由人工维护。',
+        '> Ordo 过渡说明：Release 联动导出尚未启用，本文件暂由人工维护。',
         '',
       ].join('\n');
       await this.fs.writeFile(absPath, content);

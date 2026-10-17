@@ -14,11 +14,11 @@ describe('SearchService', () => {
     id: 'i1',
     type: 'task',
     title: '修复登录超时',
-    shortId: 'APM-PF-001',
+    shortId: 'ORDO-PF-001',
     status: 'in_progress',
     projectId: 'p1',
     updatedAt: new Date('2026-09-01T00:00:00.000Z'),
-    project: { name: 'maintenance-exp', projectCode: 'APM-EXP' },
+    project: { name: 'maintenance-exp', projectCode: 'ORDO-EXP' },
     ...over,
   });
 
@@ -47,14 +47,14 @@ describe('SearchService', () => {
         status: 'published',
         projectId: 'p1',
         updatedAt: new Date('2026-09-02T00:00:00.000Z'),
-        project: { name: 'maintenance-exp', projectCode: 'APM-EXP' },
+        project: { name: 'maintenance-exp', projectCode: 'ORDO-EXP' },
       },
     ]);
     prismaMock.project.findMany.mockResolvedValue([
       {
         id: 'p1',
         name: 'maintenance-exp',
-        projectCode: 'APM-EXP',
+        projectCode: 'ORDO-EXP',
         updatedAt: new Date('2026-09-03T00:00:00.000Z'),
       },
     ]);
@@ -75,7 +75,7 @@ describe('SearchService', () => {
       path: '/app/issues/i1',
       projectId: 'p1',
       // CAP-A-23：短号 + 项目代码齐备才产出 ordo:// 引用串
-      ordoRef: 'ordo://APM-EXP/issue/APM-PF-001',
+      ordoRef: 'ordo://ORDO-EXP/issue/ORDO-PF-001',
     });
     // bug → /app/bugs 路由；缺短号引用串为 null 不造假
     expect(result.items[1]).toMatchObject({
@@ -86,7 +86,7 @@ describe('SearchService', () => {
     expect(result.items[2]).toMatchObject({
       type: 'document',
       path: '/app/documents/d1',
-      ordoRef: 'ordo://APM-EXP/doc/D1',
+      ordoRef: 'ordo://ORDO-EXP/doc/D1',
     });
     expect(result.items[3]).toMatchObject({
       type: 'project',
@@ -110,7 +110,7 @@ describe('SearchService', () => {
         status: 'draft',
         projectId: 'p1',
         updatedAt: new Date(),
-        project: { name: 'n', projectCode: 'APM-EXP' },
+        project: { name: 'n', projectCode: 'ORDO-EXP' },
       },
     ]);
 

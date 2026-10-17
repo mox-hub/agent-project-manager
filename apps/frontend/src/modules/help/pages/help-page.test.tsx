@@ -89,10 +89,10 @@ describe('HelpPage 渲染', () => {
     renderHelp();
     expect(screen.getAllByText('入门指南').length).toBeGreaterThan(0);
     // 文章列表与卡片同时出现，用 getAllByText 断言存在
-    expect(screen.getAllByText('APM 是什么？').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Ordo 是什么？').length).toBeGreaterThan(0);
     expect(screen.getAllByText('快速上手').length).toBeGreaterThan(0);
     // 打开文章后正文可见
-    fireEvent.click(screen.getAllByText('APM 是什么？')[0]);
+    fireEvent.click(screen.getAllByText('Ordo 是什么？')[0]);
     expect(
       screen.getAllByText(/一个 AI 驱动的项目管理工具/).length,
     ).toBeGreaterThan(0);

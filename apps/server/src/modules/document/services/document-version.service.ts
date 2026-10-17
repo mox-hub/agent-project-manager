@@ -237,7 +237,7 @@ export class DocumentVersionService {
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
       if (user) {
         return {
-          name: user.displayName || user.username || 'APM User',
+          name: user.displayName || user.username || 'Ordo User',
           email: user.email || `${userId}@ordo.local`,
         };
       }

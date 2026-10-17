@@ -690,7 +690,7 @@ export class ExecutionService {
         isolation.worktreePath,
         isolation.baseRef,
         {
-          message: `chore(apm): execution ${shortId} snapshot`,
+          message: `chore(ordo): execution ${shortId} snapshot`,
           author,
         },
       );

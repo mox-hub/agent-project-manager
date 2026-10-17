@@ -71,7 +71,7 @@ export class UpdateProjectDto {
   @IsOptional()
   config?: Record<string, any>;
 
-  @ApiProperty({ required: false, example: 'APM-123' })
+  @ApiProperty({ required: false, example: 'ORDO-123' })
   @IsString()
   @IsOptional()
   projectCode?: string;

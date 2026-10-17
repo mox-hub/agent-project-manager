@@ -4,7 +4,7 @@
  * 历史版本是纯静态提示（2026-09-12 诚实化改造：当时无单一契约端点，不做假表单）。
  * 现接真实绑定：创建项目步产出的 projectId 传导进来后，复用 git 模块
  * BindRepositoryDialog（表单/校验/落库全在既有链路），绑定结果即时回显；
- * 未建项目（跳过）时退回静态指引。仍可跳过——仓库可进 APM 后在项目内随时绑定。
+ * 未建项目（跳过）时退回静态指引。仍可跳过——仓库可进 Ordo 后在项目内随时绑定。
  */
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';

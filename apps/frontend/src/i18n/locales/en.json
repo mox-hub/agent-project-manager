@@ -1456,8 +1456,8 @@
   "boot": {
     "allDone": "Startup complete",
     "preparing": "Preparing",
-    "initTitle": "Setting up APM",
-    "quickTitle": "Quick start APM",
+    "initTitle": "Setting up Ordo",
+    "quickTitle": "Quick start Ordo",
     "firstRunDesc": "First run auto-checks dependencies, loads preferences and verifies your session",
     "checkDesc": "Checking backend connection, session and local preferences",
     "viewLogs": "View logs ({{count}})",
@@ -1465,7 +1465,7 @@
     "prodMode": "Production mode",
     "retryFailed": "Retry failed ({{count}})",
     "continueAnyway": "Continue anyway",
-    "enterApp": "Enter APM",
+    "enterApp": "Enter Ordo",
     "enterLogin": "Go to login",
     "skip": {
       "default": "Not applicable in this environment",
@@ -1608,8 +1608,8 @@
     "toRegister": "Register now",
     "toLogin": "Sign in",
     "troubleLogin": "Trouble signing in? Contact your admin",
-    "registerHeading": "Start your APM journey",
-    "registerIntro": "Create your APM identity and ship reliable projects with AI colleagues.",
+    "registerHeading": "Start your Ordo journey",
+    "registerIntro": "Create your Ordo identity and ship reliable projects with AI colleagues.",
     "registerInviteTitle": "You're invited",
     "displayNamePlaceholder": "Name (optional)",
     "passwordHint": "Password (at least 8 characters)",
@@ -1622,14 +1622,14 @@
     "inviteInvalid": "This invitation has expired. Please ask the administrator to resend it.",
     "inviteBy": "{{name}} invited you to join",
     "inviteEmail": " (invited email: {{email}})",
-    "journeyTitle": "Your APM journey\nstarts now",
-    "journeyCongrats": "Congratulations on joining APM.",
-    "journeyBody": "This badge marks where your APM journey started — view it anytime in your profile later.",
+    "journeyTitle": "Your Ordo journey\nstarts now",
+    "journeyCongrats": "Congratulations on joining Ordo.",
+    "journeyBody": "This badge marks where your Ordo journey started — view it anytime in your profile later.",
     "learnMore": "About us",
     "getStarted": "Get started",
     "badgeNoLabel": "No.",
     "badgeTimeLabel": "Time",
-    "badgePlaceholderName": "APM Colleague",
+    "badgePlaceholderName": "Ordo Colleague",
     "visualIssueStatus": "In progress",
     "visualIssueTitle": "Wire up CI evidence reflow",
     "visualIssueMeta": "AI colleague · working",
@@ -2560,18 +2560,18 @@
         "figma": "Link design files to task specs",
         "vercel": "Track deployment status on tasks",
         "datadog": "Alert on anomalies, create incidents",
-        "pagerduty": "Route on-call alerts to AgentPM tasks",
+        "pagerduty": "Route on-call alerts to Ordo tasks",
         "loom": "Attach screen recordings to tasks"
       },
       "disconnectSuccess": "{{name}} disconnected",
       "disconnectFailed": "Failed to disconnect, please try again",
       "catalog": {
         "linear": {
-          "desc": "Sync issues, cycles, and projects from Linear into AgentPM tasks.",
+          "desc": "Sync issues, cycles, and projects from Linear into Ordo tasks.",
           "longDesc": "Connect your Linear workspace to import and two-way sync issues as tasks. AI agents can create Linear issues directly, and acceptance results are posted back as issue comments.",
           "f1": {
             "label": "Issue sync",
-            "desc": "Import and sync Linear issues as AgentPM tasks"
+            "desc": "Import and sync Linear issues as Ordo tasks"
           },
           "f2": {
             "label": "Two-way sync",
@@ -2587,7 +2587,7 @@
           },
           "f5": {
             "label": "Member mapping",
-            "desc": "Map Linear members to AgentPM team members"
+            "desc": "Map Linear members to Ordo team members"
           },
           "f6": {
             "label": "Cycle tracking",
@@ -2603,7 +2603,7 @@
           },
           "f2": {
             "label": "Status sync",
-            "desc": "Sync Jira workflow statuses to AgentPM"
+            "desc": "Sync Jira workflow statuses to Ordo"
           },
           "f3": {
             "label": "AI ticket creation",
@@ -2615,11 +2615,11 @@
           },
           "f5": {
             "label": "Assignee mapping",
-            "desc": "Map Jira users to AgentPM team members"
+            "desc": "Map Jira users to Ordo team members"
           },
           "f6": {
             "label": "Bug tracking",
-            "desc": "Import Jira bug reports into AgentPM bug list"
+            "desc": "Import Jira bug reports into Ordo bug list"
           }
         },
         "github": {
@@ -2635,7 +2635,7 @@
           },
           "f3": {
             "label": "Branch rules",
-            "desc": "Enforce branch protection via AgentPM policies"
+            "desc": "Enforce branch protection via Ordo policies"
           },
           "f4": {
             "label": "CI status",
@@ -2655,7 +2655,7 @@
           "longDesc": "Integrate GitLab to manage merge requests, monitor pipelines, and keep your code and tasks in sync. Supports GitLab.com and self-hosted instances.",
           "f1": {
             "label": "MR sync",
-            "desc": "Sync merge requests to AgentPM task timeline"
+            "desc": "Sync merge requests to Ordo task timeline"
           },
           "f2": {
             "label": "AI MR creation",
@@ -2699,7 +2699,7 @@
           }
         },
         "sentry": {
-          "desc": "Turn Sentry error alerts into AgentPM bugs automatically.",
+          "desc": "Turn Sentry error alerts into Ordo bugs automatically.",
           "longDesc": "Connect Sentry to automatically create bug reports from error events. AI agents can investigate stack traces and propose fixes.",
           "f1": {
             "label": "Auto bug creation",
@@ -2741,7 +2741,7 @@
         "quickActions": "Quick actions",
         "pullProject": "Pull a Linear project…",
         "aboutSync": "About sync",
-        "syncProjects": "Projects: one-way (Linear → APM)",
+        "syncProjects": "Projects: one-way (Linear → Ordo)",
         "syncTasks": "Tasks: two-way with hybrid conflict policy",
         "lockedFields": "Locked fields: name, description, icon, color, status, priority, health",
         "editableLocally": "Editable locally: members, progress, AI context, custom metadata"
@@ -3226,17 +3226,17 @@
     "backfillNow": "Backfill Now",
     "shortIdAllDone": "All tasks have Short IDs assigned",
     "shortIdPrefixTitle": "Short ID Prefix Settings",
-    "shortIdPrefixDesc": "Set the prefix for task Short IDs. Format: Prefix-Module-Sequence (e.g. APM-PF-001)",
+    "shortIdPrefixDesc": "Set the prefix for task Short IDs. Format: Prefix-Module-Sequence (e.g. ORDO-PF-001)",
     "shortIdPrefixLabel": "Short ID Prefix",
-    "shortIdPlaceholder": "e.g. APM",
-    "shortIdHint": "Enter 2-4 uppercase letters, e.g. APM, PROJ, DEV.",
+    "shortIdPlaceholder": "e.g. Ordo",
+    "shortIdHint": "Enter 2-4 uppercase letters, e.g. Ordo, PROJ, DEV.",
     "storagePathEmpty": "Storage path cannot be empty",
     "defaultPathDetected": "Default storage path detected",
     "defaultPathDetectFailed": "Failed to detect default path",
     "storageLoading": "Loading storage config...",
     "storageTitle": "Local File Storage",
     "storagePathLabel": "Storage Path",
-    "storagePathPlaceholder": "e.g. C:\\Users\\you\\Documents\\APM-Documents",
+    "storagePathPlaceholder": "e.g. C:\\Users\\you\\Documents\\Ordo-Documents",
     "detectDefault": "Detect Default",
     "storagePathFormatPrefix": "Documents are saved as ",
     "storagePathFormatSuffix": " format.",
@@ -4538,7 +4538,7 @@
   },
   "help": {
     "title": "Help Center",
-    "description": "Find answers and learn how to use APM",
+    "description": "Find answers and learn how to use Ordo",
     "searchPlaceholder": "Search help...",
     "searchTitle": "Nothing matched your search",
     "searchHint": "Try different keywords, or browse the topics on the left",
@@ -4552,7 +4552,7 @@
       "faq": "FAQ"
     },
     "sectionDescriptions": {
-      "getting-started": "Meet APM and get productive in minutes",
+      "getting-started": "Meet Ordo and get productive in minutes",
       "projects-issues": "Create projects, manage tasks and bugs, work in batches and iterations",
       "ai": "Meet your AI teammate: configure models, dispatch work, follow results",
       "governance": "Acceptance gates, decisions, document contracts, and releases",
@@ -4562,10 +4562,10 @@
     },
     "articles": {
       "getting-started": {
-        "what-is-apm": {
-          "title": "What is APM?",
+        "what-is-ordo": {
+          "title": "What is Ordo?",
           "summary": "An AI-powered project management tool: you decide, your AI teammate does the work.",
-          "content": "APM brings project management (projects, tasks, iterations, acceptance) and AI execution (an AI teammate that reads and writes tasks, runs code, and submits results) into one workspace. You break work down into tasks with clear acceptance criteria; the AI teammate executes under acceptance gates and your approvals, while the important calls stay yours. The sidebar is organized into four groups — Workbench, Development Lifecycle, Collaboration & Foundation, and System — and the six-stage lifecycle (01 Intake → 02 Issues → 03 Repositories → 04 Executions → 05 Acceptance → 06 Releases) walks you through a full delivery."
+          "content": "Ordo brings project management (projects, tasks, iterations, acceptance) and AI execution (an AI teammate that reads and writes tasks, runs code, and submits results) into one workspace. You break work down into tasks with clear acceptance criteria; the AI teammate executes under acceptance gates and your approvals, while the important calls stay yours. The sidebar is organized into four groups — Workbench, Development Lifecycle, Collaboration & Foundation, and System — and the six-stage lifecycle (01 Intake → 02 Issues → 03 Repositories → 04 Executions → 05 Acceptance → 06 Releases) walks you through a full delivery."
         },
         "quick-start": {
           "title": "Quick Start",
@@ -4604,7 +4604,7 @@
         "what-ai-can-do": {
           "title": "What the AI Teammate Can Do",
           "summary": "Pick up issues, write code, and submit acceptance evidence like a team member.",
-          "content": "The AI teammate is APM's built-in AI executor: it can be assigned issues, read and write code in connected repositories, run commands, and record every step under Executions. Its work is governed end to end: you see the plan before it starts, important actions require your approval, and finished work must pass the acceptance gate with evidence. In short: the AI does the work, you make the calls."
+          "content": "The AI teammate is Ordo's built-in AI executor: it can be assigned issues, read and write code in connected repositories, run commands, and record every step under Executions. Its work is governed end to end: you see the plan before it starts, important actions require your approval, and finished work must pass the acceptance gate with evidence. In short: the AI does the work, you make the calls."
         },
         "configure-ai": {
           "title": "Configuring AI Models",
@@ -4621,7 +4621,7 @@
         "acceptance": {
           "title": "Acceptance Gates",
           "summary": "Nothing counts as done until it passes acceptance: criteria first, evidence always.",
-          "content": "Every issue can define acceptance criteria — ideally when the issue is created (\"what does done look like?\"). When the AI or a member submits work, verify it criterion by criterion on the Acceptance page (lifecycle stage 05): review the submitted evidence (code, screenshots, notes), approve to close, or reject with reasons. The acceptance gate is APM's core mechanism for proving that work was done — and done right."
+          "content": "Every issue can define acceptance criteria — ideally when the issue is created (\"what does done look like?\"). When the AI or a member submits work, verify it criterion by criterion on the Acceptance page (lifecycle stage 05): review the submitted evidence (code, screenshots, notes), approve to close, or reject with reasons. The acceptance gate is Ordo's core mechanism for proving that work was done — and done right."
         },
         "decisions": {
           "title": "Decision Cards & Inbox",
@@ -4643,7 +4643,7 @@
         "integrations": {
           "title": "Integrations: GitHub & Linear",
           "summary": "Connect code hosting and external task sources with two-way sync.",
-          "content": "Connect GitHub and Linear under Settings → Integrations. With GitHub connected, repositories, commits, and pull requests appear on the Repositories page and inside projects; with Linear connected, external issues sync two ways into APM issues, and the project header shows sync status with a manual sync button. If an integration misbehaves, check its connection and authorization under Settings → Integrations first."
+          "content": "Connect GitHub and Linear under Settings → Integrations. With GitHub connected, repositories, commits, and pull requests appear on the Repositories page and inside projects; with Linear connected, external issues sync two ways into Ordo issues, and the project header shows sync status with a manual sync button. If an integration misbehaves, check its connection and authorization under Settings → Integrations first."
         },
         "search": {
           "title": "Global Search",
@@ -4676,8 +4676,8 @@
       "faq": {
         "where-is-data": {
           "title": "Where is my data stored?",
-          "summary": "On the APM server you connect to — one isolated database per workspace.",
-          "content": "APM data (projects, issues, documents, and so on) lives on the server, isolated per workspace. On desktop, the server runs on your own machine, so data never leaves it; on web, it depends on where the server you connect to is deployed. Workspaces and storage are visible under Settings → Storage."
+          "summary": "On the Ordo server you connect to — one isolated database per workspace.",
+          "content": "Ordo data (projects, issues, documents, and so on) lives on the server, isolated per workspace. On desktop, the server runs on your own machine, so data never leaves it; on web, it depends on where the server you connect to is deployed. Workspaces and storage are visible under Settings → Storage."
         },
         "ai-not-responding": {
           "title": "The AI isn't responding",
@@ -5493,7 +5493,7 @@
       "seedAll": "Seed all",
       "seed": "Seed",
       "adoptAll": "Format & adopt",
-      "adoptAllTitle": "Merges apm_ frontmatter into existing files and creates an observe-only binding; body text untouched",
+      "adoptAllTitle": "Merges ordo_ frontmatter into existing files and creates an observe-only binding; body text untouched",
       "checkAll": "Check all alignment",
       "check": "Check alignment",
       "viewProposal": "View conflict proposal"
@@ -5554,9 +5554,9 @@
       "revert": "Revert",
       "saved": "Project prompt saved",
       "agentsSynced": "Saved and synced to AGENTS.md",
-      "agentsUnsynced": "Saved in APM (AGENTS.md not synced: {{reason}})",
+      "agentsUnsynced": "Saved in Ordo (AGENTS.md not synced: {{reason}})",
       "adopted": "Adopted the AGENTS.md file-side content",
-      "drifted": "The managed block in AGENTS.md differs from the APM-side config (it may have been edited directly in the workspace).",
+      "drifted": "The managed block in AGENTS.md differs from the Ordo-side config (it may have been edited directly in the workspace).",
       "adoptFile": "Adopt file side",
       "previewPickTask": "Pick a sample task to preview injection…",
       "previewRun": "Preview with this task",
@@ -6237,7 +6237,7 @@
     },
     "toggle": {
       "system": "System guide",
-      "systemDesc": "Built-in APM collaboration baseline & reporting spec (read-only assets)",
+      "systemDesc": "Built-in Ordo collaboration baseline & reporting spec (read-only assets)",
       "project": "Project prompt",
       "projectDesc": "Project-level instructions, edited in project settings (synced to the workspace AGENTS.md on save)",
       "executor": "Executor (role + personal)",
@@ -6267,7 +6267,7 @@
     },
     "system": {
       "title": "System prompts",
-      "desc": "Built-in prompts that standardize how AI agents understand and work within APM. Read-only: upgrades ship with releases, no manual editing.",
+      "desc": "Built-in prompts that standardize how AI agents understand and work within Ordo. Read-only: upgrades ship with releases, no manual editing.",
       "builtin": "Built-in",
       "empty": "No system prompts",
       "charCount": "{{count}} characters"
@@ -6296,7 +6296,7 @@
     "steps": {
       "welcome": {
         "title": "Welcome",
-        "description": "Get to know APM's core capabilities"
+        "description": "Get to know Ordo's core capabilities"
       },
       "workspaceRoot": {
         "title": "Working folders",
@@ -6320,7 +6320,7 @@
       },
       "complete": {
         "title": "All set",
-        "description": "Start using APM"
+        "description": "Start using Ordo"
       }
     },
     "common": {
@@ -6336,7 +6336,7 @@
     },
     "environment": {
       "heading": "Check your local environment",
-      "description": "Verify the tools your AI teammates need. APM only detects and guides — it never installs anything for you.",
+      "description": "Verify the tools your AI teammates need. Ordo only detects and guides — it never installs anything for you.",
       "recheck": "Re-check",
       "checking": "Checking…",
       "toolCount": "{{count}} tools",
@@ -6347,10 +6347,10 @@
       "copy": "Copy",
       "copied": "Copied",
       "officialSite": "Download",
-      "installHint": "Copy the command into your terminal. You may need to restart APM after installing so new CLI tools are picked up. The environment can also be set up later — it won't block you."
+      "installHint": "Copy the command into your terminal. You may need to restart Ordo after installing so new CLI tools are picked up. The environment can also be set up later — it won't block you."
     },
     "welcome": {
-      "title": "Welcome to APM",
+      "title": "Welcome to Ordo",
       "subtitle": "The AI-powered project management platform for better teamwork",
       "features": {
         "projects": {
@@ -6469,7 +6469,7 @@
         "description": "You skipped model configuration — without an AI teammate there is no one to assign work to. Click to create one on the Members page; you can configure a model later in Settings → AI Management"
       },
       "watchReplay": "Watch how it works first (90 sec · no model config needed)",
-      "enterApp": "Enter APM directly",
+      "enterApp": "Enter Ordo directly",
       "viewDocs": "View documentation"
     }
   },

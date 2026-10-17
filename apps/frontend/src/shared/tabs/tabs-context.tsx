@@ -1,6 +1,6 @@
 /**
  * TabsContext - 全局 Tab 上下文管理
- * 参考: refers/APM/UPDATE_V23.2.md
+ * 参考: refers/Ordo/UPDATE_V23.2.md
  *
  * 标签页的显示规则由 tabs-registry.ts 集中管理，这里只负责状态与操作。
  */

@@ -54,7 +54,7 @@ export const INTEGRATION_FILES_TOP = 20;
 
 /** 快照 commit 的 author 兜底（设计稿 §七 开放问题裁决口径） */
 export const EXECUTION_AUTHOR_EMAIL = 'execution@ordo.local';
-export const EXECUTION_AUTHOR_NAME = 'APM Execution';
+export const EXECUTION_AUTHOR_NAME = 'Ordo Execution';
 
 export interface CommitAuthor {
   name: string;

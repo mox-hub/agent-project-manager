@@ -31,7 +31,7 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const logger = app.get(LoggerService);
-  logger.setContext('APM');
+  logger.setContext('Ordo');
   app.useLogger(logger);
   app.flushLogs();
 

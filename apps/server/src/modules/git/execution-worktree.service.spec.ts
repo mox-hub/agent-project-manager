@@ -177,7 +177,7 @@ describe('ExecutionWorktreeService', () => {
       prep.worktreePath,
       prep.baseRef,
       {
-        message: 'chore(apm): execution uncomm001 snapshot',
+        message: 'chore(ordo): execution uncomm001 snapshot',
         author: { name: 'APM Execution', email: 'execution@ordo.local' },
       },
     );

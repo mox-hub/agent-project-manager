@@ -7,7 +7,7 @@ import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
  * 保证 /_api/openapi.json 与仓库内 openapi.json 出自同一份配置。
  */
 export const swaggerUiOptions = {
-  customSiteTitle: 'Agent Project Manager API',
+  customSiteTitle: 'Ordo API',
   customfavIcon: '/favicon.ico',
   swaggerOptions: {
     persistAuthorization: true,
@@ -33,10 +33,10 @@ export const swaggerUiOptions = {
 /** 生成全量 OpenAPI 文档（路由 + DTO 装饰器） */
 export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
   const config = new DocumentBuilder()
-    .setTitle('Agent Project Manager API')
+    .setTitle('Ordo API')
     .setDescription(
       [
-        'Agent Project Manager API Documentation',
+        'Ordo API Documentation',
         '',
         '【响应信封（全局约定，不逐端点声明）】所有 JSON 响应（含错误）均由',
         'TransformInterceptor / GlobalExceptionFilter 统一包裹为信封：',

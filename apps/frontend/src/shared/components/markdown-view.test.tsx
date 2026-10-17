@@ -33,17 +33,17 @@ const renderMd = (content: string) =>
 
 describe('MarkdownView ordo:// 引用胶囊', () => {
   it('ordo:// 链接渲染为胶囊（data-ordo-ref + hover 预览触发器）', () => {
-    renderMd('见 [登录页崩溃](ordo://APM/issue/BUG-1) 详情');
+    renderMd('见 [登录页崩溃](ordo://Ordo/issue/BUG-1) 详情');
 
     const chip = screen
       .getByText('登录页崩溃')
       .closest('a') as HTMLAnchorElement;
     expect(chip).toBeTruthy();
-    expect(chip.getAttribute('data-ordo-ref')).toBe('ordo://APM/issue/BUG-1');
+    expect(chip.getAttribute('data-ordo-ref')).toBe('ordo://Ordo/issue/BUG-1');
     expect(chip.getAttribute('title')).toContain('工单');
     const trigger = chip.parentElement as HTMLElement;
     expect(trigger.getAttribute('data-preview-path')).toBe(
-      'ordo://APM/issue/BUG-1',
+      'ordo://Ordo/issue/BUG-1',
     );
   });
 

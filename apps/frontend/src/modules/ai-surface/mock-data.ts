@@ -11,7 +11,7 @@ export const INITIAL_AGENTS: AgentPersona[] = [
     statusText: '正在推演 CAP-P-01 任务原子拆解路径',
     activeIssue: {
       id: 'issue-101',
-      key: 'APM-101',
+      key: 'Ordo-101',
       title: '需求管道自动化拆解与验收契约生成',
     },
     trustScore: 98.2,
@@ -29,7 +29,7 @@ export const INITIAL_AGENTS: AgentPersona[] = [
     statusText: '正在校验 openapi.json 与 SQLite 路由隔离',
     activeIssue: {
       id: 'issue-102',
-      key: 'APM-102',
+      key: 'Ordo-102',
       title: '多工作区 AsyncLocalStorage 路由基线加固',
     },
     trustScore: 96.5,
@@ -47,7 +47,7 @@ export const INITIAL_AGENTS: AgentPersona[] = [
     statusText: '正在生成前端悬浮胶囊与无界渲染管道',
     activeIssue: {
       id: 'issue-103',
-      key: 'APM-103',
+      key: 'Ordo-103',
       title: 'AI 表面无边框空间悬浮流组件实现',
     },
     trustScore: 93.8,
@@ -65,7 +65,7 @@ export const INITIAL_AGENTS: AgentPersona[] = [
     statusText: '正在监听单元测试与 API 契约审计矩阵',
     activeIssue: {
       id: 'issue-104',
-      key: 'APM-104',
+      key: 'Ordo-104',
       title: '全链路验收准则自动化审计',
     },
     trustScore: 97.4,
@@ -149,10 +149,10 @@ export const INITIAL_MESSAGES: CognitiveMessage[] = [
     senderRole: 'pm',
     avatar: '✦',
     timestamp: '14:01',
-    content: '通过对当前工单 APM-101 的深度剖析，我们不需要简单的“聊天抽屉”，而是需要一个让用户俯瞰所有 Agent 思考与产出的空间视界。我已将整体架构拓扑下发至工件区。',
+    content: '通过对当前工单 Ordo-101 的深度剖析，我们不需要简单的“聊天抽屉”，而是需要一个让用户俯瞰所有 Agent 思考与产出的空间视界。我已将整体架构拓扑下发至工件区。',
     thoughts: [
       { id: 't-1', title: '需求范式校验', description: '排除传统问答气泡模式，对标 Spatial Computing 全息感', durationMs: 420, status: 'done' },
-      { id: 't-2', title: '工单主线对齐', description: '关联 APM-101，确保契约真实绑定', durationMs: 310, status: 'done' },
+      { id: 't-2', title: '工单主线对齐', description: '关联 Ordo-101，确保契约真实绑定', durationMs: 310, status: 'done' },
     ],
     artifactId: 'artifact-arch-1',
   },

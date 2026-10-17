@@ -4,7 +4,7 @@ describe('IssueIdService.formatShortId', () => {
   const svc = new IssueIdService(null as any);
 
   it('joins prefix and seq with -', () => {
-    expect(svc.formatShortId('APM', 1)).toBe('APM-1');
+    expect(svc.formatShortId('ORDO', 1)).toBe('ORDO-1');
     expect(svc.formatShortId('MOX', 42)).toBe('MOX-42');
   });
 
@@ -60,7 +60,7 @@ describe('IssueIdService.nextShortId 全局序列自愈跳号', () => {
           issue: {
             findFirst: vi.fn(({ where }: { where: { shortId: string } }) =>
               Promise.resolve(
-                ['APM-1', 'APM-2', 'APM-3'].includes(where.shortId)
+                ['ORDO-1', 'ORDO-2', 'ORDO-3'].includes(where.shortId)
                   ? { id: 't' }
                   : null,
               ),
@@ -70,7 +70,7 @@ describe('IssueIdService.nextShortId 全局序列自愈跳号', () => {
       ),
     };
     await expect(new IssueIdService(prisma as any).nextShortId()).resolves.toBe(
-      'APM-4',
+      'ORDO-4',
     );
     expect(upsertSpy).toHaveBeenCalledWith({
       where: { key: 'task.shortId' },

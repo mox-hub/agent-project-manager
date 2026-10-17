@@ -200,7 +200,7 @@ describe('AiSurfacePage', () => {
     setOffice([colleague()]);
     renderSurface();
 
-    expect(screen.getByText('APM SYNTHETIC COGNITIVE SURFACE')).toBeInTheDocument();
+    expect(screen.getByText('Ordo SYNTHETIC COGNITIVE SURFACE')).toBeInTheDocument();
     expect(screen.getByText('DUAL-SURFACE V4')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/输入协同指令/)).toBeInTheDocument();
   });

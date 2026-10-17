@@ -197,7 +197,7 @@ export function AiSurfacePage() {
               <Sparkles className="size-3.5" />
             </div>
             <span className="text-sm font-semibold tracking-tight text-foreground">
-              APM SYNTHETIC COGNITIVE SURFACE
+              Ordo SYNTHETIC COGNITIVE SURFACE
             </span>
             <span className="ml-1 rounded-full bg-accent-purple/15 px-2 py-0.5 font-mono text-3xs font-medium text-accent-purple">
               DUAL-SURFACE V4

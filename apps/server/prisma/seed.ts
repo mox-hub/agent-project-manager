@@ -351,7 +351,7 @@ async function main() {
     update: {},
     create: {
       id: 'sample-project-1',
-      name: '示例项目：Agent Project Manager',
+      name: '示例项目：Ordo',
       description: '这是一个示例项目，用于演示系统功能',
       type: 'team',
       visibility: 'internal',

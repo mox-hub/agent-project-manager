@@ -179,7 +179,7 @@ describe('prompt-templates（CAP-A-24 系统提示词内置资产）', () => {
 
   it('buildSystemPromptSection 按序拼接全部模板；无内容返回 null', () => {
     const section = buildSystemPromptSection();
-    expect(section).toContain('# APM 协作基线');
+    expect(section).toContain('# Ordo 协作基线');
     expect(section).toContain('# 执行结果汇报规范');
     expect(buildSystemPromptSection([])).toBeNull();
   });
@@ -353,7 +353,7 @@ describe('prompt-shared（增强 A 插值引擎）', () => {
 describe('prompt-shared（增强 C 注入率段解析）', () => {
   it('parsePromptSections：按 marker 切片统计字符；缺失段不出现', () => {
     const sections = parsePromptSections(
-      '# APM 协作基线\n规范内容\n\n## Your Role\n执行者约定\n\n## Project Instructions\n项目约定\n\n# Task\n标题',
+      '# Ordo 协作基线\n规范内容\n\n## Your Role\n执行者约定\n\n## Project Instructions\n项目约定\n\n# Task\n标题',
     );
     expect(Object.keys(sections)).toEqual([
       'system',

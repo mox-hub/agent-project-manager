@@ -104,7 +104,7 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
     extra: Record<string, unknown> = {},
   ) => ({
     toggles: { ...DEFAULT_PROMPT_INJECTION, ...overrides },
-    systemSection: '# APM 协作基线\n不越权、不虚构、可追溯。',
+    systemSection: '# Ordo 协作基线\n不越权、不虚构、可追溯。',
     projectPrompt: '技术栈约定：pnpm + NestJS。',
     taskPrompt: '任务级要求：先写测试再实现。',
     ...extra,
@@ -119,7 +119,7 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
       null,
       governance(),
     );
-    expect(prompt).toContain('# APM 协作基线');
+    expect(prompt).toContain('# Ordo 协作基线');
     expect(prompt).toContain('## Your Role');
     expect(prompt).toContain('## Team Rules');
     expect(prompt).toContain('### Personal Instructions');
@@ -142,7 +142,7 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
       null,
       governance({ system: false }),
     );
-    expect(prompt).not.toContain('# APM 协作基线');
+    expect(prompt).not.toContain('# Ordo 协作基线');
     expect(prompt).toContain('## Your Role');
     expect(prompt).toContain('## Project Instructions');
   });
@@ -199,7 +199,7 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
       null,
       {
         toggles: allOff,
-        systemSection: '# APM 协作基线',
+        systemSection: '# Ordo 协作基线',
         projectPrompt: '项目约定',
         taskPrompt: '任务要求',
       },
@@ -209,7 +209,7 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
     expect(prompt).toContain(
       'Please execute this task and report the results.',
     );
-    expect(prompt).not.toContain('# APM 协作基线');
+    expect(prompt).not.toContain('# Ordo 协作基线');
     expect(prompt).not.toContain('## Your Role');
     expect(prompt).not.toContain('## Context');
   });
@@ -227,7 +227,7 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
       segments.map((s: { key: string }) => [s.key, s]),
     );
     expect(byKey.system.injected).toBe(false);
-    expect(byKey.system.text).toContain('# APM 协作基线');
+    expect(byKey.system.text).toContain('# Ordo 协作基线');
     expect(byKey.executor.injected).toBe(true);
   });
 
@@ -276,8 +276,8 @@ describe('CliDispatchService buildPrompt（CAP-A-24 提示词治理逐段开关�
           taskPrompt: '修复 {{issue.title}}，标准：\n{{issue.acceptanceItems}}',
         },
       },
-      'APM',
-      'APM',
+      'Ordo',
+      'Ordo',
     );
     expect(gov.toggles).toEqual({
       ...DEFAULT_PROMPT_INJECTION,

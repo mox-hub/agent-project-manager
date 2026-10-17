@@ -66,7 +66,7 @@ export class GitHubSyncService {
     const client = await this.sdk.getClientForIntegration(integrationId);
     const pr = await client.createPullRequest(input);
 
-    // 立刻记录到 PullRequest 表（状态 open），并落 APM 关联列（CAP-B-08 回流挂点）
+    // 立刻记录到 PullRequest 表（状态 open），并落 Ordo 关联列（CAP-B-08 回流挂点）
     await this.recordPullRequest(pr, integrationId, 'open', {
       acceptanceId: input.acceptanceId,
       executionRunId: input.executionRunId,

@@ -113,8 +113,8 @@ export const handlers = [
       items: [
         {
           key: 'ordo-baseline',
-          title: 'APM 协作基线',
-          description: '你在 APM 中执行任务的行为基线',
+          title: 'Ordo 协作基线',
+          description: '你在 Ordo 中执行任务的行为基线',
           charCount: 1024,
         },
       ],
@@ -123,10 +123,10 @@ export const handlers = [
   http.get('*/prompts/system/:key', ({ params }) => {
     return ok({
       key: params.key,
-      title: 'APM 协作基线',
-      description: '你在 APM 中执行任务的行为基线',
+      title: 'Ordo 协作基线',
+      description: '你在 Ordo 中执行任务的行为基线',
       charCount: 1024,
-      content: '# APM 协作基线\n\n（mock 预览：系统提示词内置资产正文）',
+      content: '# Ordo 协作基线\n\n（mock 预览：系统提示词内置资产正文）',
     });
   }),
   http.get('*/prompts/config', ({ request }) => {

@@ -74,7 +74,7 @@ export function formatConsoleLine(input: {
   const levelTag = input.standalone
     ? `[${input.level.toUpperCase()}]`
     : `${input.level}:`;
-  const contextTag = `[${input.context || 'APM'}]`;
+  const contextTag = `[${input.context || 'Ordo'}]`;
   if (!input.color) {
     return input.standalone
       ? `${levelTag} ${input.timestamp} ${contextTag} ${input.message}${input.rest}`

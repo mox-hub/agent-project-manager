@@ -468,7 +468,7 @@ export class ProposalService {
 
     // ⑤ 真合入（幂等：分支已并入 HEAD 时跳过 merge，复查补 mergeCommit）
     let mergeCommit: string;
-    const mergeMessage = `merge: execution ${payload.executionId} (apm/integration)`;
+    const mergeMessage = `merge: execution ${payload.executionId} (ordo/integration)`;
     if (
       await this.worktree.isBranchMerged(payload.projectRoot, payload.branch)
     ) {

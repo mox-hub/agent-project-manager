@@ -572,7 +572,7 @@ model Issue {
   // 工单类型（IssueType 适配引擎）：typeId 为事实源，type 为迁移期遗留冗余
   typeId String?
 
-  // 短 ID (Phase 4): 例如 "APM-PF-001", 跨 task/bug 共享计数器
+  // 短 ID (Phase 4): 例如 "ORDO-PF-001", 跨 task/bug 共享计数器
   shortId String? @unique
 
   // 工单类型自定义字段值（4d 二期）：键集由 IssueType.fieldSchema 定义；

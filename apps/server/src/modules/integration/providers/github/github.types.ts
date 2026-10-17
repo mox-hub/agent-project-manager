@@ -64,7 +64,7 @@ export interface GitHubPullRequest {
   draft?: boolean;
   /** label 名列表（归一化时从 {name} 对象提取） */
   labels?: string[];
-  /** 与 APM 映射后的最终状态 */
+  /** 与 Ordo 映射后的最终状态 */
   apmState?: string;
 }
 
@@ -93,7 +93,7 @@ export interface GitHubCreatePrInput {
   base: string; // 目标分支（通常 main/dev）
   body?: string;
   draft?: boolean;
-  /** 关联 APM 验收（CAP-B-08 证据回流挂点，仅落 RemotePullRequest，不进 GitHub API） */
+  /** 关联 Ordo 验收（CAP-B-08 证据回流挂点，仅落 RemotePullRequest，不进 GitHub API） */
   acceptanceId?: string;
   executionRunId?: string;
 }

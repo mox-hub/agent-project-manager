@@ -150,7 +150,7 @@ describe('NotificationEventSubscriber', () => {
     });
     prismaMock.project.findUnique.mockResolvedValue({
       id: 'p1',
-      name: 'APM',
+      name: 'Ordo',
       members: [{ userId: 'u1' }, { userId: 'u2' }, { userId: 'proposer' }],
     });
 
@@ -163,7 +163,7 @@ describe('NotificationEventSubscriber', () => {
         proposalTitle: '将 3 个未分配任务分派给 AI 同事？',
         kind: 'assignment',
         projectId: 'p1',
-        projectName: 'APM',
+        projectName: 'Ordo',
       }),
       ['u1', 'u2'],
     );

@@ -20,7 +20,7 @@ export interface ModelsDevModelPrice {
   toolCall: boolean;
 }
 
-/** APM AIProviderType → models.dev 厂家键别名（未列出的键按原文直查） */
+/** Ordo AIProviderType → models.dev 厂家键别名（未列出的键按原文直查） */
 const PROVIDER_ALIAS: Record<string, string> = {
   openai: 'openai',
   anthropic: 'anthropic',

@@ -2,7 +2,7 @@ import type { BootErrorEntry } from '../types';
 
 export function formatBootLog(errors: BootErrorEntry[], extra?: { note?: string }): string {
   const headerLines = [
-    `APM Boot Log — ${new Date().toISOString()}`,
+    `Ordo Boot Log — ${new Date().toISOString()}`,
     `Total errors: ${errors.length}`,
     '',
   ];

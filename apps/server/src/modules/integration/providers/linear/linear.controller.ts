@@ -146,7 +146,7 @@ export class LinearController {
   @Post('sync/project')
   @ApiOperation({
     summary:
-      'Pull a Linear project (optionally to a local project) — single direction (Linear -> APM)',
+      'Pull a Linear project (optionally to a local project) — single direction (Linear -> Ordo)',
   })
   async syncProject(
     @Body() dto: LinearSyncProjectDto,

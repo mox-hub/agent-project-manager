@@ -384,7 +384,7 @@ describe('ExecutionService G5-b worktree 成果收集（completeExecution 成功
       'E:\\repo\\.ordo\\worktrees\\abcd1234',
       'base_sha',
       expect.objectContaining({
-        message: 'chore(apm): execution 1234zzzz snapshot',
+        message: 'chore(ordo): execution 1234zzzz snapshot',
         author: { name: 'Coder', email: 'coder@ordo.test' },
       }),
     );

@@ -115,7 +115,7 @@ export function LinearConflictResolver({
         <h4 className="font-medium">Sync conflict detected</h4>
       </div>
       <p className="mt-1 text-sm text-accent-orange/80">
-        Both Linear and APM have changes for this task. Pick how to resolve.
+        Both Linear and Ordo have changes for this task. Pick how to resolve.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
         <Button

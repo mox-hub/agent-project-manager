@@ -790,7 +790,7 @@ export class AssistantToolsService {
         `- ${entry.name}：${entry.description}（HTTP: ${entry.http.method} ${entry.http.path}）`,
     );
     return [
-      '你可以调用 APM 系统接口查询与操作项目数据（请求头带 x-workspace-id 与 Bearer 访问 Token；未配置 Token 时把结果写进最终输出即可）：',
+      '你可以调用 Ordo 系统接口查询与操作项目数据（请求头带 x-workspace-id 与 Bearer 访问 Token；未配置 Token 时把结果写进最终输出即可）：',
       ...lines,
       '注意：删除/停用/归档等不可恢复操作必须先向用户确认后再执行。',
       '实体引用协议：ordo://{projectCode}/{kind}/{shortId}（kind=doc/issue/bug/member/team/acceptance/release）。' +

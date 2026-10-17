@@ -111,8 +111,8 @@ export class DocumentStorageService {
   async detectDefaultPath(): Promise<string> {
     const home = os.homedir();
     const candidates = [
-      path.join(home, 'Documents', 'APM-Documents'),
-      path.join(home, 'APM-Documents'),
+      path.join(home, 'Documents', 'Ordo-Documents'),
+      path.join(home, 'Ordo-Documents'),
       path.join(home, 'agent-project-manager', 'documents'),
     ];
     for (const candidate of candidates) {

@@ -22,7 +22,7 @@ const execFileP = promisify(execFile);
 export interface GitCommitInput {
   projectId: string;
   documentId: string;
-  fileName: string; // 相对仓库根, 例如 "APM/abc123_intro.md"
+  fileName: string; // 相对仓库根, 例如 "Ordo/abc123_intro.md"
   content: string;
   message: string;
   author: { name: string; email: string };

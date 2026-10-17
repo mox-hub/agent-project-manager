@@ -57,7 +57,7 @@ const baseExpertise = (level: 'detailed' | 'terse' | 'suppressed') => ({
 function renderGate() {
   const onAction = vi.fn();
   const { container } = render(<DecisionCard decision={gateDecision} onAction={onAction} />);
-  // data-ai 是 APM 的埋点属性（非 data-testid），统一从这里取交互点
+  // data-ai 是 Ordo 的埋点属性（非 data-testid），统一从这里取交互点
   const ai = (id: string) => container.querySelector(`[data-ai="${id}"]`) as HTMLElement;
   return { onAction, ai };
 }

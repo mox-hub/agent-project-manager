@@ -21,9 +21,9 @@ author: alice
 tags: [feature, mvp]
 aliases: [A, B]
 status: draft
-project: APM
+project: Ordo
 module: PF
-short_id: APM-PF-001
+short_id: Ordo-PF-001
 draft: true
 ---
 body`;
@@ -33,9 +33,9 @@ body`;
     expect(r.data.tags).toEqual(['feature', 'mvp']);
     expect(r.data.aliases).toEqual(['A', 'B']);
     expect(r.data.status).toBe('draft');
-    expect(r.data.project).toBe('APM');
+    expect(r.data.project).toBe('Ordo');
     expect(r.data.module).toBe('PF');
-    expect(r.data.short_id).toBe('APM-PF-001');
+    expect(r.data.short_id).toBe('Ordo-PF-001');
     expect(r.data.draft).toBe(true);
   });
 
@@ -149,9 +149,9 @@ client: contoso
       const src = `---
 title: Spec
 status: draft
-project: APM
+project: Ordo
 module: PF
-short_id: APM-PF-001
+short_id: Ordo-PF-001
 author: alice
 ---`;
       const r = parseFrontmatterProperties(src);

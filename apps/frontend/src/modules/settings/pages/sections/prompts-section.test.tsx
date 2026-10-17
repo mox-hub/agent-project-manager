@@ -49,7 +49,7 @@ const mocks = vi.hoisted(() => ({
     agentsFile: null,
   },
   systemItems: [
-    { key: 'ordo-baseline', title: 'APM 协作基线', description: '行为基线', charCount: 1024 },
+    { key: 'ordo-baseline', title: 'Ordo 协作基线', description: '行为基线', charCount: 1024 },
     { key: 'ordo-report-format', title: '执行结果汇报规范', description: '汇报结构', charCount: 512 },
   ],
   detailByKey: {} as Record<string, { key: string; title: string; description: string; charCount: number; content: string } | undefined>,
@@ -143,10 +143,10 @@ describe('PromptsSettingsSection（CAP-A-24 设置 · 提示词总控）', () =>
     mocks.detailByKey = {
       'ordo-baseline': {
         key: 'ordo-baseline',
-        title: 'APM 协作基线',
+        title: 'Ordo 协作基线',
         description: '行为基线',
         charCount: 1024,
-        content: '# APM 协作基线\n不越权、不虚构。',
+        content: '# Ordo 协作基线\n不越权、不虚构。',
       },
     };
     render(<PromptsSettingsSection />);

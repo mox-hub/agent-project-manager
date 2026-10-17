@@ -336,7 +336,7 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
         {
           id: 'project-1',
           type: 'project',
-          title: 'APM 主项目',
+          title: 'Ordo 主项目',
           subtitle: '3 个进行中工单',
           path: '/app/projects/project-1',
           updatedAt: '2026-09-19T00:00:00.000Z',
@@ -352,7 +352,7 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
 
     // 防抖 300ms 后请求并渲染（真实计时器 + waitFor 轮询）
     await waitFor(
-      () => expect(screen.getByText('APM 主项目')).toBeTruthy(),
+      () => expect(screen.getByText('Ordo 主项目')).toBeTruthy(),
       { timeout: 2000 },
     );
     // 按实体类型分组（mock t 缺键回退 defaultValue）：任务组 + 项目组
@@ -360,7 +360,7 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
     expect(screen.getByText('project')).toBeTruthy();
     expect(screen.getByText('登录页崩溃')).toBeTruthy();
 
-    fireEvent.click(screen.getByText('APM 主项目'));
+    fireEvent.click(screen.getByText('Ordo 主项目'));
     expect(screen.getByTestId('location-probe').textContent).toBe(
       '/app/projects/project-1',
     );

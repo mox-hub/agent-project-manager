@@ -28,7 +28,7 @@ const derivedConflict: Decision = {
   detail: '该文件由平台派生（真相在 DB）。',
   urgency: 'advisory',
   projectId: 'p1',
-  projectName: 'APM',
+  projectName: 'Ordo',
   proposer: { type: 'system' },
   payload: {
     bindingId: 'b-1',

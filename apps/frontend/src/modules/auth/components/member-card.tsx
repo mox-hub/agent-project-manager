@@ -22,7 +22,7 @@ function formatJoinDate(iso: string): string {
 }
 
 /**
- * APM 身份工牌（欢迎页右栏）：浅底斜纹卡 + SVG 环形口号
+ * Ordo 身份工牌（欢迎页右栏）：浅底斜纹卡 + SVG 环形口号
  * 「AGENT PROJECT MANAGER · PEOPLE + AI COLLEAGUES」绕品牌 logo，
  * 下承显示名 / 成员编号 / 入职日期 / 手写体签名。
  * 纯展示仪式件（CAP-A-22 裁决 D2：下载/复制/分享进候补）；

@@ -130,7 +130,7 @@ const PRIORITY_VISUAL: Record<string, { icon: LucideIcon; className: string }> =
 };
 
 const issueIdentifier = (task: Task) =>
-  task.shortId || `APM-${task.id.slice(0, 4).toUpperCase()}`;
+  task.shortId || `Ordo-${task.id.slice(0, 4).toUpperCase()}`;
 
 /** 行1：类型图标 + 重要性图标 + 任务编号 + 状态图标（typeMeta 由页面经 useIssueTypeOf 解析传入） */
 export function taskCardRow1(

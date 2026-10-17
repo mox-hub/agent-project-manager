@@ -8214,7 +8214,7 @@
             "name": "shortId",
             "required": true,
             "in": "path",
-            "description": "Short ID (e.g. APM-PF-001)",
+            "description": "Short ID (e.g. ORDO-PF-001)",
             "schema": {
               "type": "string"
             }
@@ -48296,7 +48296,7 @@
             "JWT-auth": []
           }
         ],
-        "summary": "Pull a Linear project (optionally to a local project) — single direction (Linear -> APM)",
+        "summary": "Pull a Linear project (optionally to a local project) — single direction (Linear -> Ordo)",
         "tags": [
           "Integration / Linear"
         ]
@@ -61839,8 +61839,8 @@
     }
   },
   "info": {
-    "title": "Agent Project Manager API",
-    "description": "Agent Project Manager API Documentation\n\n【响应信封（全局约定，不逐端点声明）】所有 JSON 响应（含错误）均由\nTransformInterceptor / GlobalExceptionFilter 统一包裹为信封：\n  { status, success, description, data, timestamp, requestId? }\n失败时携带 error: { code, message, details? }。\n\n【响应口径】本契约各端点的 200/201 响应 schema 描述的是【解包后的业务数据】\n（裸数据口径），信封不在端点级重复声明；返回 null/void 的端点无 content。\n前端 api-client 与 CLI OrdoClient 均在封装内统一解包；错误细节见各端点的\n400/401/403/404/500 声明（ErrorPayloadDto）。",
+    "title": "Ordo API",
+    "description": "Ordo API Documentation\n\n【响应信封（全局约定，不逐端点声明）】所有 JSON 响应（含错误）均由\nTransformInterceptor / GlobalExceptionFilter 统一包裹为信封：\n  { status, success, description, data, timestamp, requestId? }\n失败时携带 error: { code, message, details? }。\n\n【响应口径】本契约各端点的 200/201 响应 schema 描述的是【解包后的业务数据】\n（裸数据口径），信封不在端点级重复声明；返回 null/void 的端点无 content。\n前端 api-client 与 CLI OrdoClient 均在封装内统一解包；错误细节见各端点的\n400/401/403/404/500 声明（ErrorPayloadDto）。",
     "version": "1.0",
     "contact": {}
   },
@@ -63110,7 +63110,7 @@
           },
           "projectCode": {
             "type": "string",
-            "example": "APM-123"
+            "example": "ORDO-123"
           },
           "icon": {
             "type": "string",
@@ -63918,7 +63918,7 @@
           },
           "projectCode": {
             "type": "string",
-            "example": "APM-123"
+            "example": "ORDO-123"
           },
           "documentsRepoPath": {
             "type": "string",
@@ -64481,7 +64481,7 @@
           },
           "shortId": {
             "type": "string",
-            "description": "短 ID（如 APM-PF-001）",
+            "description": "短 ID（如 ORDO-PF-001）",
             "nullable": true
           },
           "customFields": {
@@ -65724,7 +65724,7 @@
           },
           "shortId": {
             "type": "string",
-            "description": "短 ID（如 APM-PF-001）",
+            "description": "短 ID（如 ORDO-PF-001）",
             "nullable": true
           },
           "customFields": {
@@ -67013,7 +67013,7 @@
           },
           "shortId": {
             "type": "string",
-            "description": "短 ID（如 APM-PF-001）",
+            "description": "短 ID（如 ORDO-PF-001）",
             "nullable": true
           },
           "customFields": {
@@ -80102,7 +80102,7 @@
           },
           "apmState": {
             "type": "string",
-            "description": "APM 映射后的最终状态"
+            "description": "Ordo 映射后的最终状态"
           }
         },
         "required": [

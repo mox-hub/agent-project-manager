@@ -5852,7 +5852,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Pull a Linear project (optionally to a local project) — single direction (Linear -> APM) */
+        /** Pull a Linear project (optionally to a local project) — single direction (Linear -> Ordo) */
         post: operations["LinearController_syncProject"];
         delete?: never;
         options?: never;
@@ -7883,7 +7883,7 @@ export interface components {
              * @example template-123
              */
             templateId?: string;
-            /** @example APM-123 */
+            /** @example ORDO-123 */
             projectCode?: string;
             /** @example rocket */
             icon?: string;
@@ -8226,7 +8226,7 @@ export interface components {
             config?: {
                 [key: string]: unknown;
             };
-            /** @example APM-123 */
+            /** @example ORDO-123 */
             projectCode?: string;
             /** @example C:/Users/me/APM/docs */
             documentsRepoPath?: string | null;
@@ -8447,7 +8447,7 @@ export interface components {
             type: string;
             /** @description 工单类型 ID（IssueType.id，事实源） */
             typeId?: string | null;
-            /** @description 短 ID（如 APM-PF-001） */
+            /** @description 短 ID（如 ORDO-PF-001） */
             shortId?: string | null;
             /** @description 工单类型自定义字段（内置 bug 六字段已迁入） */
             customFields?: {
@@ -9007,7 +9007,7 @@ export interface components {
             type: string;
             /** @description 工单类型 ID（IssueType.id，事实源） */
             typeId?: string | null;
-            /** @description 短 ID（如 APM-PF-001） */
+            /** @description 短 ID（如 ORDO-PF-001） */
             shortId?: string | null;
             /** @description 工单类型自定义字段（内置 bug 六字段已迁入） */
             customFields?: {
@@ -9639,7 +9639,7 @@ export interface components {
             type: string;
             /** @description 工单类型 ID（IssueType.id，事实源） */
             typeId?: string | null;
-            /** @description 短 ID（如 APM-PF-001） */
+            /** @description 短 ID（如 ORDO-PF-001） */
             shortId?: string | null;
             /** @description 工单类型自定义字段（内置 bug 六字段已迁入） */
             customFields?: {
@@ -14655,7 +14655,7 @@ export interface components {
             deletions?: number;
             /** @description 变更文件数 */
             changedFiles?: number;
-            /** @description APM 映射后的最终状态 */
+            /** @description Ordo 映射后的最终状态 */
             apmState?: string;
         };
         GitHubCreatePrResponseDto: {
@@ -21041,7 +21041,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @description Short ID (e.g. APM-PF-001) */
+                /** @description Short ID (e.g. ORDO-PF-001) */
                 shortId: string;
             };
             cookie?: never;

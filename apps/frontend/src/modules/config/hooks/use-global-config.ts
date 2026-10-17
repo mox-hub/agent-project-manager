@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { configApi, type ConfigValues } from '../api/config-api';
 
 const SHORT_ID_PREFIX_KEY = 'task.shortIdPrefix';
-const DEFAULT_SHORT_ID_PREFIX = 'APM';
+const DEFAULT_SHORT_ID_PREFIX = 'Ordo';
 
 /**
  * Hook to get global configuration

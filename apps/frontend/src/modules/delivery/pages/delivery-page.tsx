@@ -1,7 +1,7 @@
 /**
  * delivery-page.tsx - 交付视图页面
  *
- * 还原参考: refers/APM/src/app/pages/DeliveryPage.tsx
+ * 还原参考: refers/Ordo/src/app/pages/DeliveryPage.tsx
  * 状态:     DEV ONLY（仅 develop 模式展示，生产不注册路由）
  *
  * 数据：GET /delivery/overview（契约提案 v1，docs/design/api-contract-proposals.md）；

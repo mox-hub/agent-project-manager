@@ -915,11 +915,11 @@ function RegistryAuditTable() {
 
 interface DemoIssueRow { id: string; title: string; status: string; points: number }
 const DEMO_ISSUE_ROWS: DemoIssueRow[] = [
-  { id: 'APM-1', title: 'AI chat interface', status: 'done', points: 5 },
-  { id: 'APM-2', title: 'Kanban board view', status: 'in_progress', points: 8 },
-  { id: 'APM-4', title: 'AI velocity scoring', status: 'in_review', points: 3 },
+  { id: 'Ordo-1', title: 'AI chat interface', status: 'done', points: 5 },
+  { id: 'Ordo-2', title: 'Kanban board view', status: 'in_progress', points: 8 },
+  { id: 'Ordo-4', title: 'AI velocity scoring', status: 'in_review', points: 3 },
   { id: 'ACR-1', title: 'Stripe webhook handler', status: 'todo', points: 2 },
-  { id: 'APM-10', title: 'Concurrent state updates', status: 'canceled', points: 13 },
+  { id: 'Ordo-10', title: 'Concurrent state updates', status: 'canceled', points: 13 },
 ]
 const DEMO_ISSUE_COLUMNS: ColumnDef<DemoIssueRow, unknown>[] = [
   { accessorKey: 'id', header: 'ID' },
@@ -1073,13 +1073,13 @@ function PromptEditorDemo({ mode }: { mode: 'edit' | 'readonly' }) {
 /* ── 全局实体引用系统演示（CAP-A-23）：胶囊 / 斜杠命令 / 路由预览卡 ── */
 
 const REF_KIND_SAMPLES: Array<{ kind: OrdoRefKind; label: string; href: string }> = [
-  { kind: 'doc', label: '需求分析报告', href: 'ordo://APM/doc/D17' },
-  { kind: 'issue', label: '修复登录超时', href: 'ordo://APM/issue/APM-PF-001' },
-  { kind: 'bug', label: '列表分页失效', href: 'ordo://APM/bug/APM-BF-014' },
-  { kind: 'member', label: '王小明', href: 'ordo://APM/member/M7' },
-  { kind: 'team', label: '平台组', href: 'ordo://APM/team/T2' },
-  { kind: 'acceptance', label: '登录流验收', href: 'ordo://APM/acceptance/AC9' },
-  { kind: 'release', label: 'v0.7.4', href: 'ordo://APM/release/R12' },
+  { kind: 'doc', label: '需求分析报告', href: 'ordo://Ordo/doc/D17' },
+  { kind: 'issue', label: '修复登录超时', href: 'ordo://Ordo/issue/Ordo-PF-001' },
+  { kind: 'bug', label: '列表分页失效', href: 'ordo://Ordo/bug/Ordo-BF-014' },
+  { kind: 'member', label: '王小明', href: 'ordo://Ordo/member/M7' },
+  { kind: 'team', label: '平台组', href: 'ordo://Ordo/team/T2' },
+  { kind: 'acceptance', label: '登录流验收', href: 'ordo://Ordo/acceptance/AC9' },
+  { kind: 'release', label: 'v0.7.4', href: 'ordo://Ordo/release/R12' },
 ]
 
 function RefCapsuleDemo() {
@@ -1098,9 +1098,9 @@ function RefMarkdownDemo() {
   return (
     <MarkdownView
       content={[
-        '任务拆解见 [修复登录超时](ordo://APM/issue/APM-PF-001)，依据 [需求分析报告](ordo://APM/doc/D17)，评审人 [王小明](ordo://APM/member/M7)。',
+        '任务拆解见 [修复登录超时](ordo://Ordo/issue/Ordo-PF-001)，依据 [需求分析报告](ordo://Ordo/doc/D17)，评审人 [王小明](ordo://Ordo/member/M7)。',
         '',
-        '外链保持原样：[APM 文档站](https://example.com/docs)。',
+        '外链保持原样：[Ordo 文档站](https://example.com/docs)。',
       ].join('\n')}
     />
   )
@@ -2093,7 +2093,7 @@ export function DesignSystemPage() {
               </span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              AgentPM design tokens, primitives, and app-level component patterns.
+              Ordo design tokens, primitives, and app-level component patterns.
             </p>
           </div>
 
@@ -3093,11 +3093,11 @@ export function DesignSystemPage() {
             <div className="rounded-lg border border-border bg-background overflow-hidden">
               <div className="divide-y divide-border/60">
                 {[
-                  { id: 'APM-1', title: 'AI chat interface', status: 'done' as TaskStatus, priority: 'high' as Priority, assignee: 'AK', due: 'Mar 8' },
-                  { id: 'APM-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, assignee: 'ML', due: 'Mar 20' },
-                  { id: 'APM-4', title: 'AI velocity scoring', status: 'in_review' as TaskStatus, priority: 'urgent' as Priority, assignee: 'BK', due: 'Mar 25' },
+                  { id: 'Ordo-1', title: 'AI chat interface', status: 'done' as TaskStatus, priority: 'high' as Priority, assignee: 'AK', due: 'Mar 8' },
+                  { id: 'Ordo-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, assignee: 'ML', due: 'Mar 20' },
+                  { id: 'Ordo-4', title: 'AI velocity scoring', status: 'in_review' as TaskStatus, priority: 'urgent' as Priority, assignee: 'BK', due: 'Mar 25' },
                   { id: 'ACR-1', title: 'Stripe webhook handler', status: 'todo' as TaskStatus, priority: 'urgent' as Priority, assignee: '', due: 'Apr 5' },
-                  { id: 'APM-10', title: 'Concurrent state updates', status: 'canceled' as TaskStatus, priority: 'medium' as Priority, assignee: '', due: 'Apr 22' },
+                  { id: 'Ordo-10', title: 'Concurrent state updates', status: 'canceled' as TaskStatus, priority: 'medium' as Priority, assignee: '', due: 'Apr 22' },
                 ].map((row) => (
                   <div key={row.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40 transition-colors">
                     <StatusChip status={row.status} />
@@ -3124,9 +3124,9 @@ export function DesignSystemPage() {
                 </TableHeader>
                 <TableBody>
                   {[
-                    { id: 'APM-1', title: 'AI chat interface', status: 'Done', due: 'Mar 8' },
-                    { id: 'APM-2', title: 'Kanban board view', status: 'In Progress', due: 'Mar 20' },
-                    { id: 'APM-4', title: 'AI velocity scoring', status: 'In Review', due: 'Mar 25' },
+                    { id: 'Ordo-1', title: 'AI chat interface', status: 'Done', due: 'Mar 8' },
+                    { id: 'Ordo-2', title: 'Kanban board view', status: 'In Progress', due: 'Mar 20' },
+                    { id: 'Ordo-4', title: 'AI velocity scoring', status: 'In Review', due: 'Mar 25' },
                   ].map((row) => (
                     <TableRow key={row.id}>
                       <TableCell className="font-mono text-2xs text-muted-foreground">{row.id}</TableCell>
@@ -3244,7 +3244,7 @@ export function DesignSystemPage() {
                       </DialogHeader>
                       <div className="space-y-3 py-2">
                         <Label className="text-xs">Project name</Label>
-                        <Input placeholder="AgentPM Platform" />
+                        <Input placeholder="Ordo Platform" />
                       </div>
                       <DialogFooter>
                         <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
@@ -3328,7 +3328,7 @@ export function DesignSystemPage() {
                       <PopoverDescription>Latest activity in your workspace.</PopoverDescription>
                     </PopoverHeader>
                     <div className="space-y-2 text-sm text-muted-foreground">
-                      <p>Alice commented on APM-1</p>
+                      <p>Alice commented on Ordo-1</p>
                       <p>CI pipeline passed</p>
                       <p>Bob opened PR #42</p>
                     </div>
@@ -3521,10 +3521,10 @@ export function DesignSystemPage() {
               </div>
 
               {/* ⑤ 真实业务场景卡片全景 */}
-              {/* ⑤ APM 全流程核心业务卡片矩阵（6 大核心业务深度特色） */}
+              {/* ⑤ Ordo 全流程核心业务卡片矩阵（6 大核心业务深度特色） */}
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <SubLabel>⑤ APM 全流程核心业务卡片矩阵（统一架构 × 模块特色）</SubLabel>
+                  <SubLabel>⑤ Ordo 全流程核心业务卡片矩阵（统一架构 × 模块特色）</SubLabel>
                   <span className="text-3xs text-muted-foreground">
                     严格遵循「四层三列」外舒内紧架构，突出各模块专属第一视觉信号 (Hero Visual)
                   </span>
@@ -3702,7 +3702,7 @@ export function DesignSystemPage() {
                               <FolderKanban className="size-3.5" />
                             </span>
                             <span className="min-w-0 flex-1 truncate text-xs font-semibold text-foreground">
-                              Nebula Core (AgentPM 核心平台)
+                              Nebula Core (Ordo 核心平台)
                             </span>
                             <Badge variant="outline" className="text-3xs shrink-0">Project</Badge>
                           </div>
@@ -4778,7 +4778,7 @@ export function DesignSystemPage() {
                 <BreadcrumbList>
                   <BreadcrumbItem><BreadcrumbLink href="#">Documents</BreadcrumbLink></BreadcrumbItem>
                   <BreadcrumbSeparator />
-                  <BreadcrumbItem><BreadcrumbLink href="#">AgentPM</BreadcrumbLink></BreadcrumbItem>
+                  <BreadcrumbItem><BreadcrumbLink href="#">Ordo</BreadcrumbLink></BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem><BreadcrumbPage>API Specification</BreadcrumbPage></BreadcrumbItem>
                 </BreadcrumbList>
@@ -5896,9 +5896,9 @@ export function DesignSystemPage() {
                 {!groupCollapsed && (
                   <>
                     {[
-                      { id: 'APM-1', title: 'AI chat interface', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, subtasks: { done: 2, total: 3 }, milestone: 'Phase 1 · Core UI', labels: [{ name: 'Frontend', color: '#3B82F6' }], assignee: 'AK', color: '#6366F1', due: 'Mar 12' },
-                      { id: 'APM-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, subtasks: { done: 1, total: 3 }, milestone: 'Phase 1 · Core UI', labels: [{ name: 'Frontend', color: '#3B82F6' }, { name: 'Design', color: '#8B5CF6' }], assignee: 'ML', color: '#F59E0B', due: 'Mar 20' },
-                      { id: 'APM-4', title: 'AI velocity scoring', status: 'in_progress' as TaskStatus, priority: 'urgent' as Priority, subtasks: { done: 0, total: 2 }, milestone: 'Phase 2 · Intelligence', labels: [{ name: 'Backend', color: '#10B981' }], assignee: 'BK', color: '#EF4444', due: 'Mar 25' },
+                      { id: 'Ordo-1', title: 'AI chat interface', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, subtasks: { done: 2, total: 3 }, milestone: 'Phase 1 · Core UI', labels: [{ name: 'Frontend', color: '#3B82F6' }], assignee: 'AK', color: '#6366F1', due: 'Mar 12' },
+                      { id: 'Ordo-2', title: 'Kanban board view', status: 'in_progress' as TaskStatus, priority: 'high' as Priority, subtasks: { done: 1, total: 3 }, milestone: 'Phase 1 · Core UI', labels: [{ name: 'Frontend', color: '#3B82F6' }, { name: 'Design', color: '#8B5CF6' }], assignee: 'ML', color: '#F59E0B', due: 'Mar 20' },
+                      { id: 'Ordo-4', title: 'AI velocity scoring', status: 'in_progress' as TaskStatus, priority: 'urgent' as Priority, subtasks: { done: 0, total: 2 }, milestone: 'Phase 2 · Intelligence', labels: [{ name: 'Backend', color: '#10B981' }], assignee: 'BK', color: '#EF4444', due: 'Mar 25' },
                     ].map((task, issueIdx) => (
                       <div key={task.id}>
                         <div className="flex items-center gap-2 px-4 py-1.5 hover:bg-accent/20 transition-colors cursor-pointer">
@@ -5911,7 +5911,7 @@ export function DesignSystemPage() {
                             <SubtaskBadge done={task.subtasks.done} total={task.subtasks.total} />
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="w-20 text-2xs text-muted-foreground truncate">AgentPM</span>
+                            <span className="w-20 text-2xs text-muted-foreground truncate">Ordo</span>
                             <div className="w-35 flex gap-1 overflow-hidden">
                               {task.labels.map((l) => <LabelChip key={l.name} name={l.name} color={l.color} />)}
                             </div>
@@ -5931,7 +5931,7 @@ export function DesignSystemPage() {
                             <p className="flex-1 text-xs text-muted-foreground truncate min-w-0">Sub-task: initial implementation</p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="w-20 text-2xs text-muted-foreground truncate">AgentPM</span>
+                            <span className="w-20 text-2xs text-muted-foreground truncate">Ordo</span>
                             <div className="w-35" />
                             <MilestonePill name={task.milestone} idx={issueIdx} />
                             <div className="w-18" />
@@ -6083,7 +6083,7 @@ export function DesignSystemPage() {
                 due: string; owner: string; hasChildren?: boolean; expanded?: boolean;
               }[] = [
                 {
-                  id: 'p1', level: 'project', title: 'AgentPM Platform v1.0',
+                  id: 'p1', level: 'project', title: 'Ordo Platform v1.0',
                   progress: 64, coverage: 72, bugs: 8, risk: 'medium',
                   agents: { claudeCode: 'active', cursor: 'active', copilot: 'idle' },
                   accept: { unit: 'passed', internal: 'passed', dev: 'in_progress', pm: 'pending', user: 'pending' },
@@ -6263,8 +6263,8 @@ export function DesignSystemPage() {
               <SubLabel>Grid view</SubLabel>
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { title: 'API Specification v2.0', cat: 'API文档', Icon: Code2, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40', status: 'published', tags: ['REST', 'v2'], project: 'AgentPM', updated: '2 days ago' },
-                  { title: 'UI/UX Design Guidelines', cat: '设计文档', Icon: Palette, color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40', status: 'review', tags: ['Design'], project: 'AgentPM', updated: '5 days ago' },
+                  { title: 'API Specification v2.0', cat: 'API文档', Icon: Code2, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40', status: 'published', tags: ['REST', 'v2'], project: 'Ordo', updated: '2 days ago' },
+                  { title: 'UI/UX Design Guidelines', cat: '设计文档', Icon: Palette, color: 'text-violet-600', bg: 'bg-violet-50 dark:bg-violet-950/40', status: 'review', tags: ['Design'], project: 'Ordo', updated: '5 days ago' },
                   { title: 'Product Requirements', cat: '需求文档', Icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40', status: 'draft', tags: ['PRD'], project: 'ACR-Web', updated: '1 week ago' },
                 ].map(({ title, cat, Icon, color, bg, status, tags, project, updated }) => {
                   const statusCls = status === 'published'
@@ -6303,8 +6303,8 @@ export function DesignSystemPage() {
               <SubLabel>List view row</SubLabel>
               <div className="rounded-lg border border-border overflow-hidden">
                 {[
-                  { title: 'API Specification v2.0', Icon: Code2, color: 'text-emerald-600', status: 'published', project: 'AgentPM', author: 'AK', updated: '2 days ago' },
-                  { title: 'UI/UX Design Guidelines', Icon: Palette, color: 'text-violet-600', status: 'review', project: 'AgentPM', author: 'ML', updated: '5 days ago' },
+                  { title: 'API Specification v2.0', Icon: Code2, color: 'text-emerald-600', status: 'published', project: 'Ordo', author: 'AK', updated: '2 days ago' },
+                  { title: 'UI/UX Design Guidelines', Icon: Palette, color: 'text-violet-600', status: 'review', project: 'Ordo', author: 'ML', updated: '5 days ago' },
                   { title: 'Product Requirements Doc', Icon: FileText, color: 'text-blue-600', status: 'draft', project: 'ACR-Web', author: 'BK', updated: '1 week ago' },
                 ].map(({ title, Icon, color, status, project, author, updated }) => {
                   const statusCls = status === 'published'
@@ -6689,7 +6689,7 @@ export function DesignSystemPage() {
                     fromAgent={{ name: 'Alice PM', role: '需求主管' }}
                     toAgent={{ name: 'Claude Coder', role: '全栈执行 Agent' }}
                     artifact={{
-                      title: 'DESIGN.md - APM 全局设计系统规范 v2.0',
+                      title: 'DESIGN.md - Ordo 全局设计系统规范 v2.0',
                       type: 'Architecture Spec',
                     }}
                     description="完成低饱和多色色阶、外舒内紧卡片、多端 13px/14px 双层字阶与动效白名单制定，请按清单完成卡片收口。"

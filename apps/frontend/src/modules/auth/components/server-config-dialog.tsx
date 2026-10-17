@@ -93,7 +93,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
             <div>
               <DialogTitle className="text-base font-semibold">服务接入与端点配置</DialogTitle>
               <DialogDescription className="text-xs">
-                配置 APM 后端 API 服务地址（适用于私有部署、多工作区或本地多端口开发）
+                配置 Ordo 后端 API 服务地址（适用于私有部署、多工作区或本地多端口开发）
               </DialogDescription>
             </div>
           </div>

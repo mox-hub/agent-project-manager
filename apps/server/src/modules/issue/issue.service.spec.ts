@@ -88,7 +88,7 @@ describe('IssueService', () => {
   };
 
   const mockIssueIdService = {
-    nextShortId: vi.fn().mockResolvedValue('APM-1'),
+    nextShortId: vi.fn().mockResolvedValue('ORDO-1'),
   };
 
   beforeEach(async () => {
@@ -150,7 +150,7 @@ describe('IssueService', () => {
 
       const mockProject = {
         id: 'project-1',
-        projectCode: 'APM',
+        projectCode: 'Ordo',
         members: [{ userId: 'user-1' }],
       };
 
@@ -226,7 +226,7 @@ describe('IssueService', () => {
 
       const mockProject = {
         id: 'project-1',
-        projectCode: 'APM',
+        projectCode: 'Ordo',
         members: [{ userId: 'user-1' }],
       };
 
@@ -1105,11 +1105,11 @@ describe('IssueService', () => {
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(detailTask);
 
-      const result = await service.findOne('APM-PF-001', 'user-1');
+      const result = await service.findOne('ORDO-PF-001', 'user-1');
 
       expect(result).toMatchObject({ id: 'issue-1', title: '引用目标工单' });
       const secondCall = mockPrismaService.issue.findFirst.mock.calls[1][0];
-      expect(secondCall.where.shortId).toBe('APM-PF-001');
+      expect(secondCall.where.shortId).toBe('ORDO-PF-001');
       expect(Array.isArray(secondCall.where.OR)).toBe(true);
     });
 

@@ -107,11 +107,11 @@ describe('LoggerService', () => {
 
     it('should fall back to module context when no trailing string passed', () => {
       const infoSpy = vi.spyOn(service['logger'], 'info');
-      service.setContext('APM');
+      service.setContext('Ordo');
       service.log('test message', { userId: 1 });
       expect(infoSpy).toHaveBeenCalledWith(
         'test message',
-        expect.objectContaining({ context: 'APM' }),
+        expect.objectContaining({ context: 'Ordo' }),
       );
     });
 
@@ -146,9 +146,9 @@ describe('LoggerService', () => {
           standalone: true,
           color: false,
           level: 'info',
-          context: 'APM',
+          context: 'Ordo',
         }),
-      ).toBe('[INFO] 2026-09-09 12:00:00.000 [APM] hello');
+      ).toBe('[INFO] 2026-09-09 12:00:00.000 [Ordo] hello');
     });
 
     it('常规无色：ts [CTX] level: msg（与旧格式逐字节一致）', () => {
@@ -170,14 +170,14 @@ describe('LoggerService', () => {
           standalone: false,
           color: true,
           level: 'error',
-          context: 'APM',
+          context: 'Ordo',
         }),
       ).toBe(
-        '2026-09-09 12:00:00.000 \x1b[96m[APM]\x1b[0m \x1b[31merror:\x1b[0m hello',
+        '2026-09-09 12:00:00.000 \x1b[96m[Ordo]\x1b[0m \x1b[31merror:\x1b[0m hello',
       );
     });
 
-    it('彩色：未知 level 不上色，context 缺省回退 APM', () => {
+    it('彩色：未知 level 不上色，context 缺省回退 Ordo', () => {
       expect(
         formatConsoleLine({
           ...base,
@@ -186,7 +186,7 @@ describe('LoggerService', () => {
           level: 'weird',
           context: undefined,
         }),
-      ).toBe('2026-09-09 12:00:00.000 \x1b[96m[APM]\x1b[0m weird: hello');
+      ).toBe('2026-09-09 12:00:00.000 \x1b[96m[Ordo]\x1b[0m weird: hello');
     });
 
     it('meta rest 原样拼接', () => {

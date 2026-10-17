@@ -73,8 +73,8 @@ import type { DeliveryNode, Annotation } from '@/modules/delivery/api/delivery-a
 import type { AnalyticsOverview } from '@/modules/analytics/api/analytics-api';
 
 const SEARCH_SEED: Array<[SearchHit['type'], string, string, string]> = [
-  ['task', 'Implement OAuth2 login', 'AgentPM Core · In Progress', '/app/issues'],
-  ['task', 'Optimize dashboard load time', 'AgentPM Core · Done', '/app/issues'],
+  ['task', 'Implement OAuth2 login', 'Ordo Core · In Progress', '/app/issues'],
+  ['task', 'Optimize dashboard load time', 'Ordo Core · Done', '/app/issues'],
   ['task', 'Integrate Stripe checkout', 'Payment Module · Blocked', '/app/issues'],
   ['task', 'Add rate limiting middleware', 'Infrastructure · Todo', '/app/issues'],
   ['task', 'Responsive UI for mobile', 'Frontend · Failed', '/app/issues'],
@@ -91,13 +91,13 @@ const SEARCH_SEED: Array<[SearchHit['type'], string, string, string]> = [
   ['document', 'Mobile UX Guidelines', 'Guide · Published', '/app/documents'],
   ['document', 'Q3 Sprint Retrospective', 'Retrospective · Published', '/app/documents'],
   ['document', 'Delivery Review Playbook', 'Playbook · Published', '/app/documents'],
-  ['project', 'AgentPM Platform', '24 tasks · on track', '/app/projects/mock-project-1'],
+  ['project', 'Ordo Platform', '24 tasks · on track', '/app/projects/mock-project-1'],
   ['project', 'Payment Integration', '18 tasks · at risk', '/app/projects/mock-project-2'],
   ['project', 'AI Code Reviewer', '12 tasks · on track', '/app/projects/mock-project-3'],
   ['project', 'Data Pipeline v2', '31 tasks · on track', '/app/projects/mock-project-4'],
-  ['milestone', 'Phase 1: Core Features', 'AgentPM Core · On Track', '/app/projects/mock-project-1/milestones'],
-  ['milestone', 'Phase 2: Growth', 'AgentPM Core · Upcoming', '/app/projects/mock-project-1/milestones'],
-  ['milestone', 'v1.0 Release', 'AgentPM Core · At Risk', '/app/projects/mock-project-1/milestones'],
+  ['milestone', 'Phase 1: Core Features', 'Ordo Core · On Track', '/app/projects/mock-project-1/milestones'],
+  ['milestone', 'Phase 2: Growth', 'Ordo Core · Upcoming', '/app/projects/mock-project-1/milestones'],
+  ['milestone', 'v1.0 Release', 'Ordo Core · At Risk', '/app/projects/mock-project-1/milestones'],
   ['acceptance', 'User Auth Flow Acceptance', 'In Progress · 5/8 passed', '/app/acceptance'],
   ['acceptance', 'Dashboard Performance Acceptance', 'Passed · 6/6 criteria', '/app/acceptance'],
   ['acceptance', 'Payment 3DS Acceptance', 'Blocked · 2/9 criteria', '/app/acceptance'],
@@ -210,7 +210,7 @@ export function makeAnalyticsOverview(): AnalyticsOverview {
   seq = 2;
   const weeks = Array.from({ length: 12 }, (_, i) => `W${String(i + 1).padStart(2, '0')}`);
   const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-  const projects = ['AgentPM Platform', 'Payment Integration', 'AI Code Reviewer', 'Data Pipeline v2', 'Mobile Shell', 'Plugin Runtime'];
+  const projects = ['Ordo Platform', 'Payment Integration', 'AI Code Reviewer', 'Data Pipeline v2', 'Mobile Shell', 'Plugin Runtime'];
   const models = [
     { name: 'claude-code', color: '#7c3aed' },
     { name: 'cursor', color: '#3b82f6' },
@@ -303,7 +303,7 @@ export function makeDashboardOverview() {
     completedThisWeek: 4 + ((i * 5) % 9),
   }));
   const projectNames = [
-    'AgentPM Platform', 'Payment Integration', 'AI Code Reviewer', 'Data Pipeline v2',
+    'Ordo Platform', 'Payment Integration', 'AI Code Reviewer', 'Data Pipeline v2',
     'Mobile Shell', 'Plugin Runtime', 'Audit Trail', 'Notification Hub',
   ];
   return {

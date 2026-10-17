@@ -13,12 +13,12 @@ describe('LinearSyncService mappings', () => {
         createEvent: vi.fn(),
         publishAsync: vi.fn(),
       } as any,
-      { nextShortId: vi.fn().mockResolvedValue('APM-PF-001') } as any,
+      { nextShortId: vi.fn().mockResolvedValue('ORDO-PF-001') } as any,
     );
   });
 
   describe('normalizeWorkflowStatus', () => {
-    it('maps Linear state.type to APM workflowStatus', () => {
+    it('maps Linear state.type to Ordo workflowStatus', () => {
       // private but we can access via casting
       const fn = (svc as any).normalizeWorkflowStatus.bind(svc);
       expect(fn('backlog', 'Backlog')).toBe('backlog');
@@ -34,7 +34,7 @@ describe('LinearSyncService mappings', () => {
   });
 
   describe('normalizePriority', () => {
-    it('maps Linear priority (inverted) to APM priority', () => {
+    it('maps Linear priority (inverted) to Ordo priority', () => {
       const fn = (svc as any).normalizePriority.bind(svc);
       expect(fn(0)).toBe('low');
       expect(fn(1)).toBe('critical');

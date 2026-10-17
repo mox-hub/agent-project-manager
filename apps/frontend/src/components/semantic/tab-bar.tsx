@@ -1,6 +1,6 @@
 /**
  * TabBar - 浏览器式 Tab 栏组件
- * 参考: refers/APM/TABS_SYSTEM.md
+ * 参考: refers/Ordo/TABS_SYSTEM.md
  *
  * 支持：
  * - 固定标签页（pinned）：不可关闭、hover 不显示关闭按钮、固定在左侧

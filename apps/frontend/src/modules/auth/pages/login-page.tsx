@@ -122,7 +122,7 @@ export function LoginPage() {
               {t('auth.loggingIn') || '正在验证中…'}
             </>
           ) : (
-            t('auth.loginButton') || '登录 APM'
+            t('auth.loginButton') || '登录 Ordo'
           )}
         </Button>
 

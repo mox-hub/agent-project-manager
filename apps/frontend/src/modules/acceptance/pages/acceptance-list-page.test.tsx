@@ -90,13 +90,13 @@ describe('AcceptanceListPage 绑定关系展示', () => {
           title: '登录页改造',
           status: 'in_progress',
           projectId: 'p1',
-          project: { id: 'p1', name: 'APM 主站' },
+          project: { id: 'p1', name: 'Ordo 主站' },
         },
       },
     ];
     renderPage();
     // 卡片视图：项目名与任务名均直出实际名称，而非关联 ID 或占位符
-    expect(screen.getByText('APM 主站')).toBeTruthy();
+    expect(screen.getByText('Ordo 主站')).toBeTruthy();
     expect(screen.getByText('登录页改造')).toBeTruthy();
   });
 
@@ -106,7 +106,7 @@ describe('AcceptanceListPage 绑定关系展示', () => {
     ];
     renderPage();
     expect(screen.getByText('无关联契约')).toBeTruthy();
-    expect(screen.queryByText('APM 主站')).toBeNull();
+    expect(screen.queryByText('Ordo 主站')).toBeNull();
     expect(screen.queryByText('登录页改造')).toBeNull();
   });
 });

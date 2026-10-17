@@ -41,11 +41,11 @@ const hit = (over: Partial<SearchHit> = {}): SearchHit => ({
   id: 'i1',
   type: 'task',
   title: '修复登录超时',
-  subtitle: 'APM-EXP · APM-PF-001',
+  subtitle: 'Ordo-EXP · Ordo-PF-001',
   path: '/app/issues/i1',
   updatedAt: '2026-09-01T00:00:00.000Z',
   projectId: 'p1',
-  ordoRef: 'ordo://APM-EXP/issue/APM-PF-001',
+  ordoRef: 'ordo://Ordo-EXP/issue/Ordo-PF-001',
   ...over,
 });
 
@@ -99,7 +99,7 @@ describe('buildSlashInsertText', () => {
         kind: 'hit',
         hit: hit({ title: '修[复]登录' }),
       }),
-    ).toBe('[修复登录](ordo://APM-EXP/issue/APM-PF-001) ');
+    ).toBe('[修复登录](ordo://Ordo-EXP/issue/Ordo-PF-001) ');
   });
 
   it('成员以 @handle 语法糖插入', () => {
@@ -171,7 +171,7 @@ describe('SlashRefTextarea', () => {
     fireEvent.keyDown(textarea, { key: 'Enter' });
 
     expect(onChange).toHaveBeenCalledWith(
-      '前文 [修复登录超时](ordo://APM-EXP/issue/APM-PF-001) ',
+      '前文 [修复登录超时](ordo://Ordo-EXP/issue/Ordo-PF-001) ',
     );
   });
 

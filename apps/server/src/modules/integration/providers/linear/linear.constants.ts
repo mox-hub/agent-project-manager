@@ -16,7 +16,7 @@ export type SyncStatusValue = 'success' | 'failed' | 'conflict';
 export type ProjectSyncStatus = 'synced' | 'pending' | 'error' | 'never_synced';
 
 /**
- * Linear status.type -> APM Project.workflowStatus
+ * Linear status.type -> Ordo Project.workflowStatus
  * - backlog|triage -> backlog
  * - unstarted -> planned
  * - started -> in_progress
@@ -34,14 +34,14 @@ export const LINEAR_STATE_TYPE_TO_WORKFLOW: Record<string, string> = {
 };
 
 /**
- * Linear priority → APM Task.priority (note反转).
+ * Linear priority → Ordo Task.priority (note反转).
  * Linear:
  *   0 = No priority
  *   1 = Urgent
  *   2 = High
  *   3 = Medium
  *   4 = Low
- * APM:
+ * Ordo:
  *   urgent (highest) -> critical
  *   high -> high
  *   medium -> medium

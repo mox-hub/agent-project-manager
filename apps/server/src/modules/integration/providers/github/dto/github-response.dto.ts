@@ -244,7 +244,7 @@ export class GitHubPullRequestDto {
   @ApiPropertyOptional({ description: '变更文件数' })
   changedFiles?: number;
 
-  @ApiPropertyOptional({ description: 'APM 映射后的最终状态' })
+  @ApiPropertyOptional({ description: 'Ordo 映射后的最终状态' })
   apmState?: string;
 }
 

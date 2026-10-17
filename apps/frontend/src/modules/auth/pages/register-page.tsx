@@ -91,7 +91,7 @@ export function RegisterPage() {
           >
             {inviteInvalid
               ? '该邀请已失效，请联系管理员重新发送。'
-              : `${invite.inviterName} 邀请你加入 APM 团队${
+              : `${invite.inviterName} 邀请你加入 Ordo 团队${
                   invite.email ? `（受邀邮箱：${invite.email}）` : ''
                 }`}
           </div>

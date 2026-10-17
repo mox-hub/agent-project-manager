@@ -1050,7 +1050,7 @@ describe('AssistantSilentService.run', () => {
 });
 
 describe('AssistantSilentService.run · grill-next', () => {
-  const GRILLING = '你是 APM 的需求拷问官（grill）。一次只问一个问题。';
+  const GRILLING = '你是 Ordo 的需求拷问官（grill）。一次只问一个问题。';
 
   const makeGrillService = (
     skillRow: { enabled: boolean; content: string | null } | null = {

@@ -4,7 +4,7 @@
  *    插步回归与 2026-10-03 前的「web 5 步 / 桌面 7 步」分叉均随统一裁决消亡，
  *    步骤序列不再随模式漂移，web 降级在步骤组件内部诚实分叉）。
  * ② 完成/建项回归（2026-09-12 实机暴露）——向导 API 层曾指向服务端从未实现
- *    的 /onboarding/* 五端点（恒 404）：「进入 APM」静默失败无法进入；建项
+ *    的 /onboarding/* 五端点（恒 404）：「进入 Ordo」静默失败无法进入；建项
  *    提交永远不前进。修复后 finish 纯前端/壳侧完成（零网络依赖）、建项落
  *    真实 POST /projects 契约端点。
  */
@@ -83,7 +83,7 @@ describe('buildSteps（初始化向导步骤序列）', () => {
   });
 });
 
-describe('finishOnboarding（进入 APM 回归）', () => {
+describe('finishOnboarding（进入 Ordo 回归）', () => {
   it('完成是纯前端/壳侧动作：置标记、镜像壳侧、跳 /app，零网络依赖', () => {
     const { result } = renderHook(() => useOnboarding(), { wrapper: createWrapper() });
 
@@ -93,7 +93,7 @@ describe('finishOnboarding（进入 APM 回归）', () => {
 
     expect(setOnboardingCompletedMock).toHaveBeenCalledWith(true);
     // 完成须同时复位侧边栏重开开关：gate 条件是 completed && !open，
-    // 不复位的话从侧边栏进入的会话点「进入 APM」后向导关不掉（2026-10-04 实机暴露）
+    // 不复位的话从侧边栏进入的会话点「进入 Ordo」后向导关不掉（2026-10-04 实机暴露）
     expect(setOnboardingOpenMock).toHaveBeenCalledWith(false);
     expect(persistOnboardingMock).toHaveBeenCalledWith(true);
     expect(navigateMock).toHaveBeenCalledWith('/app');
@@ -118,7 +118,7 @@ describe('watchReplayThenStart（S6：向导完成 → 先看回放）', () => {
     expect(postMock).not.toHaveBeenCalled();
   });
 
-  it('★ 与「直接进入 APM」是两条不同的去向（次序不可颠倒的那一半）', () => {
+  it('★ 与「直接进入 Ordo」是两条不同的去向（次序不可颠倒的那一半）', () => {
     const { result } = renderHook(() => useOnboarding(), { wrapper: createWrapper() });
 
     act(() => {
@@ -149,7 +149,7 @@ describe('finishToCreateAgent（CAP-A-18 AI 员工引导闭环：跳过配置 AI
     expect(postMock).not.toHaveBeenCalled();
   });
 
-  it('与「直接进入 APM」是两条不同去向：不是落回 /app 的工作台', () => {
+  it('与「直接进入 Ordo」是两条不同去向：不是落回 /app 的工作台', () => {
     const { result } = renderHook(() => useOnboarding(), { wrapper: createWrapper() });
 
     act(() => {

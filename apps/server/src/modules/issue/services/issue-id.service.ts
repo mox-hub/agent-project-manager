@@ -13,7 +13,7 @@ import { PrismaService } from '../../../core/database/prisma.service';
 export const GLOBAL_SEQUENCE_KEY = 'task.shortId';
 
 // 默认 shortID 前缀（配置缺失时使用）
-const DEFAULT_SHORT_ID_PREFIX = 'APM';
+const DEFAULT_SHORT_ID_PREFIX = 'ORDO';
 
 @Injectable()
 export class IssueIdService {

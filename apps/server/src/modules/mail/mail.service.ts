@@ -112,7 +112,7 @@ export class MailService {
     `;
     return this.send({
       to: params.to,
-      subject: `[APM] 邀请你加入团队「${params.teamName}」`,
+      subject: `[Ordo] 邀请你加入团队「${params.teamName}」`,
       body,
       template: 'team_invite',
       payload: { link, teamName: params.teamName, role: params.role },
@@ -131,13 +131,13 @@ export class MailService {
     const link = `${baseUrl.replace(/\/$/, '')}/register?invite=${params.token}`;
     const body = `
       <h2>注册 APM 账号</h2>
-      <p>${params.inviterName} 邀请你注册 APM（Agent Project Manager）账号。</p>
+      <p>${params.inviterName} 邀请你注册 APM（Ordo）账号。</p>
       <p>点击以下链接完成注册（${params.expiresAt.toLocaleString('zh-CN')} 前有效）：</p>
       <p><a href="${link}">${link}</a></p>
     `;
     return this.send({
       to: params.to,
-      subject: `[APM] ${params.inviterName} 邀请你注册账号`,
+      subject: `[Ordo] ${params.inviterName} 邀请你注册账号`,
       body,
       template: 'register_invite',
       payload: { link },

@@ -87,7 +87,7 @@ export function normalizePromptInjection(raw: unknown): PromptInjectionToggles {
  * 首卡的一级标题识别；taskBody/closing 恒注入不列入治理统计口径外。
  */
 export const PROMPT_SECTION_MARKERS: Record<string, string> = {
-  system: '# APM 协作基线',
+  system: '# Ordo 协作基线',
   executor: '## Your Role',
   team: '## Team Rules',
   project: '## Project Instructions',

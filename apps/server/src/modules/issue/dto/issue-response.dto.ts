@@ -264,7 +264,7 @@ export class IssueBaseDto {
 
   @ApiPropertyOptional({
     type: String,
-    description: '短 ID（如 APM-PF-001）',
+    description: '短 ID（如 ORDO-PF-001）',
     nullable: true,
   })
   shortId?: string | null;
