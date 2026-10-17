@@ -1,5 +1,5 @@
 ---
-title: "Agent Project Manager"
+title: "Ordo"
 description: "项目入口与文档导航"
 id: "ROOT-README-001"
 category: "meta"
@@ -16,7 +16,7 @@ ai-audiences: "session:all"
 tags: "docs,index,readme"
 ---
 
-# Agent Project Manager
+# Ordo
 
 **AI 驱动的工程项目管理工具**——AI 同事替你干活，治理闭环替你把关：需求访谈 → 任务拆解 → 隔离执行 → 验收门禁 → 发版交付。
 
@@ -26,7 +26,7 @@ tags: "docs,index,readme"
 
 1. 到 [Releases](https://github.com/mox-hub/agent-project-manager/releases) 下载最新 Windows 安装包（`.exe`）并安装；
 2. 首启注册账号（首个注册用户自动成为管理员），引导向导会带你完成：工作目录 → 环境检查 → 建第一个项目 → 连接仓库 → 配置 AI；
-3. 「配置 AI」步填入模型服务的 API Key（支持 OpenAI / Anthropic / GLM / DeepSeek 等），测试通过后 APM 会自动创建你的第一个 AI 员工；
+3. 「配置 AI」步填入模型服务的 API Key（支持 OpenAI / Anthropic / GLM / DeepSeek 等），测试通过后 Ordo 会自动创建你的第一个 AI 员工；
 4. 到项目里建一张工单，指派给 AI 员工——它会读取需求、隔离执行、回来提交验收。
 
 **方式二：开发态（Web 全栈）**

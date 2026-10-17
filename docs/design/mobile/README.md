@@ -1,6 +1,6 @@
 ---
 title: 移动端材料索引（M0）
-description: APM 移动端（Expo + React Native 伴随式掌上治理台）前期材料总索引——效力链导航、材料状态表、决策基线、批次规划
+description: Ordo 移动端（Expo + React Native 伴随式掌上治理台）前期材料总索引——效力链导航、材料状态表、决策基线、批次规划
 status: active
 scope: apps/mobile
 created: "2026-10-11"

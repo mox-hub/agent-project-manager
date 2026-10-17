@@ -17,7 +17,7 @@ tags: architecture, backend, frontend, cli, runtime
 
 # 架构总览
 
-> 本文档是系统**主架构文档**（AI 会话第二步阅读）。v4.0.0（2026-09-07）对齐仓库实况：pnpm/turbo/catalog 工具链、四应用 + @apm/shared、后端 36 模块目录（38 Module 类）/ 前端 36 模块目录、工作区多库路由、Runtime 守护进程执行链、openapi 契约三件套。v4.1.0（2026-10-11）订正模块口径：后端 43 模块目录（modules/ 下 49 个 Module 类，app.module 直接挂载 45 个业务 Module）/ 前端 42 模块目录，删除不存在的 `context` 模块，补入 environment / search / workflow / ai-surface / release / tour。
+> 本文档是系统**主架构文档**（AI 会话第二步阅读）。v4.0.0（2026-09-07）对齐仓库实况：pnpm/turbo/catalog 工具链、四应用 + @ordo/shared、后端 36 模块目录（38 Module 类）/ 前端 36 模块目录、工作区多库路由、Runtime 守护进程执行链、openapi 契约三件套。v4.1.0（2026-10-11）订正模块口径：后端 43 模块目录（modules/ 下 49 个 Module 类，app.module 直接挂载 45 个业务 Module）/ 前端 42 模块目录，删除不存在的 `context` 模块，补入 environment / search / workflow / ai-surface / release / tour。
 > **术语口径（2026-09 核心模型重构）**：`Task` 族 → `Issue` 族、`ExecutionRun` → `Execution`；模块目录与 API 面均为新口径（`/issues` + `issueId`）。
 > 治理入口见 [[AGENTS.md|AGENTS.md]]；精简直览与完整模块结构见 `docs/02-架构设计/architecture/技术架构总览.md`。
 
@@ -38,10 +38,10 @@ agent-project-manager/
 ├── apps/
 │   ├── server/        # NestJS 10 + Prisma 6 (SQLite)——控制面 REST/WS + 执行核心 + 数据层
 │   ├── frontend/      # React 19 + Vite 7 + Tailwind 4——人类控制面 (web)
-│   ├── cli/           # @apm/cli：瘦客户端(apm) + 常驻守护进程(apm-runtime)
+│   ├── cli/           # @ordo/cli：瘦客户端(ordo) + 常驻守护进程(ordo-runtime)
 │   └── desktop/       # Electron 桌面壳（托管前端 + 本地能力，ADR-014）
 ├── packages/
-│   └── apm-shared/    # @apm/shared：CLI/runtime 协议镜像、CLI adapters、HTTP 客户端、生成类型
+│   └── ordo-shared/    # @ordo/shared：CLI/runtime 协议镜像、CLI adapters、HTTP 客户端、生成类型
 ├── openapi.json       # API 契约真相（contract:check / 双端类型生成）
 └── scripts/           # 质量与巡检脚本（check-doc-sync / contract-check / cli-contract / api-audit …）
 ```
@@ -50,9 +50,9 @@ agent-project-manager/
 |------|------|------|
 | `apps/server` | NestJS 10 + Prisma 6 (SQLite) | 控制面 REST + 实时 WS + 执行核心 + 数据层 |
 | `apps/frontend` | React 19 + Vite 7 + Tailwind 4 | 人类控制面（web） |
-| `apps/cli` | Node + commander + socket.io-client | Agent 侧入口：`apm` 命令 + `apm-runtime` 守护进程 |
+| `apps/cli` | Node + commander + socket.io-client | Agent 侧入口：`ordo` 命令 + `ordo-runtime` 守护进程 |
 | `apps/desktop` | Electron 44 + electron-builder | 桌面壳（shell），托管前端与本地能力（ADR-014） |
-| `packages/apm-shared` | 框架无关 TypeScript | 协议镜像、CLI adapters（codex/claude-code/zcode）、HTTP 客户端 |
+| `packages/ordo-shared` | 框架无关 TypeScript | 协议镜像、CLI adapters（codex/claude-code/zcode）、HTTP 客户端 |
 
 ## 3. 双表面架构
 
@@ -63,7 +63,7 @@ agent-project-manager/
 │  Human Surface   React Web（项目/工单/验收/审批/文档/AI 面板）  │
 │                  + Electron 桌面壳（apps/desktop）             │
 ├─────────────────────────────────────────────────────────────┤
-│  Agent Surface   @apm/cli（apm 命令）· MCP 接入 · apm-runtime  │
+│  Agent Surface   @ordo/cli（ordo 命令）· MCP 接入 · ordo-runtime  │
 └─────────────────────────────────────────────────────────────┘
             ↓ 共享后端（REST /_api + WebSocket）↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -71,7 +71,7 @@ agent-project-manager/
 └─────────────────────────────────────────────────────────────┘
             ↓ 派发执行（cli-dispatch，按角色/provider 组装）↓
 ┌─────────────────────────────────────────────────────────────┐
-│  Local Runtime   apm-runtime 守护进程 → CLI Adapters          │
+│  Local Runtime   ordo-runtime 守护进程 → CLI Adapters          │
 │                  (claude-code / codex / zcode)               │
 └─────────────────────────────────────────────────────────────┘
                      ↓ 回传 execution events/result ↓
@@ -133,8 +133,8 @@ apps/frontend/src/
 ### 4.3 控制面与本地执行面（Runtime / CLI 链）
 
 - **Server 侧**：`runtime` 登记在线 Runtime（注册/心跳/capabilities，terminal 并入）；`execution` 承载 Execution 八态状态机与审批（ApprovalRequest）；`cli-dispatch` 按项目角色/CLI provider 解析组装 prompt，经 REST/WS 下派在线 runtime。
-- **Runtime 侧（apps/cli）**：`apm-runtime` 守护进程单实例（`runtime.lock` 原子锁 + 陈旧接管），worker 消费派发队列、维护审批映射、进程树取消、事件与结果回传。
-- **CLI adapters（@apm/shared）**：`claude-code` / `codex` / `zcode` + `process-runner`，框架无关；协议 DTO 在 `packages/apm-shared/src/runtime/protocol.ts` 与 server `modules/runtime/` **镜像同步**（`check:cli-contract`）。
+- **Runtime 侧（apps/cli）**：`ordo-runtime` 守护进程单实例（`runtime.lock` 原子锁 + 陈旧接管），worker 消费派发队列、维护审批映射、进程树取消、事件与结果回传。
+- **CLI adapters（@ordo/shared）**：`claude-code` / `codex` / `zcode` + `process-runner`，框架无关；协议 DTO 在 `packages/ordo-shared/src/runtime/protocol.ts` 与 server `modules/runtime/` **镜像同步**（`check:cli-contract`）。
 - **执行闭环**：Execution → 派发 Runtime → CLI adapter → events/result 回传 → **Acceptance 验收门禁**收口。
 
 ## 5. 主线对象（数据模型，schema.prisma 109 model）
@@ -190,7 +190,7 @@ User ──┬── Member ── Project ── Iteration ── Issue(原Task
 | 需求契约 | `docs/01-需求/产品需求文档-v3.md` + `需求模块/Feat*.md` | FR 定义、边界、验收 |
 | 设计契约 | `docs/02-架构设计/策略/*` | 权限、执行审批、运行时数据模型、CLI 适配器等 |
 | **API 契约（三件套）** | 仓库根 `openapi.json` | `contract:export` → 双份 `api-types.gen.ts` → `contract:check` 零漂移 |
-| **CLI 运行时协议** | `@apm/shared/src/runtime/protocol.ts` ↔ server `modules/runtime/` | `check:cli-contract` |
+| **CLI 运行时协议** | `@ordo/shared/src/runtime/protocol.ts` ↔ server `modules/runtime/` | `check:cli-contract` |
 | 变更契约 | `CHANGELOG.md` | 版本-模块-证据追溯 |
 | 文档契约（演进方向）| `docs/02-架构设计/策略/项目契约与文档知识层-双向绑定设计纪要-v1.md` | 双向绑定、DocRegistry、docs 镜像 |
 
@@ -222,6 +222,6 @@ User ──┬── Member ── Project ── Iteration ── Issue(原Task
 | 控制面/运行时 | `docs/02-架构设计/architecture/控制平面-本地运行时-v1.md` · `本地运行时模块-v1.md` · `本地运行时通信协议-v1.md` |
 | CLI/MCP 现状 | `docs/02-架构设计/architecture/CLI-MCP-接入现状.md` |
 | 策略与治理 | `docs/02-架构设计/策略/角色级权限模型-v1.md` · `渐进式信任模型.md` · `执行审批模型-v1.md` · `上下文管理设计.md` · `运行时数据模型-v1.md` · `CLI适配器模型-v1.md` · `外部AI集成协议-v1.md` · `决策日志.md` |
-| API/协议真相 | 根 `openapi.json` · `packages/apm-shared/src/runtime/protocol.ts` |
-| 交互图表 | `docs/diagrams/`（apm-system-architecture / module-dependencies / main-workflow / engineering-workflow）|
+| API/协议真相 | 根 `openapi.json` · `packages/ordo-shared/src/runtime/protocol.ts` |
+| 交互图表 | `docs/diagrams/`（ordo-system-architecture / module-dependencies / main-workflow / engineering-workflow）|
 | 实施路线 | `docs/roadmap/tasks-phase1-3.md` · `docs/roadmap/stabilization-plan.md` |

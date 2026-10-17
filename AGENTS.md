@@ -39,10 +39,10 @@ ordo_sync_mode: managed
 
 ## 二、项目简介
 
-Agent Project Manager (APM) 是一个 **AI 驱动的项目管理工具**，采用**双表面架构**：
+Ordo (Ordo) 是一个 **AI 驱动的项目管理工具**，采用**双表面架构**：
 
 - **人类控制面**：React Web（项目/工单/验收/审批/文档/AI 面板）+ Electron 桌面壳
-- **AI 执行面**：`apm-runtime` 守护进程 → CLI Adapters（`claude-code` / `codex` / `zcode`）执行代码、Git、终端命令
+- **AI 执行面**：`ordo-runtime` 守护进程 → CLI Adapters（`claude-code` / `codex` / `zcode`）执行代码、Git、终端命令
 
 | 用户角色 | 核心需求 |
 |----------|----------|
@@ -73,10 +73,10 @@ agent-project-manager/
 ├── apps/
 │   ├── server/        # NestJS 10 + Prisma 6 (SQLite) —— 控制面 REST/WS + 执行核心 + 数据层
 │   ├── frontend/      # React 19 + Vite 7 + Tailwind 4 —— 人类控制面 (web)
-│   ├── cli/           # @apm/cli：瘦客户端(apm) + 常驻守护进程(apm-runtime)
+│   ├── cli/           # @ordo/cli：瘦客户端(ordo) + 常驻守护进程(ordo-runtime)
 │   └── desktop/       # Electron 桌面壳（托管前端 + 本地能力，ADR-014）
 ├── packages/
-│   └── apm-shared/    # @apm/shared：CLI/runtime 协议镜像、CLI adapters、HTTP 客户端、生成类型
+│   └── ordo-shared/    # @ordo/shared：CLI/runtime 协议镜像、CLI adapters、HTTP 客户端、生成类型
 ├── openapi.json       # API 契约真相（供 contract:check / 双端类型生成）
 └── scripts/           # 质量与巡检脚本（check-doc-sync / contract-check / cli-contract / api-audit …）
 ```
@@ -164,8 +164,8 @@ pnpm build:template-db   # 重建工作区模板库
 
 | 契约 | 位置 | 校验 |
 |------|------|------|
-| API 契约（三件套）| 仓库根 `openapi.json` | server `contract:export` → 前端 + `@apm/shared` 双份 `api-types.gen.ts` → `contract:check` 零漂移 |
-| CLI 运行时协议 | `packages/apm-shared/src/runtime/protocol.ts` + server `modules/runtime/` | `check:cli-contract` |
+| API 契约（三件套）| 仓库根 `openapi.json` | server `contract:export` → 前端 + `@ordo/shared` 双份 `api-types.gen.ts` → `contract:check` 零漂移 |
+| CLI 运行时协议 | `packages/ordo-shared/src/runtime/protocol.ts` + server `modules/runtime/` | `check:cli-contract` |
 | 变更契约 | `CHANGELOG.md` | — |
 | 需求契约（功能点总账）| `docs/01-需求/能力清单-v1.md`（配套 `测试映射矩阵-v1.md` / `需求入口流程-v1.md`）| `requirement-intake` skill 闸门：未进清单不得开工 |
 | 文档契约 | 本文件 + README + docs/ | `check:docs-sync`（**本文件为 CI 治理对象**）|
@@ -189,13 +189,13 @@ hotfix/*（从 main 检出） · release/*（从 pre-prod 检出）
 
 - 改模块前先读 `docs/02-架构设计/architecture/{backend,frontend}/modules.md` 对应域，遵守模块放置规范（前端：模块专用组件入 `modules/{module}/components`，跨模块业务组件入 `shared/components`，UI 原子入 `components/ui`）。
 - 契约驱动：涉及 API 字段 → 先动根 `openapi.json` / 后端 DTO，再 `contract:export` 生成前端类型，禁手工改 `api-types.gen.ts`。
-- CLI 协议变更 → 改 `packages/apm-shared/src/runtime/protocol.ts` 并镜像 server `modules/runtime/dto`，跑 `check:cli-contract`。
+- CLI 协议变更 → 改 `packages/ordo-shared/src/runtime/protocol.ts` 并镜像 server `modules/runtime/dto`，跑 `check:cli-contract`。
 - 行为/状态变更 → 同步 `docs/` 设计文档 + `CHANGELOG.md`（文档即契约）。
 - 定义完成：改完自查 `pnpm quality:gate`（或最小子集 type-check + test + lint），并在回复附变更摘要。
 - 需求入口：新功能想法 / 功能变更 / 功能废弃一律先走 `requirement-intake` skill（流程见 `docs/01-需求/需求入口流程-v1.md`）——**未进能力清单（`docs/01-需求/能力清单-v1.md`）的功能不得开工**；测试映射与缺口账见 `docs/01-需求/测试映射矩阵-v1.md`。
 
 <!-- BEGIN ordo:managed:project-intro -->
-# Agent Project Manager
+# Ordo
 
-APM 自举（dogfooding）：用 APM 管理 APM 自己的开发——需求管理、发布与版本管理、任务与文档纳入本系统管辖
+Ordo 自举（dogfooding）：用 Ordo 管理 Ordo 自己的开发——需求管理、发布与版本管理、任务与文档纳入本系统管辖
 <!-- END ordo:managed:project-intro -->

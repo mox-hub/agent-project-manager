@@ -1,6 +1,6 @@
 ---
-title: DESIGN.md - APM 全局设计系统规范与组件架构标准
-description: APM 双表面（人类控制面 + AI 执行面）前端设计系统参考规格书——低饱和多色色阶、外舒内紧卡片、多端字阶密度、系统化动效理念与全量组件清单
+title: DESIGN.md - Ordo 全局设计系统规范与组件架构标准
+description: Ordo 双表面（人类控制面 + AI 执行面）前端设计系统参考规格书——低饱和多色色阶、外舒内紧卡片、多端字阶密度、系统化动效理念与全量组件清单
 version: 2.0.0
 status: reference-spec
 superseded_by: docs/design/PRINCIPLES.md
@@ -9,7 +9,7 @@ scope: apps/frontend, apps/desktop
 governance: "宪法为 docs/design/PRINCIPLES.md（版本号只在宪法头部声明一处）；本文件为其下位参考规格，冲突以宪法为准"
 ---
 
-# APM 全局设计系统规范与组件架构标准 (v2.0)
+# Ordo 全局设计系统规范与组件架构标准 (v2.0)
 
 > ## ⚠️ 地位勘正（2026-09-27，随 PRINCIPLES 语义化 token 层落地）
 >
@@ -65,7 +65,7 @@ governance: "宪法为 docs/design/PRINCIPLES.md（版本号只在宪法头部�
 ## 一、核心设计哲学与双表面定位
 
 ### 1.1 设计主轴
-APM 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主轴是：
+Ordo 是一个 **AI 驱动的高吞吐项目管理系统**。我们的产品主轴是：
 > **「AI 同事是手段，工程治理是目的」** —— 界面必须让小白团队能够清晰感知工程质量、验收门禁与契约合规，同时让熟练工程师拥有如代码编辑器般的极速扫视感。
 
 ### 1.2 双表面架构视觉映射（Dual-Surface Cohesion）

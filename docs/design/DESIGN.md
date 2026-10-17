@@ -1,5 +1,5 @@
 ---
-title: DESIGN.md - APM 全局设计系统规范与组件架构标准（指针页）
+title: DESIGN.md - Ordo 全局设计系统规范与组件架构标准（指针页）
 description: 本文件原为根 DESIGN.md 的逐字副本，2026-09-27 收口为单份后降为指针页——正文见仓库根 DESIGN.md，宪法见 PRINCIPLES.md
 status: pointer
 superseded_by: docs/design/PRINCIPLES.md
@@ -17,7 +17,7 @@ governance: "宪法为 docs/design/PRINCIPLES.md（版本号只在宪法头部�
 | 要读什么 | 去哪 |
 |---------|------|
 | **前端设计宪法（最高依据）** | [`docs/design/PRINCIPLES.md`](./PRINCIPLES.md) —— 版本号只在宪法头部声明一处，配 `lint:spacing` / `lint:palette` / `lint:semantic` / `lint:undefined` 机器强制 |
-| 《APM 全局设计系统规范与组件架构标准 v2.0》正文 | 仓库根 [`DESIGN.md`](../../DESIGN.md) —— 已降级为**参考规格（Reference Spec）**，其文首「地位勘正」列出与宪法的全部已知偏差 |
+| 《Ordo 全局设计系统规范与组件架构标准 v2.0》正文 | 仓库根 [`DESIGN.md`](../../DESIGN.md) —— 已降级为**参考规格（Reference Spec）**，其文首「地位勘正」列出与宪法的全部已知偏差 |
 | A/B/C/D/E 类修改方案与规范调研 | `docs/design/修改方案-*.md`、`docs/design/规范调研报告-2026-09-27.md` |
 
 ## 为什么保留根副本而不是本副本
