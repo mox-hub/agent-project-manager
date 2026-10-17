@@ -158,6 +158,7 @@ scripts/check_icon_tools.py
 
 # 桌面壳打包 staging（pack.mjs 产物；electron-builder extraResources 源）
 apps/desktop/build/desktop-pack/
+apps/desktop/build/pack-cache/
 
 # 夜航体验测试产物（截图/一次性脚本，2026-09-20）
 tmp/

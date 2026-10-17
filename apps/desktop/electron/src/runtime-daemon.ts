@@ -15,7 +15,7 @@ const GRACEFUL_DAEMON_SHUTDOWN_TIMEOUT_MS = 3_000;
 import fs from 'node:fs';
 import path from 'node:path';
 import { utilityProcess, type UtilityProcess } from 'electron';
-import type { AppConfig } from './config';
+import { withBundledEnv, type AppConfig } from './config';
 import { logger } from './logger';
 import { state, type RuntimeDaemonHandle } from './state';
 
@@ -177,12 +177,12 @@ export async function startRuntimeDaemon(backendPort: number): Promise<{ pid: nu
     writeWorkspaceRoots(config, readWorkspaceRoots(config));
   }
 
-  const env = {
+  const env = withBundledEnv(config, {
     ...process.env,
     ORDO_BACKEND: `http://127.0.0.1:${backendPort}`,
     ORDO_CONFIG_PATH: config.ordoConfigPath,
     NODE_ENV: 'production',
-  };
+  });
   logger.info(`启动守护进程: entry=${config.cliEntry} backend=${env.ORDO_BACKEND}`);
 
   const proc: UtilityProcess = utilityProcess.fork(config.cliEntry, [], {

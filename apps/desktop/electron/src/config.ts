@@ -26,6 +26,12 @@ export interface AppConfig {
   integrationKey: string;
   /** 打包模式指向随包分发的 node.exe；开发模式为 null（回退 Electron 内置 Node，见 setup.ts） */
   nodeExe: string | null;
+  /** 随包 MinGit 的 git.exe 目录（resources/git/cmd）；dev/非 win 为 null（CAP-A-30） */
+  bundledGitBinDir: string | null;
+  /** 随包 npm CLI 入口（resources/bin/npm/bin/npm-cli.js）；dev 为 null（CAP-A-30） */
+  bundledNpmCli: string | null;
+  /** AI CLI 按需安装落点（用户数据目录 tools/，受控 prefix 不碰系统全局，CAP-A-30） */
+  toolsDir: string;
   defaultPort: number;
   maxPort: number;
 }
@@ -51,6 +57,8 @@ export function resolveAppConfig(): AppConfig {
   let frontendDist: string;
   let cliEntry: string;
   let nodeExe: string | null = null;
+  let bundledGitBinDir: string | null = null;
+  let bundledNpmCli: string | null = null;
 
   if (isDevMode()) {
     const root = resolveWorkspaceRoot();
@@ -64,6 +72,11 @@ export function resolveAppConfig(): AppConfig {
     frontendDist = path.join(resources, 'frontend');
     cliEntry = path.join(resources, 'cli', 'dist', 'runtime', 'index.js');
     nodeExe = path.join(resources, 'bin', process.platform === 'win32' ? 'node.exe' : 'node');
+    // 环境自足随包（CAP-A-30）：MinGit 仅 Windows 发行版随包（打包目标 x64 nsis）
+    if (process.platform === 'win32') {
+      bundledGitBinDir = path.join(resources, 'git', 'cmd');
+      bundledNpmCli = path.join(resources, 'bin', 'npm', 'bin', 'npm-cli.js');
+    }
   }
 
   // SWC builder 以 src 为 rootDir 平铺输出，入口是 dist/main.js（非旧的 dist/src/main.js）
@@ -82,9 +95,43 @@ export function resolveAppConfig(): AppConfig {
     jwtSecret: '',
     integrationKey: '',
     nodeExe,
+    bundledGitBinDir,
+    bundledNpmCli,
+    toolsDir: path.join(userDataDir, 'tools'),
     defaultPort: 4300,
     maxPort: 4399,
   };
+}
+
+/**
+ * 环境自足注入（CAP-A-30）：随包 git/node/npm 目录前插派发链 PATH，并把随包
+ * 资产路径经 ORDO_BUNDLED_* 告知 server（其按需安装作业据此拼 npm 命令）。
+ * server/守护进程拉起的一切子进程（AI CLI、git、安装器）由此免预装可用；
+ * dev 模式随包项为 null，仅注入 toolsDir（安装走用户数据目录约定不变）。
+ */
+export function withBundledEnv(
+  config: Pick<
+    AppConfig,
+    'nodeExe' | 'bundledGitBinDir' | 'bundledNpmCli' | 'toolsDir'
+  >,
+  env: NodeJS.ProcessEnv,
+): NodeJS.ProcessEnv {
+  const prependDirs = [
+    config.bundledGitBinDir,
+    config.nodeExe ? path.dirname(config.nodeExe) : null,
+    config.toolsDir,
+  ].filter((dir): dir is string => !!dir);
+  const pathKey = process.platform === 'win32' ? 'Path' : 'PATH';
+  const resolved: NodeJS.ProcessEnv = { ...env };
+  const existingPath = resolved[pathKey] ?? resolved.PATH ?? '';
+  // PATH/Path 混写双键会让 Windows 子进程 env 块行为未定义——统一保留单键
+  delete resolved.PATH;
+  delete resolved.Path;
+  resolved[pathKey] = `${prependDirs.join(path.delimiter)}${path.delimiter}${existingPath}`;
+  if (config.nodeExe) resolved.ORDO_BUNDLED_NODE = config.nodeExe;
+  if (config.bundledNpmCli) resolved.ORDO_BUNDLED_NPM_CLI = config.bundledNpmCli;
+  resolved.ORDO_TOOLS_DIR = config.toolsDir;
+  return resolved;
 }
 
 export function getDatabaseUrl(config: AppConfig): string {

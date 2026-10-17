@@ -242,4 +242,63 @@ run('npm', ['install', '--omit=dev', '--no-audit', '--no-fund', '--legacy-peer-d
 cpSync(process.execPath, path.join(binStaging, 'node.exe'));
 cpSync(path.join(repoRoot, 'apps', 'frontend', 'dist'), frontendStaging, { recursive: true });
 
+// 6. 环境自足随包（CAP-A-30，2026-10-17）：MinGit + npm 运行时——用户机 git 能力
+//    （仓库绑定/worktree/文档 git）与 AI CLI 按需安装不再要求预装。MinGit 是
+//    git-for-windows 官方嵌入发行版（无 GUI/bash 菜单，git 核心全量）；npm 取自
+//    打包机 node 安装自带树（与 node.exe 同源版本配套）。壳侧把 resources/git/cmd
+//    与 resources/bin 前插派发链 PATH，并注入 ORDO_BUNDLED_NODE/ORDO_BUNDLED_NPM_CLI。
+//    下载缓存到 build/pack-cache/（gitignored 构建产物区），ORDO_PACK_GIT_URL 可指向镜像。
+const MINGIT_VERSION = '2.47.1';
+const MINGIT_DEFAULT_URL = `https://github.com/git-for-windows/git/releases/download/v${MINGIT_VERSION}.windows.1/MinGit-${MINGIT_VERSION}-64-bit.zip`;
+const packCacheDir = path.join(desktopRoot, 'build', 'pack-cache');
+mkdirSync(packCacheDir, { recursive: true });
+const gitZipPath = path.join(packCacheDir, `MinGit-${MINGIT_VERSION}-64-bit.zip`);
+if (!existsSync(gitZipPath)) {
+  const url = process.env.ORDO_PACK_GIT_URL ?? MINGIT_DEFAULT_URL;
+  console.log(`[pack:resources] 下载 MinGit ${MINGIT_VERSION}: ${url}`);
+  const res = await fetch(url, { redirect: 'follow' });
+  if (!res.ok) {
+    throw new Error(`MinGit 下载失败 HTTP ${res.status}（可用 ORDO_PACK_GIT_URL 指向镜像）`);
+  }
+  const buf = Buffer.from(await res.arrayBuffer());
+  writeFileSync(gitZipPath, buf);
+}
+const gitStaging = path.join(packRoot, 'git');
+mkdirSync(gitStaging, { recursive: true });
+// 解压走 PowerShell Expand-Archive（win 全版本内置）：PATH 里的 GNU tar 会把
+// `D:\...` 当远程主机（"Cannot connect to D: resolve failed"，2026-10-17 实证），
+// bsdtar 虽无此问题但本地/CI 的 tar 解析不可控，PowerShell 是唯一确定性解。
+// Defender 对新解压目录的扫描锁由 extraResources 拷贝阶段的重试兜底
+run(
+  'powershell',
+  [
+    '-NoProfile',
+    '-Command',
+    `Expand-Archive -LiteralPath '${gitZipPath}' -DestinationPath '${gitStaging}' -Force`,
+  ],
+);
+if (!existsSync(path.join(gitStaging, 'cmd', 'git.exe'))) {
+  throw new Error(`MinGit 解压产物异常：${gitStaging}\\cmd\\git.exe 不存在`);
+}
+
+// 6b. npm 运行时 staging（随包 node.exe 配套，供 AI CLI 按需安装；~15MB）
+const nodeDir = path.dirname(process.execPath);
+const npmSrc = path.join(nodeDir, 'node_modules', 'npm');
+if (!existsSync(path.join(npmSrc, 'bin', 'npm-cli.js'))) {
+  throw new Error(
+    `未找到 npm 运行时树: ${npmSrc}（打包机 node 安装需自带 npm；nvm/绿色版 node 缺 npm 时请换完整安装）`,
+  );
+}
+cpSync(npmSrc, path.join(binStaging, 'npm'), {
+  recursive: true,
+  filter: (src) => {
+    const rel = path.relative(npmSrc, src);
+    // 剥文档与测试：npm 树 ~50% 体积是 .md/.map/test，运行时零作用
+    return !/(^|[\\/])(test|tests)([\\/]|$)/.test(rel) && !/\.(md|map)$/.test(rel);
+  },
+});
+if (!existsSync(path.join(binStaging, 'npm', 'bin', 'npm-cli.js'))) {
+  throw new Error('npm staging 产物异常：bin/npm-cli.js 不存在');
+}
+
 console.log(`[pack:resources] 桌面打包资源就绪：${packRoot}`);

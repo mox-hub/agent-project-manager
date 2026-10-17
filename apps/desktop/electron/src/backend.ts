@@ -10,7 +10,7 @@ import net from 'node:net';
 import http from 'node:http';
 import path from 'node:path';
 import { utilityProcess } from 'electron';
-import { getDatabaseUrl, isDevMode, type AppConfig } from './config';
+import { getDatabaseUrl, isDevMode, withBundledEnv, type AppConfig } from './config';
 import { logger } from './logger';
 
 // 60s：server 冷启动耗时抖动大（杀毒扫描/机器负载，实测 8s~31s）——30s 窗口曾把
@@ -103,7 +103,7 @@ export function probeBackendHealth(apiBaseUrl: string, timeoutMs = 2000): Promis
 
 function buildServerEnv(config: AppConfig, port: number): NodeJS.ProcessEnv {
   const allowedOrigins = `http://127.0.0.1:${port},http://localhost:${port}`;
-  return {
+  const env: NodeJS.ProcessEnv = {
     ...process.env,
     PORT: String(port),
     DATABASE_URL: getDatabaseUrl(config),
@@ -125,6 +125,9 @@ function buildServerEnv(config: AppConfig, port: number): NodeJS.ProcessEnv {
     // schema 由 db push 对齐（setup.ts alignDevDatabaseSchema），不注入零参与
     ...(isDevMode() ? {} : { ORDO_PACKAGED: '1' }),
   };
+  // 环境自足（CAP-A-30）：随包 git/node/npm 前插派发链 PATH + ORDO_BUNDLED_* 告知
+  // 安装作业——server 及其拉起的一切子进程免预装可用
+  return withBundledEnv(config, env);
 }
 
 function pipeLog(
