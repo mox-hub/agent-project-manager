@@ -73,7 +73,7 @@ export function InvitePage() {
     <div className="flex min-h-screen items-center justify-center bg-background" data-ai-page="auth-invite">
       <div className="w-full max-w-90 space-y-6 rounded-lg border border-border bg-background p-8 shadow-xs">
         <div className="text-center">
-          <Logo size="lg" variant="framed" className="mx-auto mb-3" ariaLabel="Agent Project Manager" />
+          <Logo size="lg" variant="framed" className="mx-auto mb-3" ariaLabel="Ordo" />
           <h1 className="text-xl font-semibold text-foreground">团队邀请</h1>
         </div>
 

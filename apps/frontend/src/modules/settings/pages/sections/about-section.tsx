@@ -64,7 +64,7 @@ export function AboutSection() {
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
-              <p className="text-sm font-medium">Agent Project Manager</p>
+              <p className="text-sm font-medium">Ordo</p>
               <p className="text-xs text-content-text-muted">
                 {appVersion
                   ? t('settings.aboutVersionLine', { version: appVersion })

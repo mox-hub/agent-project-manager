@@ -1110,7 +1110,7 @@ export function UnifiedCreateDialog({
         <div className="flex items-center justify-between px-4 h-11 shrink-0 border-b border-border/50 bg-muted/20">
           <div className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
             <span className="px-1 rounded-sm hover:bg-accent hover:text-foreground transition-colors cursor-pointer shrink-0">
-              AgentPM
+              Ordo
             </span>
             <ChevronRight className="size-3 opacity-40 shrink-0" />
             <ProjectBreadcrumbSelector

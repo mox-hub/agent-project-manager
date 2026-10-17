@@ -52,7 +52,7 @@ export function DesktopInitPage() {
               />
             </svg>
           </div>
-          <h1 className="mb-2 text-2xl font-semibold text-foreground">Agent Project Manager</h1>
+          <h1 className="mb-2 text-2xl font-semibold text-foreground">Ordo</h1>
           <p className="text-sm text-muted-foreground">
             {backendStatus?.running
               ? '后端运行中，正在跳转...'

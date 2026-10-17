@@ -198,7 +198,7 @@ export function AuthVisualCard({
               <Logo
                 size="md"
                 variant="framed"
-                ariaLabel="Agent Project Manager"
+                ariaLabel="Ordo"
               />
               <span className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-2xs font-medium text-muted-foreground">
                 <span

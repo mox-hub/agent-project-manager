@@ -414,7 +414,7 @@ export function ShellLayout() {
                   aria-label="Toggle sidebar"
                   title={sidebarCollapsed ? t('shell.expandSidebar') : t('shell.appName')}
                 >
-                  <Logo size="sm" variant="framed" tone="auto" className="shrink-0 size-6" ariaLabel="Agent Project Manager" />
+                  <Logo size="sm" variant="framed" tone="auto" className="shrink-0 size-6" ariaLabel="Ordo" />
                   {!sidebarCollapsed && (
                     <span className="text-sm font-semibold text-sidebar-foreground truncate">{t('shell.appName')}</span>
                   )}
