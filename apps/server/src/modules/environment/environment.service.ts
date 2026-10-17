@@ -11,6 +11,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { spawn } from 'child_process';
 import { CliProviderService } from '@/modules/cli-provider/cli-provider.service';
+import { EnvironmentInstallService } from './environment-install.service';
 import {
   ENVIRONMENT_TOOL_KEYS,
   EnvironmentToolDto,
@@ -25,7 +26,10 @@ const DETECT_TIMEOUT_MS = 5000;
 export class EnvironmentService {
   private readonly logger = new Logger(EnvironmentService.name);
 
-  constructor(private readonly cliProviderService: CliProviderService) {}
+  constructor(
+    private readonly cliProviderService: CliProviderService,
+    private readonly installService: EnvironmentInstallService,
+  ) {}
 
   async check(): Promise<EnvironmentReportDto> {
     const [systemTools, aiTools] = await Promise.all([
@@ -38,6 +42,7 @@ export class EnvironmentService {
 
     return {
       tools: [...systemTools, ...aiTools],
+      installableTools: this.installService.listInstallable(),
       checkedAt: new Date().toISOString(),
     };
   }

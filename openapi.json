@@ -56536,7 +56536,291 @@
             "JWT-auth": []
           }
         ],
-        "summary": "本地基础环境检测（node/git + AI CLI）",
+        "summary": "本地基础环境检测（node/git + AI CLI + 可代装清单）",
+        "tags": [
+          "Environment"
+        ]
+      }
+    },
+    "/_api/environment/install": {
+      "post": {
+        "description": "工具不在白名单/安装器缺失/已有同工具作业进行中时返回结构化 422/409",
+        "operationId": "EnvironmentController_install",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnvironmentInstallRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "安装作业已启动",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvironmentInstallJobDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "按需安装 AI CLI（npm 白名单，受控 prefix）",
+        "tags": [
+          "Environment"
+        ]
+      }
+    },
+    "/_api/environment/install/{jobId}": {
+      "get": {
+        "operationId": "EnvironmentController_getJob",
+        "parameters": [
+          {
+            "name": "jobId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "作业当前状态与日志尾部",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvironmentInstallJobDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录或登录已过期",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权限访问",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "资源不存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "$ref": "#/components/schemas/ErrorPayloadDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "安装作业状态轮询",
         "tags": [
           "Environment"
         ]
@@ -82275,6 +82559,21 @@
               "$ref": "#/components/schemas/EnvironmentToolDto"
             }
           },
+          "installableTools": {
+            "type": "array",
+            "description": "可一键代装的工具键（npm 白名单，CAP-A-30）；不在清单的工具只给手动指引",
+            "items": {
+              "type": "string",
+              "enum": [
+                "node",
+                "git",
+                "claude-code",
+                "codex",
+                "zcode",
+                "opencode"
+              ]
+            }
+          },
           "checkedAt": {
             "type": "string",
             "description": "检测完成时间（ISO 8601）"
@@ -82282,7 +82581,93 @@
         },
         "required": [
           "tools",
+          "installableTools",
           "checkedAt"
+        ]
+      },
+      "EnvironmentInstallRequestDto": {
+        "type": "object",
+        "properties": {
+          "tool": {
+            "type": "string",
+            "description": "要安装的工具键",
+            "enum": [
+              "node",
+              "git",
+              "claude-code",
+              "codex",
+              "zcode",
+              "opencode"
+            ]
+          }
+        },
+        "required": [
+          "tool"
+        ]
+      },
+      "EnvironmentInstallJobDto": {
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "description": "作业 ID"
+          },
+          "tool": {
+            "type": "string",
+            "description": "工具键",
+            "enum": [
+              "node",
+              "git",
+              "claude-code",
+              "codex",
+              "zcode",
+              "opencode"
+            ]
+          },
+          "package": {
+            "type": "string",
+            "description": "npm 包名（服务端白名单解析）"
+          },
+          "status": {
+            "type": "string",
+            "description": "作业状态",
+            "enum": [
+              "running",
+              "succeeded",
+              "failed"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "description": "开始时间（ISO 8601）"
+          },
+          "finishedAt": {
+            "type": "object",
+            "description": "结束时间（ISO 8601）",
+            "nullable": true
+          },
+          "exitCode": {
+            "type": "object",
+            "description": "退出码（未结束时 null）",
+            "nullable": true
+          },
+          "error": {
+            "type": "object",
+            "description": "失败原因",
+            "nullable": true
+          },
+          "log": {
+            "type": "string",
+            "description": "安装日志尾部（截断）"
+          }
+        },
+        "required": [
+          "jobId",
+          "tool",
+          "package",
+          "status",
+          "startedAt",
+          "log"
         ]
       },
       "SkillStatusResponseDto": {

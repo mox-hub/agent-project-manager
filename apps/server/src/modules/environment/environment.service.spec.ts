@@ -17,9 +17,11 @@ type SpawnBehavior = {
 };
 
 const spawnMock = vi.fn();
+const spawnSyncMock = vi.fn(() => ({ status: 0 }));
 
 vi.mock('child_process', () => ({
   spawn: (...args: unknown[]) => spawnMock(...(args as [])),
+  spawnSync: (...args: unknown[]) => spawnSyncMock(...(args as [])),
 }));
 
 import { EnvironmentService } from './environment.service';
@@ -52,7 +54,10 @@ function mockSpawnWith(behavior: Record<string, SpawnBehavior>) {
 
 /** CliProviderService 只用到 detectAll——直给 duck-type 桩，不走 DI 容器 */
 function makeService(detectAll: ReturnType<typeof vi.fn>): EnvironmentService {
-  return new EnvironmentService({ detectAll } as never);
+  const installService = {
+    listInstallable: () => ['claude-code', 'codex', 'opencode'],
+  } as never;
+  return new EnvironmentService({ detectAll } as never, installService);
 }
 
 beforeEach(() => {
@@ -116,6 +121,11 @@ describe('EnvironmentService（本地基础环境检测）', () => {
     });
     expect(report.tools[3]).toMatchObject({ key: 'codex', installed: false });
     expect(report.checkedAt).toBeTruthy();
+    expect(report.installableTools).toEqual([
+      'claude-code',
+      'codex',
+      'opencode',
+    ]);
   });
 
   it('命令非零退出（未安装/不可执行）→ installed=false 带 error', async () => {

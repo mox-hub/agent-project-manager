@@ -6796,8 +6796,45 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 本地基础环境检测（node/git + AI CLI） */
+        /** 本地基础环境检测（node/git + AI CLI + 可代装清单） */
         get: operations["EnvironmentController_check"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/environment/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 按需安装 AI CLI（npm 白名单，受控 prefix）
+         * @description 工具不在白名单/安装器缺失/已有同工具作业进行中时返回结构化 422/409
+         */
+        post: operations["EnvironmentController_install"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/_api/environment/install/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 安装作业状态轮询 */
+        get: operations["EnvironmentController_getJob"];
         put?: never;
         post?: never;
         delete?: never;
@@ -15540,8 +15577,43 @@ export interface components {
         EnvironmentReportDto: {
             /** @description 基础环境工具状态列表（node/git + 四个 AI CLI，顺序固定） */
             tools: components["schemas"]["EnvironmentToolDto"][];
+            /** @description 可一键代装的工具键（npm 白名单，CAP-A-30）；不在清单的工具只给手动指引 */
+            installableTools: ("node" | "git" | "claude-code" | "codex" | "zcode" | "opencode")[];
             /** @description 检测完成时间（ISO 8601） */
             checkedAt: string;
+        };
+        EnvironmentInstallRequestDto: {
+            /**
+             * @description 要安装的工具键
+             * @enum {string}
+             */
+            tool: "node" | "git" | "claude-code" | "codex" | "zcode" | "opencode";
+        };
+        EnvironmentInstallJobDto: {
+            /** @description 作业 ID */
+            jobId: string;
+            /**
+             * @description 工具键
+             * @enum {string}
+             */
+            tool: "node" | "git" | "claude-code" | "codex" | "zcode" | "opencode";
+            /** @description npm 包名（服务端白名单解析） */
+            package: string;
+            /**
+             * @description 作业状态
+             * @enum {string}
+             */
+            status: "running" | "succeeded" | "failed";
+            /** @description 开始时间（ISO 8601） */
+            startedAt: string;
+            /** @description 结束时间（ISO 8601） */
+            finishedAt?: Record<string, never> | null;
+            /** @description 退出码（未结束时 null） */
+            exitCode?: Record<string, never> | null;
+            /** @description 失败原因 */
+            error?: Record<string, never> | null;
+            /** @description 安装日志尾部（截断） */
+            log: string;
         };
         SkillStatusResponseDto: {
             /** @description 技能唯一 key */
@@ -47981,6 +48053,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EnvironmentReportDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    EnvironmentController_install: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EnvironmentInstallRequestDto"];
+            };
+        };
+        responses: {
+            /** @description 安装作业已启动 */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvironmentInstallJobDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    EnvironmentController_getJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 作业当前状态与日志尾部 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvironmentInstallJobDto"];
                 };
             };
             /** @description 请求参数错误 */
