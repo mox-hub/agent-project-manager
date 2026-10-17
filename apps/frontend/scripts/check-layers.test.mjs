@@ -25,7 +25,7 @@ afterAll(() => {
 
 /** 在 os.tmpdir() 建一个随机 fixture 根，write(rel, content) 自动补目录 */
 function makeFixture() {
-  const root = mkdtempSync(join(tmpdir(), "apm-check-layers-"));
+  const root = mkdtempSync(join(tmpdir(), "ordo-check-layers-"));
   tmpRoots.push(root);
   const write = (rel, content = "") => {
     const abs = join(root, rel);

@@ -432,7 +432,7 @@ export const commandHandlers = {
     return { ok: true };
   },
 
-  // ---------- apm-runtime 守护进程（AI 执行面） ----------
+  // ---------- ordo-runtime 守护进程（AI 执行面） ----------
 
   async get_runtime_daemon_status(): Promise<ReturnType<typeof getRuntimeDaemonStatus>> {
     return getRuntimeDaemonStatus();

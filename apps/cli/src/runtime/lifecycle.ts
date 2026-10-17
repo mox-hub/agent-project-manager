@@ -42,7 +42,7 @@ export async function runRuntimeDaemon(): Promise<void> {
   const config = readConfig();
   const backend = getBackend(config) || process.env.ORDO_BACKEND;
   if (!backend) {
-    throw new Error('未配置后端地址：请先执行 apm config set backend <url>');
+    throw new Error('未配置后端地址：请先执行 ordo config set backend <url>');
   }
 
   const hostname = os.hostname();
@@ -81,7 +81,7 @@ export async function runRuntimeDaemon(): Promise<void> {
   const heartbeatMs =
     (reg.heartbeatIntervalSeconds ?? HEARTBEAT_INTERVAL_SECONDS) * 1000;
 
-  // 持久化 session 供 apm daemon status 查看
+  // 持久化 session 供 ordo daemon status 查看
   if (!config.daemon) config.daemon = {};
   config.daemon.runtimeSessionId = sessionId;
   config.daemon.runtimeSessionToken = sessionToken;
@@ -168,11 +168,11 @@ export async function runRuntimeDaemon(): Promise<void> {
   }, POLL_INTERVAL_MS);
 
   console.log(
-    `[apm-runtime] 已启动：runtime=${runtimeId} session=${sessionId} ws=${WS_NAMESPACE} backend=${backend}`,
+    `[ordo-runtime] 已启动：runtime=${runtimeId} session=${sessionId} ws=${WS_NAMESPACE} backend=${backend}`,
   );
 
   const shutdown = () => {
-    console.log('[apm-runtime] 正在关闭...');
+    console.log('[ordo-runtime] 正在关闭...');
     socket.close();
     lock.release();
     process.exit(0);
@@ -180,7 +180,7 @@ export async function runRuntimeDaemon(): Promise<void> {
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
   // Electron 壳 utility 承载桥（ADR-015 P2）：Windows kill() 不投递 SIGTERM，
-  // 壳 stop 流程先经 parentPort 发 apm:shutdown 桥接到同一 shutdown 路径；
+  // 壳 stop 流程先经 parentPort 发 ordo:shutdown 桥接到同一 shutdown 路径；
   // 手动 CLI（普通 node）无 parentPort，桥不挂载
   const parentPort = (
     process as typeof process & {
@@ -189,7 +189,7 @@ export async function runRuntimeDaemon(): Promise<void> {
   ).parentPort;
   if (parentPort) {
     parentPort.on('message', (e) => {
-      if (e?.data === 'apm:shutdown') {
+      if (e?.data === 'ordo:shutdown') {
         shutdown();
       }
     });

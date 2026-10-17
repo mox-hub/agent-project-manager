@@ -1,6 +1,6 @@
 /**
  * daemon：本地 runtime 守护进程生命周期
- *   apm daemon start|stop|status|logs
+ *   ordo daemon start|stop|status|logs
  */
 import { Command } from 'commander';
 import { spawn, spawnSync } from 'child_process';
@@ -54,7 +54,7 @@ export function registerDaemonCommands(program: Command): void {
       }
       const backend = getBackend(config, opts.backend);
       if (!backend) {
-        console.error('未配置后端地址：apm config set backend <url> 或 --backend <url>');
+        console.error('未配置后端地址：ordo config set backend <url> 或 --backend <url>');
         process.exit(4);
       }
       const runningPid = activeDaemonPid(config);

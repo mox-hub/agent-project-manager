@@ -111,7 +111,7 @@ export function ServerConfigDialog({ open, onOpenChange }: ServerConfigDialogPro
                 setUrl(e.target.value);
                 setTestResult(null);
               }}
-              placeholder="例如 http://localhost:3000/_api 或 https://apm.internal"
+              placeholder="例如 http://localhost:3000/_api 或 https://ordo.internal"
               className="font-mono text-xs"
             />
           </div>

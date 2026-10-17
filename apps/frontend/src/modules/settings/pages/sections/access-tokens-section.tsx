@@ -1,7 +1,7 @@
 /**
  * @file 设置页 · 访问 Token（PAT）管理区块
  * @description 创建（明文一次性展示+复制）、列表（前缀/状态/最近使用）、吊销。
- *              Token 供 AI/外部工具免登录调用 API：apm login --token <token>。
+ *              Token 供 AI/外部工具免登录调用 API：ordo login --token <token>。
  */
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -222,8 +222,8 @@ export function AccessTokensSettingsSection() {
           <CardContent className="space-y-3">
             <Alert>{t('settings.tokenUsageTip')}</Alert>
             <div className="space-y-1.5 rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs">
-              <div>apm login --token &lt;{t('settings.runtimeGuideToken')}&gt;</div>
-              <div>apm config set accessToken &lt;{t('settings.runtimeGuideToken')}&gt;</div>
+              <div>ordo login --token &lt;{t('settings.runtimeGuideToken')}&gt;</div>
+              <div>ordo config set accessToken &lt;{t('settings.runtimeGuideToken')}&gt;</div>
             </div>
           </CardContent>
         </Card>

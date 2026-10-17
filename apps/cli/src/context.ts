@@ -35,7 +35,7 @@ export function buildContext(cmd: Command): CliContext {
   const backend = getBackend(config, root.backend);
   if (!backend) {
     throw new ApmError(
-      '未配置后端地址。请先执行 apm config set backend <url>，或用 --backend <url> 指定',
+      '未配置后端地址。请先执行 ordo config set backend <url>，或用 --backend <url> 指定',
       ExitCode.BACKEND_UNREACHABLE,
     );
   }

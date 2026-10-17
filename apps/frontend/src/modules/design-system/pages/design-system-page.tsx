@@ -4219,7 +4219,7 @@ export function DesignSystemPage() {
                           {/* 属性小节 */}
                           <PreviewSection title="执行表现度量">
                             <PreviewRow label="门禁通过率">96.8% (31/32 门禁一次性通过)</PreviewRow>
-                            <PreviewRow label="常驻守护">apm-runtime 节点 #rt-08</PreviewRow>
+                            <PreviewRow label="常驻守护">ordo-runtime 节点 #rt-08</PreviewRow>
                             <PreviewRow label="授权边界">自主编码测试 · 生产合流需人审</PreviewRow>
                           </PreviewSection>
                           {/* 底部元信息 */}
@@ -4347,7 +4347,7 @@ export function DesignSystemPage() {
 
                         <PreviewSection title="执行表现度量">
                           <PreviewRow label="门禁通过率">96.8% (31/32 门禁一次通过)</PreviewRow>
-                          <PreviewRow label="常驻守护">apm-runtime 守护节点 #rt-08</PreviewRow>
+                          <PreviewRow label="常驻守护">ordo-runtime 守护节点 #rt-08</PreviewRow>
                           <PreviewRow label="授权边界">自主编码测试 · 生产合流需人审</PreviewRow>
                         </PreviewSection>
                       </div>

@@ -45,7 +45,7 @@ export function registerAuthCommands(program: Command): void {
       const backend = getBackend(config, root.backend);
       if (!backend) {
         throw new ApmError(
-          '未配置后端地址：请用 --backend <url> 或先执行 apm config set backend <url>',
+          '未配置后端地址：请用 --backend <url> 或先执行 ordo config set backend <url>',
           ExitCode.BACKEND_UNREACHABLE,
         );
       }

@@ -172,7 +172,7 @@ describe('DesktopPreferencesCard', () => {
 
   it('导出诊断成功提示路径，取消不提示', async () => {
     stubInvoke({
-      export_diagnostics: () => ({ path: 'C:/tmp/apm-diagnostics.zip' }),
+      export_diagnostics: () => ({ path: 'C:/tmp/ordo-diagnostics.zip' }),
     });
     render(<DesktopPreferencesCard />);
     fireEvent.click(

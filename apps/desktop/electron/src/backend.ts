@@ -191,7 +191,7 @@ export function startServerProcess(
           // 优雅优先（P2）：utility 通道发 shutdown 指令，server 收尾（HTTP 连接池/
           // Prisma 断开）后自退；Windows kill() 是 TerminateProcess 无优雅路径，超时兜底强杀
           try {
-            proc.postMessage({ type: 'apm:shutdown' });
+            proc.postMessage({ type: 'ordo:shutdown' });
           } catch {
             // 进程已死，exit 事件即达
           }

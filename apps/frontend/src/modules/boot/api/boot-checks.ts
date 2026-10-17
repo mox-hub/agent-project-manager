@@ -117,7 +117,7 @@ export const bootChecks: BootCheck[] = [
   {
     id: 'check-runtime-daemon',
     title: '检查 AI 执行运行时',
-    description: '桌面端确认 apm-runtime 守护进程已自动拉起并注册本机（AI 同事的执行面）',
+    description: '桌面端确认 ordo-runtime 守护进程已自动拉起并注册本机（AI 同事的执行面）',
     skipIf: (ctx) => (ctx.isDesktopShell ? false : 'desktop-only'),
     async run() {
       const status = await invoke<{

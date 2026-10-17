@@ -354,7 +354,7 @@ function NewWorkspaceContent() {
                             id="workspace-path"
                             value={pathInput}
                             onChange={setPathInput}
-                            placeholder={t('workspace.pathPlaceholder', '如：D:\\apm-workspaces\\company-a')}
+                            placeholder={t('workspace.pathPlaceholder', '如：D:\\ordo-workspaces\\company-a')}
                             inputClassName="font-mono text-xs"
                           />
                           {pathInput && !pathValid ? (

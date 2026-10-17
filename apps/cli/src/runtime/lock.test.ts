@@ -10,7 +10,7 @@ import { acquireRuntimeLock, readLockHolderPid } from './lock';
 const dirs: string[] = [];
 
 function tmpDir(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-lock-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-lock-'));
   dirs.push(dir);
   return dir;
 }

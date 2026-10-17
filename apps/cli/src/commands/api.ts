@@ -1,7 +1,7 @@
 /**
  * api：通用透传命令（324 端点兜底）
- *   apm api <method> <path> [json]
- *   apm api GET /tasks '{"projectId":"p1"}'
+ *   ordo api <method> <path> [json]
+ *   ordo api GET /tasks '{"projectId":"p1"}'
  */
 import { Command } from 'commander';
 import { ApmError } from '@ordo/shared';

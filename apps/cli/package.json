@@ -5,8 +5,8 @@
   "private": true,
   "license": "UNLICENSED",
   "bin": {
-    "apm": "dist/index.js",
-    "apm-runtime": "dist/runtime/index.js"
+    "ordo": "dist/index.js",
+    "ordo-runtime": "dist/runtime/index.js"
   },
   "files": [
     "dist"

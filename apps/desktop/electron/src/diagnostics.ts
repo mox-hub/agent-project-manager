@@ -98,14 +98,14 @@ export async function exportDiagnostics(
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const { canceled, filePath } = await dialog.showSaveDialog(win, {
     title: '导出诊断包',
-    defaultPath: path.join(app.getPath('downloads'), `apm-diagnostics-${stamp}.zip`),
+    defaultPath: path.join(app.getPath('downloads'), `ordo-diagnostics-${stamp}.zip`),
     filters: [{ name: 'ZIP', extensions: ['zip'] }],
   });
   if (canceled || !filePath) {
     return { path: null };
   }
 
-  const staging = path.join(app.getPath('temp'), `apm-diagnostics-${Date.now()}`);
+  const staging = path.join(app.getPath('temp'), `ordo-diagnostics-${Date.now()}`);
   try {
     fs.mkdirSync(staging, { recursive: true });
     const logFile = getLogFilePath();

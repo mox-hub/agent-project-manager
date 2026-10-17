@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * apm CLI 入口
+ * ordo CLI 入口
  */
 import { Command } from 'commander';
 import { ApmError } from '@ordo/shared';
@@ -14,7 +14,7 @@ async function main() {
   const program = new Command();
 
   program
-    .name('apm')
+    .name('ordo')
     .description('Agent Project Manager CLI（瘦客户端直连后端 REST）')
     .version('0.1.0')
     .option('--backend <url>', '后端地址（覆盖配置）')

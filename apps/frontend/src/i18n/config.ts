@@ -21,4 +21,4 @@ export const LOCALE_FLAGS: Record<Locale, string> = {
 /**
  * Storage key for persisting user's language preference
  */
-export const LOCALE_STORAGE_KEY = 'apm-locale';
+export const LOCALE_STORAGE_KEY = 'ordo-locale';

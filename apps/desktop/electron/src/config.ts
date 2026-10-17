@@ -14,7 +14,7 @@ export interface AppConfig {
   serverEntry: string;
   serverCwd: string;
   frontendDist: string;
-  /** apm-runtime 守护进程入口（apps/cli 构建产物）；dev 未构建时报可操作错误 */
+  /** ordo-runtime 守护进程入口（apps/cli 构建产物）；dev 未构建时报可操作错误 */
   cliEntry: string;
   userDataDir: string;
   logsDir: string;

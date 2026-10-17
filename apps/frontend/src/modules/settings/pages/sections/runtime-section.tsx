@@ -94,7 +94,7 @@ function useRuntimeDispatches() {
 }
 
 /**
- * 桌面模式专属：本机 apm-runtime 守护进程控制卡片。
+ * 桌面模式专属：本机 ordo-runtime 守护进程控制卡片。
  * 守护进程由壳随应用启动自动拉起（AI 执行面），此处提供状态可视、手动启停、
  * 工作目录维护与开发者工具入口。
  */
@@ -486,10 +486,10 @@ export function RuntimeSettingsSection() {
         >
           <Alert>{t('settings.runtimeGuideTip')}</Alert>
           <div className="space-y-1.5 rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs">
-            <div>apm login --token &lt;{t('settings.runtimeGuideToken')}&gt;</div>
-            <div>apm daemon start</div>
-            <div>apm daemon status</div>
-            <div>apm runtime providers:detect</div>
+            <div>ordo login --token &lt;{t('settings.runtimeGuideToken')}&gt;</div>
+            <div>ordo daemon start</div>
+            <div>ordo daemon status</div>
+            <div>ordo runtime providers:detect</div>
           </div>
           <Alert variant="default">
             {t('settings.runtimeGuideExecutions')}{' '}
