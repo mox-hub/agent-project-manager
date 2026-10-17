@@ -106,8 +106,8 @@ jobs:
         with:
           name: desktop-installer-${{ github.ref_name }}
           path: |
-            apps/desktop/dist-release-3/*.exe
-            apps/desktop/dist-release-3/*.blockmap
-            apps/desktop/dist-release-3/latest.yml
+            apps/desktop/dist-release-*/*.exe
+            apps/desktop/dist-release-*/*.blockmap
+            apps/desktop/dist-release-*/latest.yml
           if-no-files-found: error
           retention-days: 14
