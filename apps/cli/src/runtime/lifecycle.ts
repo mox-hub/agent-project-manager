@@ -5,7 +5,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { io } from 'socket.io-client';
 import {
-  ApmClient,
+  OrdoClient,
   ApprovalResolvedPayload,
   getBackend,
   getConfigPath,
@@ -60,7 +60,7 @@ export async function runRuntimeDaemon(): Promise<void> {
   writeConfig(config);
 
   // 1. register（Public，无需 session 头）
-  const regClient = new ApmClient({ backend });
+  const regClient = new OrdoClient({ backend });
   const reg = await regClient.post<RuntimeRegistrationResult>(
     RUNTIME_ENDPOINTS.REGISTER,
     {
@@ -89,7 +89,7 @@ export async function runRuntimeDaemon(): Promise<void> {
   writeConfig(config);
 
   // 带 runtime session 头的 API 客户端
-  const api = new ApmClient({
+  const api = new OrdoClient({
     backend,
     extraHeaders: () => ({
       'x-runtime-session-id': sessionId,

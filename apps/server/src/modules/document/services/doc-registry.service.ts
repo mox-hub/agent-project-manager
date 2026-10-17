@@ -15,7 +15,7 @@ import { PrismaService } from '../../../core/database/prisma.service';
  *     不各自爬目录。
  *
  * shortId 惯例与 issue-id.service 对齐：GlobalSequence 原子递增 + 事务内
- * 跳过被占用序号自愈；格式 D{seq}，kind 语义由 apm:// scheme 承载（§13）。
+ * 跳过被占用序号自愈；格式 D{seq}，kind 语义由 ordo:// scheme 承载（§13）。
  */
 
 export const DOC_SHORT_ID_SEQUENCE_KEY = 'document.shortId';
@@ -265,7 +265,7 @@ export class DocRegistryService {
     }));
   }
 
-  /** apm://{projectCode}/doc/{shortId} 的后端解析支撑（v2 纪要 §13）。 */
+  /** ordo://{projectCode}/doc/{shortId} 的后端解析支撑（v2 纪要 §13）。 */
   async resolveRef(projectId: string, shortId: string) {
     return this.prisma.document.findFirst({
       where: { projectId, shortId, isDeleted: false },

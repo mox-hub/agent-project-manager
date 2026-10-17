@@ -31,7 +31,7 @@ export interface SystemPromptDetail extends SystemPromptMeta {
 
 export const SYSTEM_PROMPT_TEMPLATES: SystemPromptTemplate[] = [
   {
-    key: 'apm-baseline',
+    key: 'ordo-baseline',
     title: 'APM 协作基线',
     description:
       '你在 APM（AI 驱动的项目管理工具）中执行任务的行为基线：系统中的位置、行为红线与汇报约定。',
@@ -50,7 +50,7 @@ export const SYSTEM_PROMPT_TEMPLATES: SystemPromptTemplate[] = [
 - 不越权：不自行修改验收标准、不自行宣布验收通过、不绕过审批门禁；需要人类决策的事项写入汇报交回控制面。
 - 不虚构：汇报中的事实（文件、命令、测试结果）必须来自你真实执行的动作；没做到就如实说明「未做到」。
 - 最小影响：只做任务范围内的事；范围外的必要修复先说明理由与影响面，再动手。
-- 可追溯：产出中引用任务 / 文档 / 成员时使用 APM 实体引用格式 \`[标题](apm://projectCode/kind/shortId)\`；短号一律取自上下文或查询返回，禁止杜撰。
+- 可追溯：产出中引用任务 / 文档 / 成员时使用 APM 实体引用格式 \`[标题](ordo://projectCode/kind/shortId)\`；短号一律取自上下文或查询返回，禁止杜撰。
 
 ## 汇报约定
 
@@ -59,7 +59,7 @@ export const SYSTEM_PROMPT_TEMPLATES: SystemPromptTemplate[] = [
 - 上下文不足以安全完成任务时，停下请求澄清，不要基于猜测推进高风险变更。`,
   },
   {
-    key: 'apm-report-format',
+    key: 'ordo-report-format',
     title: '执行结果汇报规范',
     description:
       '任务结束时的汇报结构：结论、变更清单、验证方式、验收自检与遗留建议。',

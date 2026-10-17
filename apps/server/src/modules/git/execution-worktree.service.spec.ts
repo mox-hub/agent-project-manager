@@ -70,7 +70,7 @@ async function commitIn(
 }
 
 beforeAll(async () => {
-  repoRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'apm-wt-spec-'));
+  repoRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'ordo-wt-spec-'));
   await initRepo(repoRoot);
   service = buildWorktreeService();
 });
@@ -121,7 +121,7 @@ describe('ExecutionWorktreeService', () => {
 
   it('prepareWorktree：非 git 目录抛错', async () => {
     const plain = await fs.promises.mkdtemp(
-      path.join(os.tmpdir(), 'apm-wt-plain-'),
+      path.join(os.tmpdir(), 'ordo-wt-plain-'),
     );
     try {
       await expect(

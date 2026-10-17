@@ -97,7 +97,7 @@ declare global {
     /** 桌面壳桥（Electron preload 注入，ADR-014）：invoke 走主进程 desktop:command 路由 */
     __ORDO_DESKTOP__?: {
       invoke: <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
-      /** apm:// 深链订阅（ADR-015 P2）；返回解绑函数。旧壳版本无此能力为可选 */
+      /** ordo:// 深链订阅（ADR-015 P2）；返回解绑函数。旧壳版本无此能力为可选 */
       onDeepLink?: (callback: (url: string) => void) => () => void;
       /** 自动更新状态实时推送（ADR-015 补记 4）；返回解绑函数。旧壳无此能力为可选 */
       onUpdateStatus?: (callback: (status: DesktopUpdateStatus) => void) => () => void;

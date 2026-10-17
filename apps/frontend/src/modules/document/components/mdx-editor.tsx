@@ -100,7 +100,7 @@ const darkTheme = EditorView.theme(
 /**
  * `/` 触发实体引用补全（CAP-A-23 全局引用系统，与 SlashRefTextarea 同源语义）：
  * 行首/空白符后的 `/query` 词元 → searchApi 模糊匹配 → 以
- * `[标题](apm://…)` 片段替换词元；无 apmRef 的命中不进候选。
+ * `[标题](ordo://…)` 片段替换词元；无 ordoRef 的命中不进候选。
  */
 async function slashRefCompletionSource(context: CompletionContext) {
   const before = context.matchBefore(/(?:^|\s)\/([^\s/]*)$/);
@@ -113,11 +113,11 @@ async function slashRefCompletionSource(context: CompletionContext) {
   try {
     const res = await searchApi.search({ q: query, limit: 8 });
     const options = res.items
-      .filter((hit) => hit.apmRef)
+      .filter((hit) => hit.ordoRef)
       .map((hit) => ({
         label: hit.title.replace(/[[\]]/g, ''),
         detail: hit.subtitle,
-        apply: `[${hit.title.replace(/[[\]]/g, '')}](${hit.apmRef}) `,
+        apply: `[${hit.title.replace(/[[\]]/g, '')}](${hit.ordoRef}) `,
       }));
     if (options.length === 0) return null;
     return { from: slashPos, options, validFor: /^[^\s/]*$/ };

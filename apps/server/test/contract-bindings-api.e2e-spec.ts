@@ -72,7 +72,7 @@ describe('契约绑定 REST 面 (e2e)', () => {
   });
 
   it('POST seed：仅绑 ProjectWorkspace 也能种生（resolver 回退），三件套落盘', async () => {
-    workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-bindings-'));
+    workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-bindings-'));
     await withWs(ws.id, async () => {
       await ws.db.projectWorkspace.create({
         data: { projectId, localPath: workspaceRoot },
@@ -216,7 +216,7 @@ describe('契约绑定 REST 面 (e2e)', () => {
       );
       expect(autoBindings).toHaveLength(0);
 
-      root2 = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-adopt-'));
+      root2 = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-adopt-'));
       const manual = [
         '---',
         'title: 项目手册',

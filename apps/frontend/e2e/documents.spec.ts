@@ -3,9 +3,9 @@
  * 提交审核）、编辑保存、列表（搜索/筛选/双视图/统计卡）、删除。
  */
 import { test as base, expect, type Page } from '@playwright/test'
-import { makeApi, uniq, type ApmApi } from './helpers/api'
+import { makeApi, uniq, type OrdoApi } from './helpers/api'
 
-const test = base.extend<{ api: ApmApi }>({
+const test = base.extend<{ api: OrdoApi }>({
   api: async ({ request }, use) => {
     await use(await makeApi(request))
   },

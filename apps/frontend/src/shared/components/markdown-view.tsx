@@ -4,8 +4,8 @@
  * 用于任务/BUG 描述与评论正文：GFM 表格 / 任务清单 / 删除线 / 自动链接，
  * 排版为紧凑详情页风格（text-sm 基线）。文档模块的 MDX 管线（shared/mdx）面向
  * 可编译文档，不适用于任意用户输入，故此处独立轻量渲染。
- * 链接 renderer 拦截 apm:// 实体引用（CAP-A-23 全局引用系统）：渲染为
- * apm-ref-chip 胶囊 + hover 预览 + 点击直达；其余链接保持外链行为。
+ * 链接 renderer 拦截 ordo:// 实体引用（CAP-A-23 全局引用系统）：渲染为
+ * ordo-ref-chip 胶囊 + hover 预览 + 点击直达；其余链接保持外链行为。
  */
 import { useMemo } from 'react';
 import ReactMarkdown, { defaultUrlTransform, type Components } from 'react-markdown';
@@ -14,8 +14,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { isApmRef } from '@ordo/shared/apm-ref';
-import { ApmRefLink } from '@/shared/apm-ref/apm-ref-chip';
+import { isOrdoRef } from '@ordo/shared/ordo-ref';
+import { OrdoRefLink } from '@/shared/ordo-ref/ordo-ref-chip';
 
 const components: Components = {
   h1: ({ children }) => <h1 className="mb-2 mt-4 text-base font-semibold first:mt-0">{children}</h1>,
@@ -84,11 +84,11 @@ const components: Components = {
   th: ({ children }) => <TableHead className="px-2.5 py-1.5 text-left">{children}</TableHead>,
   td: ({ children }) => <TableCell className="px-2.5 py-1.5">{children}</TableCell>,
   a: ({ children, href, ...rest }) => {
-    if (href && isApmRef(href)) {
+    if (href && isOrdoRef(href)) {
       return (
-        <ApmRefLink href={href} {...rest}>
+        <OrdoRefLink href={href} {...rest}>
           {children}
-        </ApmRefLink>
+        </OrdoRefLink>
       );
     }
     return (
@@ -113,10 +113,10 @@ const components: Components = {
 
 /**
  * react-markdown 默认 urlTransform 只放行 http/https 等安全协议，会把
- * apm:// 引用清洗成空串——此处为引用方言放行（仅放行，不做二次校验，
- * 非法引用由 ApmRefLink 降级为普通链接）。
+ * ordo:// 引用清洗成空串——此处为引用方言放行（仅放行，不做二次校验，
+ * 非法引用由 OrdoRefLink 降级为普通链接）。
  */
-const urlTransform = (url: string) => (isApmRef(url) ? url : defaultUrlTransform(url));
+const urlTransform = (url: string) => (isOrdoRef(url) ? url : defaultUrlTransform(url));
 
 export function MarkdownView({
   content,

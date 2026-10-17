@@ -2,7 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { DocumentService } from '../document.service';
 
 /**
- * apm:// 短号解析接线（v2 纪要 §13）：findOne 兼容 `D{seq}` shortId。
+ * ordo:// 短号解析接线（v2 纪要 §13）：findOne 兼容 `D{seq}` shortId。
  */
 
 class StubPrisma {
@@ -28,7 +28,7 @@ function makeService(docs: StubPrisma['docs']) {
   ) as unknown as { findOne: (id: string) => Promise<{ id: string }> };
 }
 
-describe('DocumentService.findOne apm:// 短号解析', () => {
+describe('DocumentService.findOne ordo:// 短号解析', () => {
   it('短号 D17 解析到对应文档（isDeleted 排除）', async () => {
     const svc = makeService([
       { id: 'cuid-1', shortId: 'D17', isDeleted: false },

@@ -10,7 +10,7 @@
  * 说明：项目无删除端点，测试数据清理统一走归档；任务数据用 DELETE 真删。
  */
 import { test as base, expect, type Page } from '@playwright/test'
-import { makeApi, uniq, type ApmApi } from './helpers/api'
+import { makeApi, uniq, type OrdoApi } from './helpers/api'
 import {
   openRowContextMenu,
   pickContextMenu,
@@ -20,7 +20,7 @@ import {
   modalDialog,
 } from './helpers/ui'
 
-const test = base.extend<{ api: ApmApi }>({
+const test = base.extend<{ api: OrdoApi }>({
   api: async ({ request }, use) => {
     await use(await makeApi(request))
   },
@@ -39,7 +39,7 @@ test.afterEach(async ({ api }) => {
   for (const id of cleanupProjects) await api.archiveProject(id).catch(() => {})
 })
 
-async function newProject(api: ApmApi, label: string, extra: Record<string, unknown> = {}) {
+async function newProject(api: OrdoApi, label: string, extra: Record<string, unknown> = {}) {
   const p = await api.createProject({ name: uniq(label), ...extra })
   cleanupProjects.push(p.id)
   await api.ensureProjectModule(p.id)

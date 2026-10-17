@@ -85,11 +85,11 @@ export class SearchHitDto {
 
   @ApiPropertyOptional({
     description:
-      'apm:// 实体引用串（apm://{projectCode}/{kind}/{shortId}，全局引用系统插入用）；' +
+      'ordo:// 实体引用串（ordo://{projectCode}/{kind}/{shortId}，全局引用系统插入用）；' +
       '缺 projectCode/shortId 时为 null——调用方不得自行拼装',
     nullable: true,
   })
-  apmRef: string | null;
+  ordoRef: string | null;
 }
 
 export class SearchResponseDto {

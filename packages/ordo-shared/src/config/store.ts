@@ -44,7 +44,7 @@ export interface DaemonConfig {
   startedAt?: string;
 }
 
-export interface ApmConfig {
+export interface OrdoConfig {
   currentProfile?: string;
   profiles: Record<string, ProfileConfig>;
   runtime?: RuntimeConfig;
@@ -60,11 +60,11 @@ export function getConfigPath(): string {
   );
 }
 
-export function readConfig(): ApmConfig {
+export function readConfig(): OrdoConfig {
   const file = getConfigPath();
   try {
     const raw = fs.readFileSync(file, 'utf8');
-    const parsed = JSON.parse(raw) as Partial<ApmConfig>;
+    const parsed = JSON.parse(raw) as Partial<OrdoConfig>;
     return {
       currentProfile: DEFAULT_PROFILE,
       ...parsed,
@@ -75,19 +75,19 @@ export function readConfig(): ApmConfig {
   }
 }
 
-export function writeConfig(config: ApmConfig): void {
+export function writeConfig(config: OrdoConfig): void {
   const file = getConfigPath();
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(config, null, 2), { mode: 0o600 });
 }
 
-export function getActiveProfileName(config: ApmConfig): string {
+export function getActiveProfileName(config: OrdoConfig): string {
   return config.currentProfile || DEFAULT_PROFILE;
 }
 
 /** 取（必要时创建）指定 profile 的配置片段 */
 export function getProfile(
-  config: ApmConfig,
+  config: OrdoConfig,
   profileName?: string,
 ): ProfileConfig {
   const name = profileName || getActiveProfileName(config);
@@ -97,11 +97,11 @@ export function getProfile(
   return config.profiles[name];
 }
 
-export function getBackend(config: ApmConfig, override?: string): string | undefined {
+export function getBackend(config: OrdoConfig, override?: string): string | undefined {
   return override || getProfile(config).backend;
 }
 
-export function clearToken(config: ApmConfig, profileName?: string): ApmConfig {
+export function clearToken(config: OrdoConfig, profileName?: string): OrdoConfig {
   const profile = getProfile(config, profileName);
   delete profile.accessToken;
   delete profile.session;

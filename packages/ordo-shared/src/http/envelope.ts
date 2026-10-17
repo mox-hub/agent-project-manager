@@ -6,7 +6,7 @@
  *   失败: { status, success: false, description, data: null,
  *           error: { code, message, details? }, timestamp, requestId }
  *
- * 前端 api-client 与 CLI ApmClient 共用 unwrapEnvelope，取代此前各自维护
+ * 前端 api-client 与 CLI OrdoClient 共用 unwrapEnvelope，取代此前各自维护
  * 的两份解包实现。
  */
 

@@ -1,9 +1,9 @@
 /**
- * Worker 执行循环单测：注入假 ApmClient 与假适配器，runCliProcess 打桩
+ * Worker 执行循环单测：注入假 OrdoClient 与假适配器，runCliProcess 打桩
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';import type { ChildProcess } from 'child_process';
 import {
-  ApmClient,
+  OrdoClient,
   CliAdapter,
   RUNTIME_ENDPOINTS,
   RuntimeDispatch,
@@ -23,13 +23,13 @@ import { startWorker } from './worker';
 
 const mockRun = vi.mocked(runCliProcess);
 
-function makeApi(approvalId?: string): ApmClient {
+function makeApi(approvalId?: string): OrdoClient {
   return {
     post: vi.fn().mockResolvedValue(
       approvalId ? { approvalRequestId: approvalId } : {},
     ),
     get: vi.fn().mockResolvedValue([]),
-  } as unknown as ApmClient;
+  } as unknown as OrdoClient;
 }
 
 const dispatch: RuntimeDispatch = {

@@ -45,7 +45,7 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
         '',
         '【响应口径】本契约各端点的 200/201 响应 schema 描述的是【解包后的业务数据】',
         '（裸数据口径），信封不在端点级重复声明；返回 null/void 的端点无 content。',
-        '前端 api-client 与 CLI ApmClient 均在封装内统一解包；错误细节见各端点的',
+        '前端 api-client 与 CLI OrdoClient 均在封装内统一解包；错误细节见各端点的',
         '400/401/403/404/500 声明（ErrorPayloadDto）。',
       ].join('\n'),
     )

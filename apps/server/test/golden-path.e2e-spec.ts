@@ -94,7 +94,7 @@ describe('黄金路径 1：需求 → 执行 → 验收 → 发版 (e2e)', () =>
     projectId = res.body.data.id;
 
     // 种生需要项目有仓库工作区路径：登记 repository（契约域专用 workspacePath）
-    workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-golden-'));
+    workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-golden-'));
     await withWs(ws.id, async () => {
       await ws.db.repository.create({
         data: {

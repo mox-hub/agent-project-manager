@@ -7,7 +7,7 @@
  *   2. 手改 AGENTS.md 托管区 → 对齐检查检出冲突 → 升级 DecisionProposal（不静默覆盖）
  *   3. 冲突裁决 accept_db → 平台真相写回 → 恢复对齐
  *   4. 发版 → release.created 订阅器再生 CHANGELOG；手改派生文件检出派生型冲突 → 重导恢复
- *   5. apm:// 链路：建文档 → rebuild 分配短号 → resolveRef / findOne 短号兼容 →
+ *   5. ordo:// 链路：建文档 → rebuild 分配短号 → resolveRef / findOne 短号兼容 →
  *      T1 惰性 digest（structural → cached）→ T0 发布触发重算
  */
 import { INestApplication } from '@nestjs/common';
@@ -95,7 +95,7 @@ describe('契约与文档知识层 · 实机验收 (e2e)', () => {
     );
 
     // 种生需要项目有仓库工作区路径；先建项目（种生诚实降级）再登记仓库重跑
-    workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-accept-'));
+    workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-accept-'));
     await withWs(ws.id, async () => {
       await ws.db.repository.create({
         data: {
@@ -251,7 +251,7 @@ describe('契约与文档知识层 · 实机验收 (e2e)', () => {
     expect(realigned.state).toBe('aligned');
   });
 
-  it('验收 5：apm:// 链路——短号分配/解析/ findOne 兼容', async () => {
+  it('验收 5：ordo:// 链路——短号分配/解析/ findOne 兼容', async () => {
     const createRes = await wsHttp
       .post('/_api/documents')
       .set('Authorization', `Bearer ${accessToken}`)
@@ -277,7 +277,7 @@ describe('契约与文档知识层 · 实机验收 (e2e)', () => {
     );
     expect(resolved?.id).toBe(docId);
 
-    // findOne 短号兼容（apm:// 链接直达的路由基础）
+    // findOne 短号兼容（ordo:// 链接直达的路由基础）
     const viaShortId = await withWs(ws.id, () => documentService.findOne('D1'));
     expect(viaShortId.id).toBe(docId);
   });

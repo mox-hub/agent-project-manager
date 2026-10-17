@@ -169,7 +169,7 @@ export class SearchService {
       path: isBug ? `/app/bugs/${issue.id}` : `/app/issues/${issue.id}`,
       updatedAt: issue.updatedAt.toISOString(),
       projectId: issue.projectId,
-      apmRef: this.buildApmRef(
+      ordoRef: this.buildOrdoRef(
         issue.project?.projectCode ?? null,
         isBug ? 'bug' : 'issue',
         issue.shortId,
@@ -197,7 +197,7 @@ export class SearchService {
       path: `/app/documents/${doc.id}`,
       updatedAt: doc.updatedAt.toISOString(),
       projectId: doc.projectId,
-      apmRef: this.buildApmRef(
+      ordoRef: this.buildOrdoRef(
         doc.project?.projectCode ?? null,
         'doc',
         doc.shortId,
@@ -219,20 +219,20 @@ export class SearchService {
       path: `/app/projects/${project.id}`,
       updatedAt: project.updatedAt.toISOString(),
       projectId: null,
-      // apm:// 方言无 project kind（实体自身无 projectCode 命名空间），不造假
-      apmRef: null,
+      // ordo:// 方言无 project kind（实体自身无 projectCode 命名空间），不造假
+      ordoRef: null,
     };
   }
 
   /** 短号或项目代码缺失即 null——引用串必须完整可用，调用方不自行拼装 */
-  private buildApmRef(
+  private buildOrdoRef(
     projectCode: string | null,
     kind: 'issue' | 'bug' | 'doc',
     shortId: string | null,
   ): string | null {
     if (!projectCode || !shortId) return null;
-    // apm:// 方言（packages/ordo-shared/src/apm-ref.ts formatApmRef 同构）；
+    // ordo:// 方言（packages/ordo-shared/src/ordo-ref.ts formatOrdoRef 同构）；
     // server 未依赖 @ordo/shared，此处内联同构串，格式漂移由 spec 钉住
-    return `apm://${projectCode}/${kind}/${shortId}`;
+    return `ordo://${projectCode}/${kind}/${shortId}`;
   }
 }

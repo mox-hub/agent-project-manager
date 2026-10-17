@@ -4,7 +4,7 @@
  * 产出到 build/desktop-pack/（electron-builder extraResources 原样拷进安装包 resources/）：
  *   server/    自包含的 server 运行时（npm 平铺 node_modules + dist + prisma + 预生成客户端）
  *   frontend/  前端构建产物（server 静态托管用）
- *   cli/       apm-runtime 守护进程自包含运行时（@ordo/shared 以 file: 引用随装；壳自动拉起）
+ *   cli/       ordo-runtime 守护进程自包含运行时（@ordo/shared 以 file: 引用随装；壳自动拉起）
  *   bin/node.exe  Node 运行时（server 承载路径 A 降级兜底用）
  *
  * 路径放在 build/desktop-pack/（构建产物区，gitignore；旧 Tauri 壳时代曾落在
@@ -185,7 +185,7 @@ rmSync(path.join(serverStaging, 'node_modules', '@prisma', 'engines'), {
 // 4d. 非运行时文件剥离（.d.ts/.map/.md/_types/examples）——覆盖含 prisma generate 产物
 stripNonRuntime(path.join(serverStaging, 'node_modules'));
 
-// 3c. apm-runtime 守护进程（apps/cli）自包含产物——AI 执行面随包（壳自动拉起 + 设置页可控制）。
+// 3c. ordo-runtime 守护进程（apps/cli）自包含产物——AI 执行面随包（壳自动拉起 + 设置页可控制）。
 //     @ordo/shared 是 workspace 包，npm 无法解析 workspace: 协议——随 staging 以 file: 引用自带
 //     （shared 的 axios/zod 由 npm 一并解析安装），与 server staging 同一套「剥 devDeps 再裸装」模式。
 run('pnpm', ['--filter', '@ordo/cli', 'build'], { cwd: repoRoot });

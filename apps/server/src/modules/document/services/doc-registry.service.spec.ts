@@ -2,7 +2,7 @@ import { DocRegistryService } from './doc-registry.service';
 
 /**
  * DocRegistry 可重建索引测试（内存桩）：派生字段回填幂等、
- * shortId 稳定性、catalog 聚合、apm:// resolveRef。
+ * shortId 稳定性、catalog 聚合、ordo:// resolveRef。
  */
 
 interface DocRow {

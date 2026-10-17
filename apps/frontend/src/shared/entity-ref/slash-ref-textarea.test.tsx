@@ -2,7 +2,7 @@
  * SlashRefTextarea 单测（CAP-A-23 全局 Markdown 实体引用系统 · 插入侧）
  *
  * 覆盖 GAP-T-43 ②③：/ 词元触发与 URL 斜杠不误触发、类型筛选、
- * 键入过滤、键盘导航插入 apm:// markdown、成员 @handle 插入、
+ * 键入过滤、键盘导航插入 ordo:// markdown、成员 @handle 插入、
  * Esc 关菜单不外冒、菜单关闭时按键语义透传、无命中空态。
  */
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -45,7 +45,7 @@ const hit = (over: Partial<SearchHit> = {}): SearchHit => ({
   path: '/app/issues/i1',
   updatedAt: '2026-09-01T00:00:00.000Z',
   projectId: 'p1',
-  apmRef: 'apm://APM-EXP/issue/APM-PF-001',
+  ordoRef: 'ordo://APM-EXP/issue/APM-PF-001',
   ...over,
 });
 
@@ -93,13 +93,13 @@ const searchMock = vi.mocked(searchApi.search);
 const mentionsMock = vi.mocked(suggestMentions);
 
 describe('buildSlashInsertText', () => {
-  it('命中以 [标题](apmRef) 插入，标题方括号剥除', () => {
+  it('命中以 [标题](ordoRef) 插入，标题方括号剥除', () => {
     expect(
       buildSlashInsertText({
         kind: 'hit',
         hit: hit({ title: '修[复]登录' }),
       }),
-    ).toBe('[修复登录](apm://APM-EXP/issue/APM-PF-001) ');
+    ).toBe('[修复登录](ordo://APM-EXP/issue/APM-PF-001) ');
   });
 
   it('成员以 @handle 语法糖插入', () => {
@@ -161,7 +161,7 @@ describe('SlashRefTextarea', () => {
     });
   });
 
-  it('Enter 以 apm:// markdown 链接替换词元并恢复光标', async () => {
+  it('Enter 以 ordo:// markdown 链接替换词元并恢复光标', async () => {
     searchMock.mockResolvedValue({ items: [hit()], total: 1 });
     const { textarea, onChange } = renderTextarea();
 
@@ -171,7 +171,7 @@ describe('SlashRefTextarea', () => {
     fireEvent.keyDown(textarea, { key: 'Enter' });
 
     expect(onChange).toHaveBeenCalledWith(
-      '前文 [修复登录超时](apm://APM-EXP/issue/APM-PF-001) ',
+      '前文 [修复登录超时](ordo://APM-EXP/issue/APM-PF-001) ',
     );
   });
 
@@ -238,9 +238,9 @@ describe('SlashRefTextarea', () => {
     expect(searchMock).not.toHaveBeenCalled();
   });
 
-  it('无 apmRef 的命中不进候选（引用系统只产稳定引用）', async () => {
+  it('无 ordoRef 的命中不进候选（引用系统只产稳定引用）', async () => {
     searchMock.mockResolvedValue({
-      items: [hit({ apmRef: null, title: '未绑定项目的工单' })],
+      items: [hit({ ordoRef: null, title: '未绑定项目的工单' })],
       total: 1,
     });
     const { textarea } = renderTextarea();

@@ -6,10 +6,10 @@
  * 实现 MarkdownInputProps 协议（value/onChange/placeholder/rows/autoFocus/
  * onKeyDown/className/ref），作为 MarkdownEditor 默认输入件、MarkdownLiveEditor
  * 活跃块输入件。光标前出现 `/query` 词元（行首或空白符之后，URL 中的斜杠不误触发）
- * 时弹出统一候选弹层：任务/Bug/文档走 searchApi（命中带现成 apmRef 引用串）、
+ * 时弹出统一候选弹层：任务/Bug/文档走 searchApi（命中带现成 ordoRef 引用串）、
  * 成员走 suggestMentions；↑↓/Enter/Tab/Esc 键盘导航，选中以
- * `[标题](apm://…)`（成员 `@handle ` 语法糖）插入并恢复光标，渲染侧由
- * apm-ref-chip 呈现为胶囊 + hover 预览。菜单关闭时按键语义完全透传
+ * `[标题](ordo://…)`（成员 `@handle ` 语法糖）插入并恢复光标，渲染侧由
+ * ordo-ref-chip 呈现为胶囊 + hover 预览。菜单关闭时按键语义完全透传
  * （评论 mod+Enter 提交、描述区 Esc 失焦不受影响）。
  */
 import {
@@ -75,9 +75,9 @@ export function buildSlashInsertText(candidate: SlashCandidate): string {
   if (candidate.kind === 'member') {
     return `@${candidate.handle} `;
   }
-  // apmRef 由后端产出（短号 + 项目代码齐备才非 null）；无引用串的命中
+  // ordoRef 由后端产出（短号 + 项目代码齐备才非 null）；无引用串的命中
   // 在候选侧已过滤，此处是类型收窄的兜底
-  const href = candidate.hit.apmRef ?? candidate.hit.path;
+  const href = candidate.hit.ordoRef ?? candidate.hit.path;
   return `[${sanitizeTitle(candidate.hit.title)}](${href}) `;
 }
 
@@ -156,10 +156,10 @@ export function SlashRefTextarea({
         memberType: m.type,
       }));
     if (filter === 'member') return members;
-    // 无 apmRef 的命中（如未绑定项目的 inbox 工单、缺短号存量行）不进候选：
+    // 无 ordoRef 的命中（如未绑定项目的 inbox 工单、缺短号存量行）不进候选：
     // 全局引用系统只产稳定引用，不降级插裸路径链接
     const hits: SlashCandidate[] = (searchData?.items ?? [])
-      .filter((h) => h.apmRef)
+      .filter((h) => h.ordoRef)
       .map((hit) => ({ kind: 'hit' as const, hit }));
     return [...members, ...hits];
   }, [query, filter, searchData, membersData]);

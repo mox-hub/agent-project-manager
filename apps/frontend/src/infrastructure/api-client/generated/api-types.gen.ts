@@ -7620,7 +7620,7 @@ export interface components {
             id: string;
             /** @description Token 名称 */
             name: string;
-            /** @description Token 前缀（apm_pat_ + 6 位） */
+            /** @description Token 前缀（ordo_pat_ + 6 位） */
             tokenPrefix: string;
             /** @description 所属用户 ID */
             userId: string;
@@ -7641,7 +7641,7 @@ export interface components {
             id: string;
             /** @description Token 名称 */
             name: string;
-            /** @description Token 前缀（apm_pat_ + 6 位） */
+            /** @description Token 前缀（ordo_pat_ + 6 位） */
             tokenPrefix: string;
             /** @description 所属用户 ID */
             userId: string;
@@ -12608,7 +12608,7 @@ export interface components {
             name: string;
             /** @description 项目颜色（仅 findOne 返回） */
             color?: string | null;
-            /** @description 项目代码（apm:// 命名空间，仅 findOne 返回） */
+            /** @description 项目代码（ordo:// 命名空间，仅 findOne 返回） */
             projectCode?: string | null;
         };
         DocumentResponseDto: {
@@ -12653,7 +12653,7 @@ export interface components {
              * @enum {string|null}
              */
             docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
-            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            /** @description ordo:// 稳定短号（D{seq}，DocRegistry 回填） */
             shortId?: string | null;
             /** @description 所属文件夹（列表场景仅含 id/name） */
             folder?: components["schemas"]["DocumentFolderResponseDto"] | null;
@@ -12710,7 +12710,7 @@ export interface components {
              * @enum {string|null}
              */
             docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
-            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            /** @description ordo:// 稳定短号（D{seq}，DocRegistry 回填） */
             shortId?: string | null;
             /** @description 所属文件夹摘要（仅 id/name） */
             folder?: components["schemas"]["DocumentFolderResponseDto"];
@@ -12828,7 +12828,7 @@ export interface components {
              * @enum {string|null}
              */
             docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
-            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            /** @description ordo:// 稳定短号（D{seq}，DocRegistry 回填） */
             shortId?: string | null;
             /** @description 所属文件夹（完整字段） */
             folder?: components["schemas"]["DocumentFolderResponseDto"] | null;
@@ -13858,8 +13858,8 @@ export interface components {
             updatedAt: string;
             /** @description 所属项目 ID（项目命中时为 null） */
             projectId?: Record<string, never> | null;
-            /** @description apm:// 实体引用串（apm://{projectCode}/{kind}/{shortId}，全局引用系统插入用）；缺 projectCode/shortId 时为 null——调用方不得自行拼装 */
-            apmRef?: Record<string, never> | null;
+            /** @description ordo:// 实体引用串（ordo://{projectCode}/{kind}/{shortId}，全局引用系统插入用）；缺 projectCode/shortId 时为 null——调用方不得自行拼装 */
+            ordoRef?: Record<string, never> | null;
         };
         SearchResponseDto: {
             /** @description 扁平命中列表（前端按 type 分组渲染） */
@@ -14066,7 +14066,7 @@ export interface components {
             workspaceId?: string;
         };
         WorkspaceBackupDto: {
-            /** @description 备份 ID（即 .apm-backups 下的目录名） */
+            /** @description 备份 ID（即 .ordo-backups 下的目录名） */
             id: string;
             /** @description 备份创建时间（ISO） */
             createdAt: string;

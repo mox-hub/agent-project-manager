@@ -25,7 +25,7 @@ export interface MentionTextareaProps {
   rows?: number;
   className?: string;
   disabled?: boolean;
-  /** 文档候选搜索范围与 apm:// 短号链接的项目代码（统一实体引用子系统，v2 纪要 §13.3） */
+  /** 文档候选搜索范围与 ordo:// 短号链接的项目代码（统一实体引用子系统，v2 纪要 §13.3） */
   projectId?: string;
   projectCode?: string;
   /** 命中成员选中时的回调（可用于联动解析 Mention 记录；仅成员候选触发） */
@@ -40,7 +40,7 @@ const TOKEN_RE = /@([a-zA-Z0-9_\-.]*)$/;
  * 支持 @ 触发统一实体引用补全的文本域（v2 纪要 §13.3 重构）：
  * 光标前输入 @query 时弹出统一候选列表（成员 + 项目文档混排同源），
  * 成员以 `@handle ` 插入（兼容提及解析），文档以 markdown 链接插入
- * （apm:// 短号形态优先，渲染侧由 apm-ref-chip 呈现为同一 chip）。
+ * （ordo:// 短号形态优先，渲染侧由 ordo-ref-chip 呈现为同一 chip）。
  */
 export function MentionTextarea({
   value,

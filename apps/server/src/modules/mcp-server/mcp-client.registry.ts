@@ -61,7 +61,7 @@ export class McpClientRegistry {
   async probe(target: McpProbeTarget): Promise<McpProbeResult> {
     const start = Date.now();
     const client = new Client(
-      { name: 'apm-mcp-probe', version: '1.0.0' },
+      { name: 'ordo-mcp-probe', version: '1.0.0' },
       { capabilities: {} },
     );
 

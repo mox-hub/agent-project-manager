@@ -5,8 +5,8 @@ import { Command } from 'commander';
 import * as readline from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import {
-  ApmClient,
-  ApmError,
+  OrdoClient,
+  OrdoError,
   ExitCode,
   clearToken,
   getActiveProfileName,
@@ -44,14 +44,14 @@ export function registerAuthCommands(program: Command): void {
 
       const backend = getBackend(config, root.backend);
       if (!backend) {
-        throw new ApmError(
+        throw new OrdoError(
           '未配置后端地址：请用 --backend <url> 或先执行 ordo config set backend <url>',
           ExitCode.BACKEND_UNREACHABLE,
         );
       }
       if (root.backend) profile.backend = root.backend;
 
-      const client = new ApmClient({
+      const client = new OrdoClient({
         backend,
         getToken: () => profile.accessToken,
       });
@@ -65,7 +65,7 @@ export function registerAuthCommands(program: Command): void {
 
       const username = opts.username || process.env.ORDO_USERNAME;
       if (!username) {
-        throw new ApmError(
+        throw new OrdoError(
           '需要用户名：--username <name> 或环境变量 ORDO_USERNAME',
           ExitCode.GENERAL,
         );

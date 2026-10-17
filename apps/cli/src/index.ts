@@ -3,7 +3,7 @@
  * ordo CLI 入口
  */
 import { Command } from 'commander';
-import { ApmError } from '@ordo/shared';
+import { OrdoError } from '@ordo/shared';
 import { registerAuthCommands } from './commands/auth';
 import { registerConfigCommands } from './commands/config';
 import { registerWorkspaceCommands } from './commands/workspace';
@@ -33,9 +33,9 @@ async function main() {
 
 main().catch((err: unknown) => {
   const apmErr =
-    err instanceof ApmError
+    err instanceof OrdoError
       ? err
-      : new ApmError(err instanceof Error ? err.message : String(err));
+      : new OrdoError(err instanceof Error ? err.message : String(err));
   console.error(`错误：${apmErr.message}`);
   if (apmErr.backendErrorCode) {
     console.error(`后端错误码：${apmErr.backendErrorCode}`);

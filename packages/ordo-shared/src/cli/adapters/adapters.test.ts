@@ -448,7 +448,7 @@ describe('ZCodeAdapter（headless stream-json 协议校准，v0.16.9 实测采�
     const attachIdx = built.args.indexOf('--attach');
     expect(attachIdx).toBeGreaterThan(-1);
     const attachFile = built.args[attachIdx + 1];
-    expect(attachFile).toMatch(/apm-zcode-.+\.md$/);
+    expect(attachFile).toMatch(/ordo-zcode-.+\.md$/);
     expect(built.args[built.args.indexOf('-p') + 1]).toContain('attached file');
     expect(built.args[built.args.indexOf('-p') + 1].length).toBeLessThan(200);
     // 密文语义：原 prompt 不进 argv（8K/32K 限制与日志泄漏双防线）

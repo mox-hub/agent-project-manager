@@ -78,7 +78,7 @@ describe('AssistantToolsService', () => {
   };
   // P1-10：决策卡直写后广播 decision.proposal.created（通知订阅链感知）
   const mockMessageBus = { publish: vi.fn() };
-  // CAP-A-23：apm:// 协议查询面（全局搜索命中带 apmRef）
+  // CAP-A-23：ordo:// 协议查询面（全局搜索命中带 ordoRef）
   const mockSearchService = {
     search: vi.fn().mockResolvedValue({ items: [], total: 0 }),
   };
@@ -117,7 +117,7 @@ describe('AssistantToolsService', () => {
     expect(tools).toHaveLength(ASSISTANT_TOOL_CATALOG.length);
   });
 
-  it('search_entities 透传 SearchService（命中带 apmRef）；目录与 prompt 携带引用协议指引（CAP-A-23）', async () => {
+  it('search_entities 透传 SearchService（命中带 ordoRef）；目录与 prompt 携带引用协议指引（CAP-A-23）', async () => {
     const tools = service.buildTools({
       projectId: 'p1',
       userId: 'u1',
@@ -131,7 +131,7 @@ describe('AssistantToolsService', () => {
           id: 'i1',
           type: 'task',
           title: '修复登录超时',
-          apmRef: 'apm://APM/issue/APM-PF-001',
+          ordoRef: 'ordo://APM/issue/APM-PF-001',
         },
       ],
       total: 1,
@@ -156,7 +156,7 @@ describe('AssistantToolsService', () => {
     expect(entry?.http.path).toContain('/_api/search?q=:query');
     const prompt = service.renderCatalogForPrompt('p1');
     expect(prompt).toContain('search_entities');
-    expect(prompt).toContain('apmRef');
+    expect(prompt).toContain('ordoRef');
     expect(prompt).toContain('禁止杜撰');
   });
 

@@ -171,7 +171,7 @@ async function bootstrap() {
   registerUnknownRouteFilter(app);
 
   // 桌面壳 utility 承载的优雅关闭桥（ADR-015 P2）：壳 stop 流程先经 parentPort
-  // 发 apm:shutdown，Nest shutdown hooks 收尾（HTTP 连接池/Prisma 断开）后退出；
+  // 发 ordo:shutdown，Nest shutdown hooks 收尾（HTTP 连接池/Prisma 断开）后退出；
   // 普通 node 进程无 parentPort，桥不挂载。SIGTERM 同路径由 enableShutdownHooks 兜住。
   app.enableShutdownHooks();
   type UtilityParentPort = {
@@ -182,7 +182,7 @@ async function bootstrap() {
   ).parentPort;
   if (parentPort) {
     parentPort.on('message', (e) => {
-      if (e?.data === 'apm:shutdown') {
+      if (e?.data === 'ordo:shutdown') {
         void app.close().finally(() => process.exit(0));
       }
     });

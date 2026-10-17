@@ -53,7 +53,7 @@ describe('startup-migrations（打包模式启动链编排）', () => {
   ];
 
   beforeEach(() => {
-    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-startup-mig-test-'));
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-startup-mig-test-'));
     migrationsDir = path.join(tmpRoot, 'migrations');
     fs.mkdirSync(path.join(migrationsDir, '20260101000000_create_item'), {
       recursive: true,

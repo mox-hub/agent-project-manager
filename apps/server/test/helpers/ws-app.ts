@@ -20,7 +20,7 @@ import { workspaceALS } from '../../src/core/database/workspace-context';
 import { registerUnknownRouteFilter } from '../../src/common/filters/unknown-route.filter';
 
 // jest 运行级临时目录：注册表文件避免写真实 workspaces.json
-const runTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-e2e-'));
+const runTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-e2e-'));
 process.env.WORKSPACE_REGISTRY_PATH =
   process.env.WORKSPACE_REGISTRY_PATH ?? path.join(runTmp, 'workspaces.json');
 process.env.WORKSPACE_TEMPLATE_PATH =

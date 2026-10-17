@@ -3,10 +3,10 @@
  * 全局仪表盘 KPI 卡与快捷操作、analytics 只读页。
  */
 import { test as base, expect } from '@playwright/test'
-import { makeApi, uniq, type ApmApi } from './helpers/api'
+import { makeApi, uniq, type OrdoApi } from './helpers/api'
 import { openCommandPalette } from './helpers/ui'
 
-const test = base.extend<{ api: ApmApi }>({
+const test = base.extend<{ api: OrdoApi }>({
   api: async ({ request }, use) => {
     await use(await makeApi(request))
   },

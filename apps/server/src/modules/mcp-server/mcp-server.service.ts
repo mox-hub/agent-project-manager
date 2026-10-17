@@ -88,7 +88,7 @@ export class McpServerService implements OnModuleInit {
   createServerForSession(userId: string | null = null): Server {
     const server = new Server(
       {
-        name: 'apm-mcp-server',
+        name: 'ordo-mcp-server',
         version: '1.0.0',
       },
       {
@@ -344,7 +344,7 @@ export class McpServerService implements OnModuleInit {
             name: 'search_entities',
             description:
               'Global search across tasks/bugs/documents/projects (fuzzy match on title/shortId/description, project-member visibility). ' +
-              'Hits carry apmRef (apm://{projectCode}/{kind}/{shortId}) — reference entities in generated markdown as [title](apmRef); never invent short IDs.',
+              'Hits carry ordoRef (ordo://{projectCode}/{kind}/{shortId}) — reference entities in generated markdown as [title](ordoRef); never invent short IDs.',
             inputSchema: {
               type: 'object',
               properties: {
@@ -912,8 +912,8 @@ export class McpServerService implements OnModuleInit {
   }
 
   /**
-   * apm:// 协议查询面（CAP-A-23 AI 协议入口）：全局搜索任务/Bug/文档/项目，
-   * 命中带 apmRef 引用串——外部 agent 生成 markdown 引用实体时的短号真相源。
+   * ordo:// 协议查询面（CAP-A-23 AI 协议入口）：全局搜索任务/Bug/文档/项目，
+   * 命中带 ordoRef 引用串——外部 agent 生成 markdown 引用实体时的短号真相源。
    */
   private async searchEntities(
     ctx: McpToolContext,

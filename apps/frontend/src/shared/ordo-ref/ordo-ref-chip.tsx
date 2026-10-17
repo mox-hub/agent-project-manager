@@ -3,19 +3,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  expandApmRefToPath,
-  formatApmRef,
-  isApmRef,
-  parseApmRef,
-  type ApmRefKind,
-} from '@ordo/shared/apm-ref';
+  expandOrdoRefToPath,
+  formatOrdoRef,
+  isOrdoRef,
+  parseOrdoRef,
+  type OrdoRefKind,
+} from '@ordo/shared/ordo-ref';
 import { cn } from '@/lib/utils';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';
 
 /**
- * apm:// 内嵌链接 chip（契约与文档知识层 v2 纪要 §13 渲染层）。
- * 文本原样保留 `[标题](apm://...)`，视觉渲染为实体 chip；
+ * ordo:// 内嵌链接 chip（契约与文档知识层 v2 纪要 §13 渲染层）。
+ * 文本原样保留 `[标题](ordo://...)`，视觉渲染为实体 chip；
  * 点击展开为应用路由——文档 kind 直接透传短号（后端 findOne 兼容短号查询），
  * 其余 kind V1 同样以短号作路径段（后端逐域兼容后自动可用）。
  */
@@ -25,7 +25,7 @@ import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigge
  * issue 原为 CircleDot、member 原为单数 User，均收敛到注册表口径
  * （issue=CheckSquare、member=Users）；release 已作为增量实体登记入表。
  */
-const KIND_ICON: Record<ApmRefKind, React.ComponentType<{ className?: string }>> = {
+const KIND_ICON: Record<OrdoRefKind, React.ComponentType<{ className?: string }>> = {
   doc: getEntityIcon('document').icon,
   issue: getEntityIcon('issue').icon,
   bug: getEntityIcon('bug').icon,
@@ -35,7 +35,7 @@ const KIND_ICON: Record<ApmRefKind, React.ComponentType<{ className?: string }>>
   release: getEntityIcon('release').icon,
 };
 
-const KIND_LABEL: Record<ApmRefKind, string> = {
+const KIND_LABEL: Record<OrdoRefKind, string> = {
   doc: '文档',
   issue: '工单',
   bug: 'Bug',
@@ -45,20 +45,20 @@ const KIND_LABEL: Record<ApmRefKind, string> = {
   release: '发版',
 };
 
-export interface ApmRefLinkProps
+export interface OrdoRefLinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
   href: string;
   children?: React.ReactNode;
 }
 
-export function ApmRefLink({
+export function OrdoRefLink({
   href,
   children,
   className,
   ...rest
-}: ApmRefLinkProps) {
+}: OrdoRefLinkProps) {
   const navigate = useNavigate();
-  const ref = parseApmRef(href);
+  const ref = parseOrdoRef(href);
 
   if (!ref) {
     // 非法引用降级为普通链接，绝不静默吞
@@ -73,18 +73,18 @@ export function ApmRefLink({
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     rest.onClick?.(event);
-    const path = expandApmRefToPath(ref, () => ref.shortId);
+    const path = expandOrdoRefToPath(ref, () => ref.shortId);
     if (path) navigate(path);
   };
 
-  // hover 预览卡（v2 纪要 §13：同一 preview card）——path 传 apm:// 引用，
+  // hover 预览卡（v2 纪要 §13：同一 preview card）——path 传 ordo:// 引用，
   // resolveRoutePreview 已支持引用入口；预览数据按短号查询（文档域后端已兼容）。
   return (
     <RoutePreviewTrigger path={href} side="top" delay={300}>
       <a
         href={href}
         onClick={handleClick}
-        data-apm-ref={formatApmRef(ref)}
+        data-ordo-ref={formatOrdoRef(ref)}
         title={`${KIND_LABEL[ref.kind]} · ${ref.projectCode}/${ref.shortId}`}
         className={cn(
           'inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-xs',
@@ -101,15 +101,15 @@ export function ApmRefLink({
 }
 
 /**
- * react-markdown/MDX components 的 `a` 拦截：apm:// 引用渲染为 chip，
+ * react-markdown/MDX components 的 `a` 拦截：ordo:// 引用渲染为 chip，
  * 其余链接保持原生行为。
  */
-export function apmRefAnchorInterceptor(
+export function ordoRefAnchorInterceptor(
   props: React.AnchorHTMLAttributes<HTMLAnchorElement>,
 ) {
   const { href, ...rest } = props;
-  if (href && isApmRef(href)) {
-    return <ApmRefLink href={href} {...rest} />;
+  if (href && isOrdoRef(href)) {
+    return <OrdoRefLink href={href} {...rest} />;
   }
   return <a href={href} {...rest} />;
 }

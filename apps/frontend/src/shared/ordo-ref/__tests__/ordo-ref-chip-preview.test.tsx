@@ -2,7 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
-import { ApmRefLink } from '../apm-ref-chip';
+import { OrdoRefLink } from '../ordo-ref-chip';
 
 // jsdom 无 ResizeObserver，floating-ui 定位依赖它
 beforeAll(() => {
@@ -29,12 +29,12 @@ vi.mock('@/modules/document/hooks/use-document-detail', () => ({
   }),
 }));
 
-describe('ApmRefLink hover 预览卡（v2 纪要 §13：同一 preview card）', () => {
+describe('OrdoRefLink hover 预览卡（v2 纪要 §13：同一 preview card）', () => {
   it('hover chip 后挂载预览卡，预览数据按短号解析', async () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter>
-        <ApmRefLink href="apm://apm/doc/D17">验收门禁设计</ApmRefLink>
+        <OrdoRefLink href="ordo://ordo/doc/D17">验收门禁设计</OrdoRefLink>
       </MemoryRouter>,
     );
 

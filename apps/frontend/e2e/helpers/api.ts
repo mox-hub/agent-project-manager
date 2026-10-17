@@ -47,7 +47,7 @@ export async function ensureE2EUser(request: APIRequestContext): Promise<string>
   throw lastErr
 }
 
-export interface ApmApi {
+export interface OrdoApi {
   token: string
   me(): Promise<{ id: string; username: string; displayName: string }>
   createProject(data: {
@@ -126,7 +126,7 @@ export interface ApmApi {
   raw(method: string, path: string, data?: unknown): Promise<{ status: number; body: unknown }>
 }
 
-export async function makeApi(request: APIRequestContext): Promise<ApmApi> {
+export async function makeApi(request: APIRequestContext): Promise<OrdoApi> {
   const token = await ensureE2EUser(request)
   const modulesEnsured = new Set<string>()
   const isNetworkError = (e: unknown) =>
@@ -237,13 +237,13 @@ export async function makeApi(request: APIRequestContext): Promise<ApmApi> {
       call('GET', `/issues/all?parentIssueId=${parentId}`).then((d: unknown) => {
         if (Array.isArray(d)) return d
         const obj = d as { data?: unknown; items?: unknown }
-        return (obj.data ?? obj.items ?? []) as ApmApi['listSubtasks'] extends () => Promise<infer T> ? T : never
+        return (obj.data ?? obj.items ?? []) as OrdoApi['listSubtasks'] extends () => Promise<infer T> ? T : never
       }),
     listAllTasks: () => call('GET', '/issues/all').then((d: unknown) => {
       // 信封 data 内层数组可能为 { data: [...] } 或 { items: [...] }
       if (Array.isArray(d)) return d
       const obj = d as { data?: unknown; items?: unknown }
-      return (obj.data ?? obj.items ?? []) as ApmApi['listAllTasks'] extends () => Promise<infer T> ? T : never
+      return (obj.data ?? obj.items ?? []) as OrdoApi['listAllTasks'] extends () => Promise<infer T> ? T : never
     }),
     createDocument: (data) => call('POST', '/documents', data),
     getDocument: (id) => call('GET', `/documents/${id}`),
@@ -257,13 +257,13 @@ export async function makeApi(request: APIRequestContext): Promise<ApmApi> {
     listDocuments: () => call('GET', '/documents').then((d: unknown) => {
       if (Array.isArray(d)) return d
       const obj = d as { data?: unknown; items?: unknown }
-      return (obj.data ?? obj.items ?? []) as ApmApi['listDocuments'] extends () => Promise<infer T> ? T : never
+      return (obj.data ?? obj.items ?? []) as OrdoApi['listDocuments'] extends () => Promise<infer T> ? T : never
     }),
     createTeam: (data) => call('POST', '/teams', { slug: `e2e-${Date.now().toString(36)}`, ...data }),
     listTeams: () => call('GET', '/teams').then((d: unknown) => {
       if (Array.isArray(d)) return d
       const obj = d as { data?: unknown; items?: unknown }
-      return (obj.data ?? obj.items ?? []) as ApmApi['listTeams'] extends () => Promise<infer T> ? T : never
+      return (obj.data ?? obj.items ?? []) as OrdoApi['listTeams'] extends () => Promise<infer T> ? T : never
     }),
     archiveTeam: async (id) => {
       await fetchWithRetry(`${API_BASE}/teams/${id}/archive`, {
@@ -289,18 +289,18 @@ export async function makeApi(request: APIRequestContext): Promise<ApmApi> {
     listTeamMembers: (teamId) => call('GET', `/teams/${teamId}/members`).then((d: unknown) => {
       if (Array.isArray(d)) return d
       const obj = d as { data?: unknown; items?: unknown }
-      return (obj.data ?? obj.items ?? []) as ApmApi['listTeamMembers'] extends () => Promise<infer T> ? T : never
+      return (obj.data ?? obj.items ?? []) as OrdoApi['listTeamMembers'] extends () => Promise<infer T> ? T : never
     }),
     listMembers: () => call('GET', '/members').then((d: unknown) => {
       if (Array.isArray(d)) return d
       const obj = d as { data?: unknown; items?: unknown }
-      return (obj.data ?? obj.items ?? []) as ApmApi['listMembers'] extends () => Promise<infer T> ? T : never
+      return (obj.data ?? obj.items ?? []) as OrdoApi['listMembers'] extends () => Promise<infer T> ? T : never
     }),
     createAcceptance: (data) => call('POST', '/acceptance', data),
     listAcceptance: () => call('GET', '/acceptance').then((d: unknown) => {
       if (Array.isArray(d)) return d
       const obj = d as { data?: unknown; items?: unknown }
-      return (obj.data ?? obj.items ?? []) as ApmApi['listAcceptance'] extends () => Promise<infer T> ? T : never
+      return (obj.data ?? obj.items ?? []) as OrdoApi['listAcceptance'] extends () => Promise<infer T> ? T : never
     }),
     deleteAcceptance: async (id) => {
       await fetchWithRetry(`${API_BASE}/acceptance/${id}`, {

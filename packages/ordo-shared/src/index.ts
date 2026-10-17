@@ -3,11 +3,11 @@
  */
 
 export * from './errors';
-export * from './apm-ref';
+export * from './ordo-ref';
 export * from './config/store';
 export * from './runtime/protocol';
 export * from './events/domain-events';
-export * from './http/apm-client';
+export * from './http/ordo-client';
 export * from './http/envelope';
 export * from './cli/adapters/interface';
 export * from './cli/adapters/claude-code';

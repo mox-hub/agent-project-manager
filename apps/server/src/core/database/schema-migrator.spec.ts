@@ -97,7 +97,7 @@ describe('schema-migrator（CAP-A-14 桌面升级迁移）', () => {
   };
 
   beforeEach(() => {
-    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-migrator-test-'));
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-migrator-test-'));
     migrationsDir = path.join(tmpRoot, 'migrations');
     fs.mkdirSync(migrationsDir, { recursive: true });
     backupRoot = path.join(tmpRoot, 'backup-root');

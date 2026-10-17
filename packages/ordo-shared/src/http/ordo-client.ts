@@ -4,14 +4,14 @@
  * 后端所有响应（含 Public 端点）统一为 TransformInterceptor 包裹的 envelope：
  *   { status, success, description, data, timestamp, requestId }
  * 失败时为 GlobalExceptionFilter 的同构 envelope（带 error: {code,message,details}）。
- * 本客户端成功时取 data 字段；失败时解析为 ApmError。
+ * 本客户端成功时取 data 字段；失败时解析为 OrdoError。
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { ApmError, parseBackendError } from '../errors';
+import { OrdoError, parseBackendError } from '../errors';
 import { unwrapEnvelope } from './envelope';
 
-export interface ApmClientOptions {
+export interface OrdoClientOptions {
   backend: string;
   workspaceId?: string;
   getToken?: () => string | undefined;
@@ -20,11 +20,11 @@ export interface ApmClientOptions {
   extraHeaders?: () => Record<string, string>;
 }
 
-export class ApmClient {
+export class OrdoClient {
   private readonly http: AxiosInstance;
-  private readonly opts: ApmClientOptions;
+  private readonly opts: OrdoClientOptions;
 
-  constructor(opts: ApmClientOptions) {
+  constructor(opts: OrdoClientOptions) {
     this.opts = opts;
     this.http = axios.create({
       baseURL: opts.backend.replace(/\/+$/, ''),
@@ -50,7 +50,7 @@ export class ApmClient {
    */
   static normalizePath(path: string): string {
     let p = path.trim();
-    if (!p) throw new ApmError('路径不能为空');
+    if (!p) throw new OrdoError('路径不能为空');
     p = p.replace(/^[./\\]+/, '/');
     if (!p.startsWith('/')) p = `/${p}`;
     if (!p.startsWith('/_api')) p = `/_api${p}`;
@@ -70,14 +70,14 @@ export class ApmClient {
   ): Promise<T> {
     const config: AxiosRequestConfig = {
       method: method.toUpperCase(),
-      url: ApmClient.normalizePath(path),
+      url: OrdoClient.normalizePath(path),
       headers: this.buildHeaders(),
       params: query,
     };
     if (body !== undefined) config.data = body;
     try {
       const res = await this.http.request<unknown>(config);
-      return ApmClient.unwrap<T>(res.data);
+      return OrdoClient.unwrap<T>(res.data);
     } catch (err) {
       throw parseBackendError(err);
     }

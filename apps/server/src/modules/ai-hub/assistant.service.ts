@@ -41,9 +41,9 @@ const PERSONA_INSTRUCTION = [
   '涉及操作类请求（排期、分派、预算、任务状态变更）时，先给出结构化建议方案而不是直接执行。',
   '回复简洁、结论先行，使用用户的语言（默认中文）。',
   '',
-  '实体引用协议（apm://）：需要引用任务/缺陷/文档/成员等实体时，先用 search_entities 工具查询，' +
-    '再以 markdown 链接 [标题](apm://{projectCode}/{kind}/{shortId}) 写进回复——前端会渲染为可 hover 预览的引用胶囊。' +
-    '短号与项目代码一律取查询结果的 apmRef，绝不杜撰；查不到就写实体名称，不放空引用。',
+  '实体引用协议（ordo://）：需要引用任务/缺陷/文档/成员等实体时，先用 search_entities 工具查询，' +
+    '再以 markdown 链接 [标题](ordo://{projectCode}/{kind}/{shortId}) 写进回复——前端会渲染为可 hover 预览的引用胶囊。' +
+    '短号与项目代码一律取查询结果的 ordoRef，绝不杜撰；查不到就写实体名称，不放空引用。',
 ].join('\n');
 
 /** 执行桥的超时：短平快的 PM 任务，默认 5 分钟；运行主体=小周 Member（V3 身份口径） */
@@ -469,8 +469,8 @@ export class AssistantService {
     if (!target) {
       throw new BadRequestException(
         provider
-          ? `没有支持 ${provider} 的在线 CLI 执行通道：请先启动对应守护进程（apm daemon start）`
-          : '没有在线的 CLI 执行通道：请先在本机启动守护进程（apm daemon start）',
+          ? `没有支持 ${provider} 的在线 CLI 执行通道：请先启动对应守护进程（ordo daemon start）`
+          : '没有在线的 CLI 执行通道：请先在本机启动守护进程（ordo daemon start）',
       );
     }
 
@@ -484,7 +484,7 @@ export class AssistantService {
     if (!providerId || !workspaceRoot) {
       throw new BadRequestException(
         !providerId
-          ? '执行通道未注册任何 CLI provider：请检查守护进程配置并重启（apm daemon start）'
+          ? '执行通道未注册任何 CLI provider：请检查守护进程配置并重启（ordo daemon start）'
           : '无法确定执行工作区：守护进程未配置 runtime.workspaceRoots，且项目未配置工作区根目录（项目设置 → Git 与终端 → 工作区）',
       );
     }
@@ -686,7 +686,7 @@ export class AssistantService {
     const online = registrations.find((r) => r.status === 'online');
     if (!online) {
       throw new BadRequestException(
-        '没有在线的 CLI 执行通道：请先在本机启动守护进程（apm daemon start）',
+        '没有在线的 CLI 执行通道：请先在本机启动守护进程（ordo daemon start）',
       );
     }
     // 先解析执行载荷再建 ExecutionRun，避免校验失败留下孤儿 run
@@ -697,7 +697,7 @@ export class AssistantService {
     if (!providerId || !workspaceRoot) {
       throw new BadRequestException(
         !providerId
-          ? '执行通道未注册任何 CLI provider：请检查守护进程配置并重启（apm daemon start）'
+          ? '执行通道未注册任何 CLI provider：请检查守护进程配置并重启（ordo daemon start）'
           : '无法确定执行工作区：守护进程未配置 runtime.workspaceRoots，且项目未配置工作区根目录（项目设置 → Git 与终端 → 工作区）',
       );
     }

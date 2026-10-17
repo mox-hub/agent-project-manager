@@ -10,7 +10,7 @@ export const ExitCode = {
   BACKEND_UNREACHABLE: 4,
 } as const;
 
-export class ApmError extends Error {
+export class OrdoError extends Error {
   readonly exitCode: number;
   readonly backendErrorCode?: string;
   readonly requestId?: string;
@@ -22,7 +22,7 @@ export class ApmError extends Error {
     requestId?: string,
   ) {
     super(message);
-    this.name = 'ApmError';
+    this.name = 'OrdoError';
     this.exitCode = exitCode;
     this.backendErrorCode = backendErrorCode;
     this.requestId = requestId;
@@ -44,20 +44,20 @@ interface AxiosLikeError {
   response?: { status?: number; data?: BackendErrorBody };
 }
 
-/** 把 axios / 任意错误解析为 ApmError，统一退出码语义 */
-export function parseBackendError(err: unknown): ApmError {
+/** 把 axios / 任意错误解析为 OrdoError，统一退出码语义 */
+export function parseBackendError(err: unknown): OrdoError {
   if (err && typeof err === 'object' && 'isAxiosError' in err) {
     const axiosErr = err as AxiosLikeError;
 
     // 网络层错误
     if (axiosErr.code === 'ECONNREFUSED' || axiosErr.code === 'ENOTFOUND') {
-      return new ApmError(
+      return new OrdoError(
         `无法连接后端（${axiosErr.code}）。请确认 server 已启动，或执行 apm config set backend <url>`,
         ExitCode.BACKEND_UNREACHABLE,
       );
     }
     if (axiosErr.code === 'ETIMEDOUT' || axiosErr.code === 'ECONNABORTED') {
-      return new ApmError(
+      return new OrdoError(
         `请求后端超时（${axiosErr.code}）`,
         ExitCode.BACKEND_UNREACHABLE,
       );
@@ -69,7 +69,7 @@ export function parseBackendError(err: unknown): ApmError {
     const message = data?.description ?? data?.error?.message;
 
     if (status === 401) {
-      return new ApmError(
+      return new OrdoError(
         message || '认证失败或登录已过期，请执行 apm login',
         ExitCode.AUTH,
         errorCode,
@@ -77,7 +77,7 @@ export function parseBackendError(err: unknown): ApmError {
       );
     }
     if (status === 403) {
-      return new ApmError(
+      return new OrdoError(
         message || '无权限访问该资源',
         ExitCode.WORKSPACE,
         errorCode,
@@ -85,7 +85,7 @@ export function parseBackendError(err: unknown): ApmError {
       );
     }
 
-    return new ApmError(
+    return new OrdoError(
       message || `请求失败：HTTP ${status ?? 'unknown'}`,
       ExitCode.GENERAL,
       errorCode,
@@ -94,7 +94,7 @@ export function parseBackendError(err: unknown): ApmError {
   }
 
   if (err instanceof Error) {
-    return new ApmError(err.message);
+    return new OrdoError(err.message);
   }
-  return new ApmError(String(err));
+  return new OrdoError(String(err));
 }

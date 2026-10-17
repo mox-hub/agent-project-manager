@@ -2,10 +2,10 @@ import { useEffect, useState, useCallback } from 'react';
 
 /**
  * usePersistentToggle - 按页面键持久化的显隐开关（用于「快捷看板/统计卡片」等可自动隐藏栏目）
- * 状态写入 localStorage，键前缀 `apm.toggle.`，默认隐藏（auto-hidden）。
+ * 状态写入 localStorage，键前缀 `ordo.toggle.`，默认隐藏（auto-hidden）。
  */
 export function usePersistentToggle(pageKey: string, defaultValue = false) {
-  const storageKey = `apm.toggle.${pageKey}`;
+  const storageKey = `ordo.toggle.${pageKey}`;
 
   const [value, setValue] = useState<boolean>(() => {
     try {

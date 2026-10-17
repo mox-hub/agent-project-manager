@@ -4,7 +4,7 @@
  *   ordo api GET /tasks '{"projectId":"p1"}'
  */
 import { Command } from 'commander';
-import { ApmError } from '@ordo/shared';
+import { OrdoError } from '@ordo/shared';
 import { buildContext, out } from '../context';
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
@@ -30,7 +30,7 @@ export function registerApiCommands(program: Command): void {
         const ctx = buildContext(cmd);
         const m = method.toUpperCase();
         if (!METHODS.includes(m)) {
-          throw new ApmError(`不支持的 HTTP 方法：${m}`);
+          throw new OrdoError(`不支持的 HTTP 方法：${m}`);
         }
         const body = json ? JSON.parse(json) : undefined;
         const query = opts.query ? JSON.parse(opts.query) : undefined;

@@ -23,7 +23,7 @@ export class DocumentProjectSummaryDto {
 
   @ApiPropertyOptional({
     type: String,
-    description: '项目代码（apm:// 命名空间，仅 findOne 返回）',
+    description: '项目代码（ordo:// 命名空间，仅 findOne 返回）',
     nullable: true,
   })
   projectCode?: string | null;
@@ -126,7 +126,7 @@ export class DocumentBaseDto {
 
   @ApiPropertyOptional({
     type: String,
-    description: 'apm:// 稳定短号（D{seq}，DocRegistry 回填）',
+    description: 'ordo:// 稳定短号（D{seq}，DocRegistry 回填）',
     nullable: true,
   })
   shortId?: string | null;

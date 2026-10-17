@@ -886,8 +886,8 @@ export class IssueService {
       include: this.issueDetailInclude,
     });
 
-    // cuid 未命中回落 shortId：apm:// 引用与胶囊路径段是短号
-    // （v2 纪要 §13「后端逐域兼容」缺口，apm-ref-chip hover 预览/点击直达依赖）
+    // cuid 未命中回落 shortId：ordo:// 引用与胶囊路径段是短号
+    // （v2 纪要 §13「后端逐域兼容」缺口，ordo-ref-chip hover 预览/点击直达依赖）
     if (!task) {
       task = await this.prisma.issue.findFirst({
         where: {

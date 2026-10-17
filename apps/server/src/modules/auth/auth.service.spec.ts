@@ -462,7 +462,7 @@ describe('AuthService', () => {
     let passwordHash: string;
 
     beforeAll(async () => {
-      tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-auth-ws-test-'));
+      tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-auth-ws-test-'));
       previousRegistry = process.env.WORKSPACE_REGISTRY_PATH;
       previousTemplate = process.env.WORKSPACE_TEMPLATE_PATH;
       process.env.WORKSPACE_REGISTRY_PATH = path.join(

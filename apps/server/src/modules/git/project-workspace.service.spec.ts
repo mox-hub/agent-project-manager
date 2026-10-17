@@ -57,7 +57,7 @@ describe('ProjectWorkspaceService（CAP-A-28 路径保障）', () => {
   };
 
   beforeAll(() => {
-    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-pws-'));
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-pws-'));
   });
 
   afterAll(() => {

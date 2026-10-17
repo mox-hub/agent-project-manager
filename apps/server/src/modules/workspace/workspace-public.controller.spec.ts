@@ -43,7 +43,7 @@ describe('WorkspaceController 公开名单端点（CAP-A-26）', () => {
   const prevRegistry = process.env.WORKSPACE_REGISTRY_PATH;
 
   beforeAll(() => {
-    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-public-ws-'));
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-public-ws-'));
     const registry = path.join(tmpRoot, 'workspaces.json');
     fs.writeFileSync(
       registry,

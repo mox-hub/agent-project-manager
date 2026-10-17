@@ -112,7 +112,7 @@ export const handlers = [
     return ok({
       items: [
         {
-          key: 'apm-baseline',
+          key: 'ordo-baseline',
           title: 'APM 协作基线',
           description: '你在 APM 中执行任务的行为基线',
           charCount: 1024,

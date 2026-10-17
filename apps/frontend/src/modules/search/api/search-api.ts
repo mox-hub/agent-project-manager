@@ -19,10 +19,10 @@ export interface SearchHit {
   /** 所属项目 ID（项目命中时为 null） */
   projectId: string | null;
   /**
-   * apm:// 实体引用串（apm://{projectCode}/{kind}/{shortId}，全局引用系统
+   * ordo:// 实体引用串（ordo://{projectCode}/{kind}/{shortId}，全局引用系统
    * CAP-A-23 插入用）；缺 projectCode/shortId 时为 null——不自行拼装
    */
-  apmRef: string | null;
+  ordoRef: string | null;
 }
 
 export interface SearchResponse {

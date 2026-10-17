@@ -1,12 +1,12 @@
 /**
- * CLI 上下文构建：解析全局参数 → 组装 ApmClient
+ * CLI 上下文构建：解析全局参数 → 组装 OrdoClient
  */
 import { Command } from 'commander';
 import { inspect } from 'util';
 import {
-  ApmClient,
-  ApmError,
-  ApmConfig,
+  OrdoClient,
+  OrdoError,
+  OrdoConfig,
   ExitCode,
   getActiveProfileName,
   getBackend,
@@ -19,8 +19,8 @@ export interface CliContext {
   workspaceId?: string;
   profileName: string;
   json: boolean;
-  client: ApmClient;
-  config: ApmConfig;
+  client: OrdoClient;
+  config: OrdoConfig;
 }
 
 export function buildContext(cmd: Command): CliContext {
@@ -34,7 +34,7 @@ export function buildContext(cmd: Command): CliContext {
   const config = readConfig();
   const backend = getBackend(config, root.backend);
   if (!backend) {
-    throw new ApmError(
+    throw new OrdoError(
       '未配置后端地址。请先执行 ordo config set backend <url>，或用 --backend <url> 指定',
       ExitCode.BACKEND_UNREACHABLE,
     );
@@ -44,7 +44,7 @@ export function buildContext(cmd: Command): CliContext {
   const profile = getProfile(config, profileName);
   const workspaceId = root.workspace || profile.workspaceId;
 
-  const client = new ApmClient({
+  const client = new OrdoClient({
     backend,
     workspaceId,
     getToken: () => profile.accessToken,

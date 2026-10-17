@@ -24,7 +24,7 @@ describe('workspace-scope.util', () => {
   let previousTemplate: string | undefined;
 
   beforeAll(() => {
-    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-scope-test-'));
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-scope-test-'));
     previousRegistry = process.env.WORKSPACE_REGISTRY_PATH;
     previousTemplate = process.env.WORKSPACE_TEMPLATE_PATH;
     process.env.WORKSPACE_REGISTRY_PATH = path.join(tmpRoot, 'workspaces.json');

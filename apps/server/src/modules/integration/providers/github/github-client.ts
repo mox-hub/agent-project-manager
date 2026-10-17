@@ -56,7 +56,7 @@ export class GitHubClient {
     this.octokit = new Octokit({
       auth: token.trim(),
       baseUrl: GITHUB_API_BASE,
-      userAgent: 'apm-agent-project-manager/1.0',
+      userAgent: 'ordo/1.0',
       request: { timeout: 30_000 },
     });
   }

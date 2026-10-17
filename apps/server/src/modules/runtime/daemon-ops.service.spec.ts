@@ -41,7 +41,7 @@ const makeService = (appMode: string | undefined) => {
   } as never);
 };
 
-const tmpDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'apm-daemon-ops-'));
+const tmpDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-daemon-ops-'));
 
 describe('DaemonOpsService（本机 daemon 运维）', () => {
   let dir: string;

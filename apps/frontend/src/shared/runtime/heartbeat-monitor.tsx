@@ -29,7 +29,7 @@ interface MonitorSample {
   detail?: string;
 }
 
-const STORAGE_PREFIX = 'apm.heartbeat-monitor.';
+const STORAGE_PREFIX = 'ordo.heartbeat-monitor.';
 const MAX_DETAIL_LENGTH = 200;
 
 /** 读回持久化样本：畸形条目丢弃、按时间截尾；存储不可用/数据损坏返回空 */

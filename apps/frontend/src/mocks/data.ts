@@ -115,8 +115,8 @@ export function makeSearchResults(): SearchHit[] {
     projectId: path.startsWith('/app/projects/')
       ? path.split('/')[3]
       : null,
-    // mock 检索不产 apmRef（引用串需短号 + 项目代码，MSW 层不造假）
-    apmRef: null,
+    // mock 检索不产 ordoRef（引用串需短号 + 项目代码，MSW 层不造假）
+    ordoRef: null,
   }));
 }
 

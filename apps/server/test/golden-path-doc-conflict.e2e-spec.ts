@@ -84,7 +84,7 @@ describe('黄金路径 3：文档冻结 → 执行触碰 → 冲突升级 (e2e)'
       .expect(201);
     projectId = res.body.data.id;
 
-    workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-gp3-'));
+    workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-gp3-'));
     await withWs(ws.id, async () => {
       await ws.db.repository.create({
         data: { projectId, name: 'main', workspacePath: workspaceRoot },

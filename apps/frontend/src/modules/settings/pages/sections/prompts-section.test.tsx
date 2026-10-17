@@ -49,8 +49,8 @@ const mocks = vi.hoisted(() => ({
     agentsFile: null,
   },
   systemItems: [
-    { key: 'apm-baseline', title: 'APM 协作基线', description: '行为基线', charCount: 1024 },
-    { key: 'apm-report-format', title: '执行结果汇报规范', description: '汇报结构', charCount: 512 },
+    { key: 'ordo-baseline', title: 'APM 协作基线', description: '行为基线', charCount: 1024 },
+    { key: 'ordo-report-format', title: '执行结果汇报规范', description: '汇报结构', charCount: 512 },
   ],
   detailByKey: {} as Record<string, { key: string; title: string; description: string; charCount: number; content: string } | undefined>,
   usageStats: {
@@ -141,8 +141,8 @@ describe('PromptsSettingsSection（CAP-A-24 设置 · 提示词总控）', () =>
 
   it('系统提示词列表默认选中首项并展示只读全文（含内置徽标）', () => {
     mocks.detailByKey = {
-      'apm-baseline': {
-        key: 'apm-baseline',
+      'ordo-baseline': {
+        key: 'ordo-baseline',
         title: 'APM 协作基线',
         description: '行为基线',
         charCount: 1024,
@@ -157,8 +157,8 @@ describe('PromptsSettingsSection（CAP-A-24 设置 · 提示词总控）', () =>
 
   it('切换系统提示词条目后展示对应只读全文', () => {
     mocks.detailByKey = {
-      'apm-report-format': {
-        key: 'apm-report-format',
+      'ordo-report-format': {
+        key: 'ordo-report-format',
         title: '执行结果汇报规范',
         description: '汇报结构',
         charCount: 512,

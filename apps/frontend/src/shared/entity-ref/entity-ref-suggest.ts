@@ -9,9 +9,9 @@ import { suggestMentions } from '@/modules/team-member/api/team-member-api';
  * 统一实体引用子系统——候选源（契约与文档知识层 v2 纪要 §13.3）。
  *
  * 同一触发符 `@`、同一候选列表（成员/文档混排同源）、同一插入语法；
- * 渲染侧与 apm-ref-chip 共用同一 chip 形态与 preview card。
- * @人 = apm:// 引用中 kind=member 的语法糖：成员插入 `@handle `（兼容
- * 后端提及解析链路），文档插入 markdown 链接（apm:// 短号形态优先，
+ * 渲染侧与 ordo-ref-chip 共用同一 chip 形态与 preview card。
+ * @人 = ordo:// 引用中 kind=member 的语法糖：成员插入 `@handle `（兼容
+ * 后端提及解析链路），文档插入 markdown 链接（ordo:// 短号形态优先，
  * 列表契约未带 shortId 时降级 cuid 路由——两者都指向稳定标识）。
  */
 
@@ -39,7 +39,7 @@ export interface EntityRefSuggestOptions {
   enabled: boolean;
   /** 文档候选搜索范围（不传则不出文档候选） */
   projectId?: string;
-  /** apm:// 短号链接的项目代码（不传则文档插入降级 cuid 路由） */
+  /** ordo:// 短号链接的项目代码（不传则文档插入降级 cuid 路由） */
   projectCode?: string;
   memberLimit?: number;
 }
@@ -78,7 +78,7 @@ export function useEntityRefSuggestions(options: EntityRefSuggestOptions) {
     const documents: EntityRefCandidate[] = (rawDocs ?? []).map((d) => ({
       kind: 'document' as const,
       id: d.id,
-      // 列表契约暂无 shortId；带上后 buildInsertText 自动切 apm:// 形态
+      // 列表契约暂无 shortId；带上后 buildInsertText 自动切 ordo:// 形态
       shortId: (d as { shortId?: string | null }).shortId ?? null,
       title: d.title,
       status: d.status,
@@ -92,7 +92,7 @@ export function useEntityRefSuggestions(options: EntityRefSuggestOptions) {
   };
 }
 
-/** 插入文本构造：成员 `@handle `；文档 markdown 链接（apm:// 优先）。 */
+/** 插入文本构造：成员 `@handle `；文档 markdown 链接（ordo:// 优先）。 */
 export function buildInsertText(
   candidate: EntityRefCandidate,
   ctx: { projectCode?: string } = {},
@@ -101,7 +101,7 @@ export function buildInsertText(
     return `@${candidate.handle} `;
   }
   if (ctx.projectCode && candidate.shortId) {
-    return `[${candidate.title}](apm://${ctx.projectCode}/doc/${candidate.shortId}) `;
+    return `[${candidate.title}](ordo://${ctx.projectCode}/doc/${candidate.shortId}) `;
   }
   return `[${candidate.title}](/app/documents/${candidate.id}) `;
 }

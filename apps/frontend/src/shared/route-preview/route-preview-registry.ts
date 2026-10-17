@@ -7,7 +7,7 @@
  * 未命中的静态路由（列表页、设置页等）返回 generic 类型，由通用卡片兜底展示。
  */
 
-import { parseApmRef } from '@ordo/shared/apm-ref';
+import { parseOrdoRef } from '@ordo/shared/ordo-ref';
 
 export type RoutePreviewType =
   | 'project'
@@ -48,9 +48,9 @@ const DYNAMIC_RULES: Array<{ prefix: string; type: RoutePreviewType }> = [
 const RESERVED_SEGMENTS = new Set(['dashboard', 'new']);
 
 export function resolveRoutePreview(path: string): RoutePreviewMatch {
-  // apm:// 实体引用（v2 纪要 §13）：与路由双入口汇入同一解析
-  if (path.toLowerCase().startsWith('apm:')) {
-    return resolveApmRefMatch(path) ?? { type: 'generic' };
+  // ordo:// 实体引用（v2 纪要 §13）：与路由双入口汇入同一解析
+  if (path.toLowerCase().startsWith('ordo:')) {
+    return resolveOrdoRefMatch(path) ?? { type: 'generic' };
   }
   for (const { prefix, type } of DYNAMIC_RULES) {
     if (!path.startsWith(prefix)) continue;
@@ -63,7 +63,7 @@ export function resolveRoutePreview(path: string): RoutePreviewMatch {
   return { type: 'generic' };
 }
 
-/** apm:// kind → 预览卡类型（v2 纪要 §13：引用与路由两入口汇入同一 Match） */
+/** ordo:// kind → 预览卡类型（v2 纪要 §13：引用与路由两入口汇入同一 Match） */
 const ORDO_REF_PREVIEW_TYPE: Record<string, RoutePreviewType> = {
   doc: 'document',
   issue: 'task',
@@ -77,11 +77,11 @@ const ORDO_REF_PREVIEW_TYPE: Record<string, RoutePreviewType> = {
 };
 
 /**
- * apm:// 引用入口（route-preview-registry 升级为「解析引用」）。
+ * ordo:// 引用入口（route-preview-registry 升级为「解析引用」）。
  * 解析失败或无法映射时返回 null（区别于 generic 兜底），调用方自行降级。
  */
-export function resolveApmRefMatch(href: string): RoutePreviewMatch | null {
-  const ref = parseApmRef(href);
+export function resolveOrdoRefMatch(href: string): RoutePreviewMatch | null {
+  const ref = parseOrdoRef(href);
   if (!ref) return null;
   const type = ORDO_REF_PREVIEW_TYPE[ref.kind];
   if (!type) return null;

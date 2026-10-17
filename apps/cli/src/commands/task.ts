@@ -2,7 +2,7 @@
  * task：工单管理（Task/Bug 统一为 Issue 族；命令名保留 task，API 走 /issues 口径）
  */
 import { Command } from 'commander';
-import { ApmError } from '@ordo/shared';
+import { OrdoError } from '@ordo/shared';
 import { buildContext, out } from '../context';
 
 export function registerTaskCommands(program: Command): void {
@@ -64,7 +64,7 @@ export function registerTaskCommands(program: Command): void {
           const items = Array.isArray(mods) ? mods : mods?.items ?? [];
           moduleCode = items.find((m) => m.code)?.code;
           if (!moduleCode) {
-            throw new ApmError(
+            throw new OrdoError(
               '项目没有可用模块，请用 --module-code <CODE> 指定模块代码（2-4 位大写字母）',
             );
           }
@@ -105,7 +105,7 @@ export function registerTaskCommands(program: Command): void {
     .description('认领任务（AI Worker）——后端 claim 端点已随术语重构移除，暂不可用')
     .option('--agent <bindingId>', 'Agent 绑定 id')
     .action(async () => {
-      throw new ApmError(
+      throw new OrdoError(
         '后端已无 /issues/:id/claim 端点（Task→Issue 术语重构时移除），请改用 assign-agent',
       );
     });

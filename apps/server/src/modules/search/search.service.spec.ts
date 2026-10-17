@@ -74,30 +74,30 @@ describe('SearchService', () => {
       title: '修复登录超时',
       path: '/app/issues/i1',
       projectId: 'p1',
-      // CAP-A-23：短号 + 项目代码齐备才产出 apm:// 引用串
-      apmRef: 'apm://APM-EXP/issue/APM-PF-001',
+      // CAP-A-23：短号 + 项目代码齐备才产出 ordo:// 引用串
+      ordoRef: 'ordo://APM-EXP/issue/APM-PF-001',
     });
     // bug → /app/bugs 路由；缺短号引用串为 null 不造假
     expect(result.items[1]).toMatchObject({
       type: 'bug',
       path: '/app/bugs/i2',
-      apmRef: null,
+      ordoRef: null,
     });
     expect(result.items[2]).toMatchObject({
       type: 'document',
       path: '/app/documents/d1',
-      apmRef: 'apm://APM-EXP/doc/D1',
+      ordoRef: 'ordo://APM-EXP/doc/D1',
     });
     expect(result.items[3]).toMatchObject({
       type: 'project',
       path: '/app/projects/p1',
       projectId: null,
-      // apm:// 方言无 project kind，恒 null
-      apmRef: null,
+      // ordo:// 方言无 project kind，恒 null
+      ordoRef: null,
     });
   });
 
-  it('apmRef 完整性：缺 projectCode 或短号任一即 null（CAP-A-23）', async () => {
+  it('ordoRef 完整性：缺 projectCode 或短号任一即 null（CAP-A-23）', async () => {
     prismaMock.issue.findMany.mockResolvedValue([
       issueRow({ project: { name: 'no-code', projectCode: null } }),
     ]);
@@ -116,8 +116,8 @@ describe('SearchService', () => {
 
     const result = await service.search(query(), 'u1');
 
-    expect(result.items[0].apmRef).toBeNull();
-    expect(result.items[1].apmRef).toBeNull();
+    expect(result.items[0].ordoRef).toBeNull();
+    expect(result.items[1].ordoRef).toBeNull();
     // 查询需带出 projectCode / shortId 作为引用串原料
     const issueSelect = prismaMock.issue.findMany.mock.calls.at(-1)[0].select;
     expect(issueSelect.project).toEqual({

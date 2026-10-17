@@ -3,9 +3,9 @@
  * 成员列表筛选搜索与详情页、团队创建/成员/绑定项目/邀请、仓库列表与工具状态。
  */
 import { test as base, expect } from '@playwright/test'
-import { makeApi, uniq, E2E_USER, type ApmApi } from './helpers/api'
+import { makeApi, uniq, E2E_USER, type OrdoApi } from './helpers/api'
 
-const test = base.extend<{ api: ApmApi }>({
+const test = base.extend<{ api: OrdoApi }>({
   api: async ({ request }, use) => {
     await use(await makeApi(request))
   },

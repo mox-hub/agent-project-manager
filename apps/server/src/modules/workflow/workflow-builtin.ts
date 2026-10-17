@@ -120,7 +120,7 @@ export const ISSUE_DRAFT_DEFINITION: V2WorkflowDoc = {
 // 走查型模板步骤全部 human 节点：每站人工打卡，message 承载该站 SOP 与已知坑；
 // 承接型模板按「代写→确认→把关→产出」主线语法（闸门后步骤进 condition.then），可直接运行。
 
-export const ORDO_REQUIREMENT_INTAKE_KEY = 'apm-requirement-intake';
+export const ORDO_REQUIREMENT_INTAKE_KEY = 'ordo-requirement-intake';
 
 /** 需求承接六步流：AI 初筛 → 六问起草 → 人工裁决（闸门）→ 归档 → 开工登记。对齐 requirement-intake skill。 */
 export const ORDO_REQUIREMENT_INTAKE_DEFINITION: V2WorkflowDoc = {
@@ -191,7 +191,7 @@ export const ORDO_REQUIREMENT_INTAKE_DEFINITION: V2WorkflowDoc = {
   ],
 };
 
-export const ORDO_DEV_MAINLINE_KEY = 'apm-dev-mainline';
+export const ORDO_DEV_MAINLINE_KEY = 'ordo-dev-mainline';
 
 /** 功能开发主线六站走查：清单闸门 → 契约先行 → 分支实现 → 质量门禁 → 文档变更账 → PR 合入。 */
 export const ORDO_DEV_MAINLINE_DEFINITION: V2WorkflowDoc = {
@@ -252,7 +252,7 @@ export const ORDO_DEV_MAINLINE_DEFINITION: V2WorkflowDoc = {
   ],
 };
 
-export const ORDO_RELEASE_PIPELINE_KEY = 'apm-release-pipeline';
+export const ORDO_RELEASE_PIPELINE_KEY = 'ordo-release-pipeline';
 
 /** 发版管道七站走查：CHANGELOG 归版 → 全量门禁 → release PR → tag → 发版草案 → 核对 → 人工 Publish。 */
 export const ORDO_RELEASE_PIPELINE_DEFINITION: V2WorkflowDoc = {
@@ -323,7 +323,7 @@ export const ORDO_RELEASE_PIPELINE_DEFINITION: V2WorkflowDoc = {
   ],
 };
 
-export const ORDO_NIGHT_PATROL_KEY = 'apm-night-patrol';
+export const ORDO_NIGHT_PATROL_KEY = 'ordo-night-patrol';
 
 /** 夜航巡检五站走查：跑满门禁 → 机械自修 → 失败定位 → 报告起草 → 报告落库。 */
 export const ORDO_NIGHT_PATROL_DEFINITION: V2WorkflowDoc = {

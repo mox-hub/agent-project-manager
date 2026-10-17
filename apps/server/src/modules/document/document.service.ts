@@ -169,7 +169,7 @@ export class DocumentService {
   }
 
   /**
-   * 按 id 取文档详情；id 形如 `D{数字}`（apm:// 短号，v2 纪要 §13）时
+   * 按 id 取文档详情；id 形如 `D{数字}`（ordo:// 短号，v2 纪要 §13）时
    * 按 shortId 解析。响应形状不变，仅扩展查找语义。
    */
   async findOne(id: string) {

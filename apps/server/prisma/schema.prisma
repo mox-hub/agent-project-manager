@@ -1609,7 +1609,7 @@ model Document {
   docRole     String? // charter|spec|design|decision|release-log|reference
   // 产物溯源：authored=人/AI 手写真相；derived=平台派生（如 release-log），不适用 lock/审批
   provenance  String    @default("authored") // authored|derived
-  // apm://{projectCode}/doc/{shortId} 稳定寻址（v2 纪要 §13）；由 DocRegistry 回填
+  // ordo://{projectCode}/doc/{shortId} 稳定寻址（v2 纪要 §13）；由 DocRegistry 回填
   shortId     String?   @unique // D{seq}，序号源 GlobalSequence(key=document.shortId)
   // 内容指纹（digest T2 增量失效检测）；由 DocRegistry.rebuild 刷新
   sourceChecksum String?

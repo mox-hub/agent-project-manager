@@ -3,9 +3,9 @@
  * 访问令牌创建/撤销、标签管理（权限门控）、AI 用量/AI 管理/short-id/存储页渲染。
  */
 import { test as base, expect } from '@playwright/test'
-import { makeApi, type ApmApi } from './helpers/api'
+import { makeApi, type OrdoApi } from './helpers/api'
 
-const test = base.extend<{ api: ApmApi }>({
+const test = base.extend<{ api: OrdoApi }>({
   api: async ({ request }, use) => {
     await use(await makeApi(request))
   },

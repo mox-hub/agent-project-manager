@@ -27,7 +27,7 @@ export interface LocalDaemonStatus {
   logPath: string;
 }
 
-interface ApmConfigFile {
+interface OrdoConfigFile {
   daemon?: { pid?: number; startedAt?: string };
 }
 
@@ -104,7 +104,7 @@ export class DaemonOpsService {
     try {
       const parsed = JSON.parse(
         fs.readFileSync(path.join(this.configDir(), 'config.json'), 'utf8'),
-      ) as ApmConfigFile;
+      ) as OrdoConfigFile;
       return typeof parsed?.daemon?.pid === 'number' ? parsed.daemon.pid : null;
     } catch {
       return null;

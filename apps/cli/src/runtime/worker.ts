@@ -3,7 +3,7 @@
  */
 import { ChildProcess } from 'child_process';
 import {
-  ApmClient,
+  OrdoClient,
   ApprovalRequestPayload,
   ApprovalResolvedPayload,
   CliAdapter,
@@ -60,7 +60,7 @@ export interface Worker {
 }
 
 export function startWorker(
-  api: ApmClient,
+  api: OrdoClient,
   runtimeId: string,
   adapters: Record<string, CliAdapter> = ADAPTERS,
 ): Worker {

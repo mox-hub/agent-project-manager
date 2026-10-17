@@ -7,9 +7,9 @@
  *
  * ── 实体图标规范 v0 ──────────────────────────────────────────────────────────
  * 1. 新增实体 = 在 ENTITY_ICONS 登记一行 `{ icon, tone }`。图标定夺三原则：
- *    ① 跟从多数注册表面已用（page-registry / route-preview / apm-ref 等）；
+ *    ① 跟从多数注册表面已用（page-registry / route-preview / ordo-ref 等）；
  *    ② 语义清晰；③ 不与其他实体撞车（__tests__ 有 uniqueness 断言强制）。
- * 2. 页面 PageHeader、引用 chip（apm-ref）、预览卡头部等「实体身份」场景一律从本表
+ * 2. 页面 PageHeader、引用 chip（ordo-ref）、预览卡头部等「实体身份」场景一律从本表
  *    取图（getEntityIcon / <EntityIcon>），禁止页面自选实体图标。
  * 3. 图标名统一 lucide 新名（CircleCheck / CircleAlert / CircleX 一族）；
  *    旧名（CheckCircle2 / XCircle / AlertCircle）仅允许存在于未迁移的历史代码。
@@ -81,7 +81,7 @@ export type EntityKind =
   | 'decision' // 决策（DecisionProposal / 收件箱）
   | 'workspace' // 工作区（每工作区一库）
   | 'repository' // 仓库
-  | 'release'; // 发版（apm-ref chip 首个增量登记：新增实体=一行）
+  | 'release'; // 发版（ordo-ref chip 首个增量登记：新增实体=一行）
 
 export interface EntityIconEntry {
   icon: StatusIconComponent;
@@ -93,7 +93,7 @@ export interface EntityIconEntry {
  * 取图依据（多数派 + 语义 + 防撞车）：
  * - issue=CheckSquare：page-registry /app/issues、route-preview、issue-type 注册表面的多数派；
  *   ListTodo（tasks-page 旧用）是「清单」动作语义，让位。
- * - bug=Bug：bugs-page / apm-ref chip 已用，甲虫语义唯一；AlertCircle 让位给
+ * - bug=Bug：bugs-page / ordo-ref chip 已用，甲虫语义唯一；AlertCircle 让位给
  *   status-visuals 的 in_review / at_risk 状态语义（lucide 新名 CircleAlert）。
  * - project=FolderKanban：page-registry /app/projects、route-preview 多数派；
  *   FolderOpen（project-list-page 旧用，与「打开」动作混淆）已于第二批收敛为本口径。
@@ -103,14 +103,14 @@ export interface EntityIconEntry {
  * - execution=Play：executions 列表页/执行域语义（原 settings/ai/executions 已废弃，2026-10-02）。
  * - acceptance=ShieldCheck：acceptance-list-page 已用，门禁语义；
  *   admin 域与人工确认节点的三方重叠已裁决改道（UserCog / UserCheck，见文件头）。
- * - document=FileText：page-registry /app/documents、route-preview、apm-ref doc 多数派；
+ * - document=FileText：page-registry /app/documents、route-preview、ordo-ref doc 多数派；
  *   FileStack（documents-page 旧用）已于第二批收敛为本口径。
  * - member=Users / team=UsersRound：nav 既有成对口径（见文件头注释）。
  * - decision=Scale：裁决天平语义唯一；page-registry / shell-layout / tabs-registry
  *   的 decisions 导航原用 Inbox（「收件箱页面」语义），已于第二批统一为本口径。
  * - workspace=Database：工作区 = 独立 SQLite 库（每工作区一库），仓库语义无撞车。
  * - repository=GitBranch：page-registry /app/repositories、route-preview 多数派。
- * - release=Tag：apm-ref chip 既有口径。
+ * - release=Tag：ordo-ref chip 既有口径。
  */
 export const ENTITY_ICONS: Record<EntityKind, EntityIconEntry> = {
   issue: { icon: CheckSquare, tone: 'info' },

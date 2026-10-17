@@ -6,7 +6,7 @@
  * 因此本命令只生成 PAT 通道配置：无可用 PAT 时输出创建指引，绝不生成连不上的配置。
  */
 import { Command } from 'commander';
-import { ApmError, ExitCode } from '@ordo/shared';
+import { OrdoError, ExitCode } from '@ordo/shared';
 import { buildContext, out } from '../context';
 
 /** 无 PAT 时的创建指引（保底形态：输出路径与命令，不自动生成凭据） */
@@ -20,7 +20,7 @@ function printPatGuide(backend: string): void {
       `  1. Web 控制面：设置 → 访问令牌（${base}/app/settings/tokens），新建后复制明文 token（仅显示一次）`,
       `  2. CLI（需已 ordo login）：ordo api POST /auth/tokens '{"name":"mcp"}'，取返回中的 token 字段`,
       '',
-      "然后重新生成配置：apm mcp config --pat <你的PAT>",
+      "然后重新生成配置：ordo mcp config --pat <你的PAT>",
       '',
     ].join('\n'),
   );
@@ -46,7 +46,7 @@ export function registerMcpCommands(program: Command): void {
         const token = opts.pat;
         if (!token) {
           printPatGuide(ctx.backend);
-          throw new ApmError(
+          throw new OrdoError(
             '未提供 PAT：请用 --pat <token> 传入访问令牌（创建方式见上方指引）',
             ExitCode.AUTH,
           );

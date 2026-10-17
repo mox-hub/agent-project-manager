@@ -16,7 +16,7 @@
  * 6. 新项目 owner 自动绑定成员表（MemberProjectBinding）→ 负责人有候选，T06 验证
  */
 import { test as base, expect, type Page } from '@playwright/test'
-import { makeApi, uniq, type ApmApi } from './helpers/api'
+import { makeApi, uniq, type OrdoApi } from './helpers/api'
 import {
   openRowContextMenu,
   pickContextMenu,
@@ -30,7 +30,7 @@ import {
   rowByTitle,
 } from './helpers/ui'
 
-const test = base.extend<{ api: ApmApi }>({
+const test = base.extend<{ api: OrdoApi }>({
   api: async ({ request }, use) => {
     await use(await makeApi(request))
   },
@@ -49,7 +49,7 @@ test.afterEach(async ({ api }) => {
   for (const id of cleanupProjects) await api.archiveProject(id).catch(() => {})
 })
 
-async function newProject(api: ApmApi, label: string) {
+async function newProject(api: OrdoApi, label: string) {
   const p = await api.createProject({ name: uniq(label) })
   cleanupProjects.push(p.id)
   await api.ensureProjectModule(p.id)
@@ -58,7 +58,7 @@ async function newProject(api: ApmApi, label: string) {
 
 /** 任务可挂项目也可留空（无 projectId 落 inbox，缺陷 1 已修复） */
 async function newTask(
-  api: ApmApi,
+  api: OrdoApi,
   title: string,
   projectId: string,
   extra: Record<string, unknown> = {},
@@ -86,7 +86,7 @@ async function gotoDetail(page: Page, taskId: string) {
 }
 
 /** 删除是异步 mutation：轮询直至任务 404 */
-async function expectTaskGone(api: ApmApi, id: string) {
+async function expectTaskGone(api: OrdoApi, id: string) {
   await expect
     .poll(
       async () =>

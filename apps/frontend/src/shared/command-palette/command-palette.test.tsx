@@ -331,7 +331,7 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
           path: '/app/issues/issue-1',
           updatedAt: '2026-09-18T00:00:00.000Z',
           projectId: 'project-1',
-          apmRef: 'apm://apm/issue/BUG-1',
+          ordoRef: 'ordo://ordo/issue/BUG-1',
         },
         {
           id: 'project-1',
@@ -341,7 +341,7 @@ describe('命令面板实体搜索（P1-13：工单/项目接入 /search）', ()
           path: '/app/projects/project-1',
           updatedAt: '2026-09-19T00:00:00.000Z',
           projectId: null,
-          apmRef: null,
+          ordoRef: null,
         },
       ],
       total: 2,

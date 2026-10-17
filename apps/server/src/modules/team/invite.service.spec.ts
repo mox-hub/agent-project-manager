@@ -47,7 +47,7 @@ describe('InviteService', () => {
   let previousTemplate: string | undefined;
 
   beforeAll(() => {
-    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-invite-test-'));
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-invite-test-'));
     previousRegistry = process.env.WORKSPACE_REGISTRY_PATH;
     previousTemplate = process.env.WORKSPACE_TEMPLATE_PATH;
     process.env.WORKSPACE_REGISTRY_PATH = path.join(tmpRoot, 'workspaces.json');

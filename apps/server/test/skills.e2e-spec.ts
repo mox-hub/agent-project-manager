@@ -33,7 +33,7 @@ describe('Skills CRUD (e2e)', () => {
 
     ws = createIsolatedWorkspace('Skills CRUD e2e');
     wsHttp = wsRequest(app, ws.id);
-    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-skills-'));
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-skills-'));
 
     const loginRes = await wsHttp.post('/_api/auth/login').send({
       username: 'admin',

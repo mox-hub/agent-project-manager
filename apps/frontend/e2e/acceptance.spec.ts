@@ -3,10 +3,10 @@
  * 驳回闭环、列表筛选。
  */
 import { test as base, expect, type Page } from '@playwright/test'
-import { makeApi, uniq, type ApmApi } from './helpers/api'
+import { makeApi, uniq, type OrdoApi } from './helpers/api'
 import { confirmDialog, modalDialog } from './helpers/ui'
 
-const test = base.extend<{ api: ApmApi }>({
+const test = base.extend<{ api: OrdoApi }>({
   api: async ({ request }, use) => {
     await use(await makeApi(request))
   },

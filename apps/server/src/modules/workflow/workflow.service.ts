@@ -80,7 +80,7 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     // LibSQL file: 相对进程 cwd（apps/server），data 目录需先存在
     mkdirSync(join(process.cwd(), 'data'), { recursive: true });
     this.storage = new LibSQLStore({
-      id: 'apm-workflow-engine',
+      id: 'ordo-workflow-engine',
       url: 'file:./data/mastra-workflows.db',
     });
 

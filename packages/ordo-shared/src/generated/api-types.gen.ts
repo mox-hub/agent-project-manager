@@ -6789,6 +6789,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/environment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 本地基础环境检测（node/git + AI CLI） */
+        get: operations["EnvironmentController_check"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/skills": {
         parameters: {
             query?: never;
@@ -7191,6 +7208,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/_api/releases/{id}/deploy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 标记已部署（交付出口 2026-10-11：发布≠部署，仅 released 可标记；重复标记幂等刷新时间与备注） */
+        post: operations["ReleaseController_markDeployed"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/_api/releases/{id}/gate": {
         parameters: {
             query?: never;
@@ -7586,7 +7620,7 @@ export interface components {
             id: string;
             /** @description Token 名称 */
             name: string;
-            /** @description Token 前缀（apm_pat_ + 6 位） */
+            /** @description Token 前缀（ordo_pat_ + 6 位） */
             tokenPrefix: string;
             /** @description 所属用户 ID */
             userId: string;
@@ -7607,7 +7641,7 @@ export interface components {
             id: string;
             /** @description Token 名称 */
             name: string;
-            /** @description Token 前缀（apm_pat_ + 6 位） */
+            /** @description Token 前缀（ordo_pat_ + 6 位） */
             tokenPrefix: string;
             /** @description 所属用户 ID */
             userId: string;
@@ -10616,7 +10650,7 @@ export interface components {
              * @description AI 员工级默认 CLI Provider（覆盖项目级角色）
              * @enum {string}
              */
-            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode";
+            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             /**
              * @description AI 员工默认执行角色
              * @enum {string}
@@ -10795,7 +10829,7 @@ export interface components {
             costRatePerDay?: number;
             aiModelConfigId?: string;
             /** @enum {string} */
-            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode";
+            defaultCliProviderId?: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             /** @enum {string} */
             defaultExecutionRole?: "coder" | "reviewer" | "pm" | "qa" | "general";
             metadata?: {
@@ -11113,7 +11147,7 @@ export interface components {
              * @description 默认 Provider（claude-code/codex 均不可用时为 null）
              * @enum {string|null}
              */
-            defaultProvider: "claude-code" | "codex" | "zcode" | "opencode" | null;
+            defaultProvider: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok" | null;
         };
         DetectedCliProviderDto: {
             providerId: string;
@@ -12574,7 +12608,7 @@ export interface components {
             name: string;
             /** @description 项目颜色（仅 findOne 返回） */
             color?: string | null;
-            /** @description 项目代码（apm:// 命名空间，仅 findOne 返回） */
+            /** @description 项目代码（ordo:// 命名空间，仅 findOne 返回） */
             projectCode?: string | null;
         };
         DocumentResponseDto: {
@@ -12619,7 +12653,7 @@ export interface components {
              * @enum {string|null}
              */
             docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
-            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            /** @description ordo:// 稳定短号（D{seq}，DocRegistry 回填） */
             shortId?: string | null;
             /** @description 所属文件夹（列表场景仅含 id/name） */
             folder?: components["schemas"]["DocumentFolderResponseDto"] | null;
@@ -12676,7 +12710,7 @@ export interface components {
              * @enum {string|null}
              */
             docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
-            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            /** @description ordo:// 稳定短号（D{seq}，DocRegistry 回填） */
             shortId?: string | null;
             /** @description 所属文件夹摘要（仅 id/name） */
             folder?: components["schemas"]["DocumentFolderResponseDto"];
@@ -12794,7 +12828,7 @@ export interface components {
              * @enum {string|null}
              */
             docRole?: "charter" | "spec" | "design" | "decision" | "release-log" | "reference" | null;
-            /** @description apm:// 稳定短号（D{seq}，DocRegistry 回填） */
+            /** @description ordo:// 稳定短号（D{seq}，DocRegistry 回填） */
             shortId?: string | null;
             /** @description 所属文件夹（完整字段） */
             folder?: components["schemas"]["DocumentFolderResponseDto"] | null;
@@ -13824,8 +13858,8 @@ export interface components {
             updatedAt: string;
             /** @description 所属项目 ID（项目命中时为 null） */
             projectId?: Record<string, never> | null;
-            /** @description apm:// 实体引用串（apm://{projectCode}/{kind}/{shortId}，全局引用系统插入用）；缺 projectCode/shortId 时为 null——调用方不得自行拼装 */
-            apmRef?: Record<string, never> | null;
+            /** @description ordo:// 实体引用串（ordo://{projectCode}/{kind}/{shortId}，全局引用系统插入用）；缺 projectCode/shortId 时为 null——调用方不得自行拼装 */
+            ordoRef?: Record<string, never> | null;
         };
         SearchResponseDto: {
             /** @description 扁平命中列表（前端按 type 分组渲染） */
@@ -14032,7 +14066,7 @@ export interface components {
             workspaceId?: string;
         };
         WorkspaceBackupDto: {
-            /** @description 备份 ID（即 .apm-backups 下的目录名） */
+            /** @description 备份 ID（即 .ordo-backups 下的目录名） */
             id: string;
             /** @description 备份创建时间（ISO） */
             createdAt: string;
@@ -15423,7 +15457,7 @@ export interface components {
              * @description Provider ID
              * @enum {string}
              */
-            providerId: "claude-code" | "codex" | "zcode" | "opencode";
+            providerId: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             /** @description 二进制是否可用（且未被禁用） */
             available: boolean;
             /** @description 探测到的版本号 */
@@ -15474,7 +15508,7 @@ export interface components {
              * @description Provider ID (must match path param :id)
              * @enum {string}
              */
-            providerId: "claude-code" | "codex" | "zcode" | "opencode";
+            providerId: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             /** @description Display name override */
             displayName?: string;
             /** @description Custom command path; if empty, fall back to PATH lookup */
@@ -15489,6 +15523,25 @@ export interface components {
             allowedTools?: string[];
             /** @description Enable or disable this provider */
             enabled?: boolean;
+        };
+        EnvironmentToolDto: {
+            /**
+             * @description 工具键
+             * @enum {string}
+             */
+            key: "node" | "git" | "claude-code" | "codex" | "zcode" | "opencode";
+            /** @description 是否已安装（探测可用） */
+            installed: boolean;
+            /** @description 探测到的版本（原样输出） */
+            version?: Record<string, never> | null;
+            /** @description 未安装/探测失败的原因（超时、命令不存在等） */
+            error?: Record<string, never> | null;
+        };
+        EnvironmentReportDto: {
+            /** @description 基础环境工具状态列表（node/git + 四个 AI CLI，顺序固定） */
+            tools: components["schemas"]["EnvironmentToolDto"][];
+            /** @description 检测完成时间（ISO 8601） */
+            checkedAt: string;
         };
         SkillStatusResponseDto: {
             /** @description 技能唯一 key */
@@ -16126,6 +16179,10 @@ export interface components {
         UpdateReleaseDeliverablesDto: {
             /** @description 交付成果清单（全量替换；元素必填 name/location/howToVerify） */
             deliverables: components["schemas"]["ReleaseDeliverableItemDto"][];
+        };
+        MarkReleaseDeployedDto: {
+            /** @description 部署备注：环境/方式/验证入口等自由文本 */
+            deployNote?: string;
         };
         ApprovalProposalRequestDto: {
             /** @description 预留：附言 */
@@ -47586,7 +47643,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode" | "opencode";
+                id: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             };
             cookie?: never;
         };
@@ -47667,7 +47724,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode" | "opencode";
+                id: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             };
             cookie?: never;
         };
@@ -47744,7 +47801,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode" | "opencode";
+                id: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             };
             cookie?: never;
         };
@@ -47829,7 +47886,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                id: "claude-code" | "codex" | "zcode" | "opencode";
+                id: "claude-code" | "codex" | "zcode" | "opencode" | "cursor-agent" | "gemini-cli" | "qwen-code" | "codebuddy" | "grok";
             };
             cookie?: never;
         };
@@ -47885,6 +47942,81 @@ export interface operations {
              *
              *     资源不存在
              */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    EnvironmentController_check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 六项工具的安装与版本状态 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvironmentReportDto"];
+                };
+            };
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -50004,6 +50136,78 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UpdateReleaseDeliverablesDto"];
+            };
+        };
+        responses: {
+            /** @description 请求参数错误 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 未登录或登录已过期 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 无权限访问 */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 资源不存在 */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+            /** @description 服务器内部错误 */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiResponseDto"] & {
+                        error?: components["schemas"]["ErrorPayloadDto"];
+                    };
+                };
+            };
+        };
+    };
+    ReleaseController_markDeployed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkReleaseDeployedDto"];
             };
         };
         responses: {

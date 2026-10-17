@@ -27,7 +27,7 @@ describe('Contract export (openapi.json)', () => {
   beforeAll(async () => {
     if (!enabled) return;
 
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-openapi-'));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-openapi-'));
     const tmpDb = path.join(tmpDir, 'contract.db');
     fs.copyFileSync(
       path.resolve(__dirname, '..', 'prisma', 'template.db'),

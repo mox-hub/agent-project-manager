@@ -61840,7 +61840,7 @@
   },
   "info": {
     "title": "Agent Project Manager API",
-    "description": "Agent Project Manager API Documentation\n\n【响应信封（全局约定，不逐端点声明）】所有 JSON 响应（含错误）均由\nTransformInterceptor / GlobalExceptionFilter 统一包裹为信封：\n  { status, success, description, data, timestamp, requestId? }\n失败时携带 error: { code, message, details? }。\n\n【响应口径】本契约各端点的 200/201 响应 schema 描述的是【解包后的业务数据】\n（裸数据口径），信封不在端点级重复声明；返回 null/void 的端点无 content。\n前端 api-client 与 CLI ApmClient 均在封装内统一解包；错误细节见各端点的\n400/401/403/404/500 声明（ErrorPayloadDto）。",
+    "description": "Agent Project Manager API Documentation\n\n【响应信封（全局约定，不逐端点声明）】所有 JSON 响应（含错误）均由\nTransformInterceptor / GlobalExceptionFilter 统一包裹为信封：\n  { status, success, description, data, timestamp, requestId? }\n失败时携带 error: { code, message, details? }。\n\n【响应口径】本契约各端点的 200/201 响应 schema 描述的是【解包后的业务数据】\n（裸数据口径），信封不在端点级重复声明；返回 null/void 的端点无 content。\n前端 api-client 与 CLI OrdoClient 均在封装内统一解包；错误细节见各端点的\n400/401/403/404/500 声明（ErrorPayloadDto）。",
     "version": "1.0",
     "contact": {}
   },
@@ -62482,7 +62482,7 @@
           },
           "tokenPrefix": {
             "type": "string",
-            "description": "Token 前缀（apm_pat_ + 6 位）"
+            "description": "Token 前缀（ordo_pat_ + 6 位）"
           },
           "userId": {
             "type": "string",
@@ -62541,7 +62541,7 @@
           },
           "tokenPrefix": {
             "type": "string",
-            "description": "Token 前缀（apm_pat_ + 6 位）"
+            "description": "Token 前缀（ordo_pat_ + 6 位）"
           },
           "userId": {
             "type": "string",
@@ -74770,7 +74770,7 @@
           },
           "projectCode": {
             "type": "string",
-            "description": "项目代码（apm:// 命名空间，仅 findOne 返回）",
+            "description": "项目代码（ordo:// 命名空间，仅 findOne 返回）",
             "nullable": true
           }
         },
@@ -74877,7 +74877,7 @@
           },
           "shortId": {
             "type": "string",
-            "description": "apm:// 稳定短号（D{seq}，DocRegistry 回填）",
+            "description": "ordo:// 稳定短号（D{seq}，DocRegistry 回填）",
             "nullable": true
           },
           "folder": {
@@ -75031,7 +75031,7 @@
           },
           "shortId": {
             "type": "string",
-            "description": "apm:// 稳定短号（D{seq}，DocRegistry 回填）",
+            "description": "ordo:// 稳定短号（D{seq}，DocRegistry 回填）",
             "nullable": true
           },
           "folder": {
@@ -75353,7 +75353,7 @@
           },
           "shortId": {
             "type": "string",
-            "description": "apm:// 稳定短号（D{seq}，DocRegistry 回填）",
+            "description": "ordo:// 稳定短号（D{seq}，DocRegistry 回填）",
             "nullable": true
           },
           "folder": {
@@ -78105,9 +78105,9 @@
             "description": "所属项目 ID（项目命中时为 null）",
             "nullable": true
           },
-          "apmRef": {
+          "ordoRef": {
             "type": "object",
-            "description": "apm:// 实体引用串（apm://{projectCode}/{kind}/{shortId}，全局引用系统插入用）；缺 projectCode/shortId 时为 null——调用方不得自行拼装",
+            "description": "ordo:// 实体引用串（ordo://{projectCode}/{kind}/{shortId}，全局引用系统插入用）；缺 projectCode/shortId 时为 null——调用方不得自行拼装",
             "nullable": true
           }
         },
@@ -78666,7 +78666,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "备份 ID（即 .apm-backups 下的目录名）"
+            "description": "备份 ID（即 .ordo-backups 下的目录名）"
           },
           "createdAt": {
             "type": "string",

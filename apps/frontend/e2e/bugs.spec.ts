@@ -3,7 +3,7 @@
  * Bug 详情页（标题热编辑/侧栏属性/评论/删除）。
  */
 import { test as base, expect, type Page } from '@playwright/test'
-import { makeApi, uniq, type ApmApi } from './helpers/api'
+import { makeApi, uniq, type OrdoApi } from './helpers/api'
 import {
   openRowContextMenu,
   pickContextMenu,
@@ -14,7 +14,7 @@ import {
   modalDialog,
 } from './helpers/ui'
 
-const test = base.extend<{ api: ApmApi }>({
+const test = base.extend<{ api: OrdoApi }>({
   api: async ({ request }, use) => {
     await use(await makeApi(request))
   },
@@ -33,14 +33,14 @@ test.afterEach(async ({ api }) => {
   for (const id of cleanupProjects) await api.archiveProject(id).catch(() => {})
 })
 
-async function newProject(api: ApmApi, label: string) {
+async function newProject(api: OrdoApi, label: string) {
   const p = await api.createProject({ name: uniq(label) })
   cleanupProjects.push(p.id)
   await api.ensureProjectModule(p.id)
   return p
 }
 
-async function newBug(api: ApmApi, title: string, projectId: string, extra: Record<string, unknown> = {}) {
+async function newBug(api: OrdoApi, title: string, projectId: string, extra: Record<string, unknown> = {}) {
   const t = await api.createTask({ title, projectId, moduleCode: 'TASK', type: 'bug', ...extra })
   cleanupTasks.push(t.id)
   return t

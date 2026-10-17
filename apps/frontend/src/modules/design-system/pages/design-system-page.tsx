@@ -374,8 +374,8 @@ import { WorkflowRunTimeline } from '@/modules/workflow/components/workflow-run-
 import type { RunStation } from '@/modules/workflow/components/run-view/build-run-view'
 import { DecisionCardShell } from '@/shared/decision-card/decision-card-shell'
 import { MemberCard } from '@/modules/auth/components/member-card'
-import { ApmRefLink } from '@/shared/apm-ref/apm-ref-chip'
-import type { ApmRefKind } from '@ordo/shared/apm-ref'
+import { OrdoRefLink } from '@/shared/ordo-ref/ordo-ref-chip'
+import type { OrdoRefKind } from '@ordo/shared/ordo-ref'
 import { SlashRefTextarea } from '@/shared/entity-ref/slash-ref-textarea'
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger'
 import { ComponentReviewBoard } from '@/modules/design-system/sections/component-review-board'
@@ -1056,7 +1056,7 @@ function MarkdownLiveEditorDemo() {
 
 function PromptEditorDemo({ mode }: { mode: 'edit' | 'readonly' }) {
   const [value, setValue] = useState(
-    '# 项目协作约定\n\n- 提交前跑 **lint + test**\n- 引用任务用 `apm://` 链接\n',
+    '# 项目协作约定\n\n- 提交前跑 **lint + test**\n- 引用任务用 `ordo://` 链接\n',
   )
   return mode === 'edit' ? (
     <PromptEditor
@@ -1072,23 +1072,23 @@ function PromptEditorDemo({ mode }: { mode: 'edit' | 'readonly' }) {
 
 /* ── 全局实体引用系统演示（CAP-A-23）：胶囊 / 斜杠命令 / 路由预览卡 ── */
 
-const REF_KIND_SAMPLES: Array<{ kind: ApmRefKind; label: string; href: string }> = [
-  { kind: 'doc', label: '需求分析报告', href: 'apm://APM/doc/D17' },
-  { kind: 'issue', label: '修复登录超时', href: 'apm://APM/issue/APM-PF-001' },
-  { kind: 'bug', label: '列表分页失效', href: 'apm://APM/bug/APM-BF-014' },
-  { kind: 'member', label: '王小明', href: 'apm://APM/member/M7' },
-  { kind: 'team', label: '平台组', href: 'apm://APM/team/T2' },
-  { kind: 'acceptance', label: '登录流验收', href: 'apm://APM/acceptance/AC9' },
-  { kind: 'release', label: 'v0.7.4', href: 'apm://APM/release/R12' },
+const REF_KIND_SAMPLES: Array<{ kind: OrdoRefKind; label: string; href: string }> = [
+  { kind: 'doc', label: '需求分析报告', href: 'ordo://APM/doc/D17' },
+  { kind: 'issue', label: '修复登录超时', href: 'ordo://APM/issue/APM-PF-001' },
+  { kind: 'bug', label: '列表分页失效', href: 'ordo://APM/bug/APM-BF-014' },
+  { kind: 'member', label: '王小明', href: 'ordo://APM/member/M7' },
+  { kind: 'team', label: '平台组', href: 'ordo://APM/team/T2' },
+  { kind: 'acceptance', label: '登录流验收', href: 'ordo://APM/acceptance/AC9' },
+  { kind: 'release', label: 'v0.7.4', href: 'ordo://APM/release/R12' },
 ]
 
 function RefCapsuleDemo() {
   return (
     <div className="flex flex-wrap items-center gap-2">
       {REF_KIND_SAMPLES.map((sample) => (
-        <ApmRefLink key={sample.kind} href={sample.href}>
+        <OrdoRefLink key={sample.kind} href={sample.href}>
           {sample.label}
-        </ApmRefLink>
+        </OrdoRefLink>
       ))}
     </div>
   )
@@ -1098,7 +1098,7 @@ function RefMarkdownDemo() {
   return (
     <MarkdownView
       content={[
-        '任务拆解见 [修复登录超时](apm://APM/issue/APM-PF-001)，依据 [需求分析报告](apm://APM/doc/D17)，评审人 [王小明](apm://APM/member/M7)。',
+        '任务拆解见 [修复登录超时](ordo://APM/issue/APM-PF-001)，依据 [需求分析报告](ordo://APM/doc/D17)，评审人 [王小明](ordo://APM/member/M7)。',
         '',
         '外链保持原样：[APM 文档站](https://example.com/docs)。',
       ].join('\n')}
@@ -4991,13 +4991,13 @@ export function DesignSystemPage() {
             <div className="flex flex-col gap-4">
               <div className="max-w-150 rounded-lg border border-border p-4">
                 <p className="mb-3 text-xs text-muted-foreground">
-                  引用胶囊 · apm:// 全部 kind（hover 出预览卡，点击直达详情路由）
+                  引用胶囊 · ordo:// 全部 kind（hover 出预览卡，点击直达详情路由）
                 </p>
                 <RefCapsuleDemo />
               </div>
               <div className="max-w-150 rounded-lg border border-border p-4">
                 <p className="mb-2 text-xs text-muted-foreground">
-                  Markdown 原文保留 [标题](apm://…) 形态，渲染为胶囊；外链不受影响
+                  Markdown 原文保留 [标题](ordo://…) 形态，渲染为胶囊；外链不受影响
                 </p>
                 <RefMarkdownDemo />
               </div>

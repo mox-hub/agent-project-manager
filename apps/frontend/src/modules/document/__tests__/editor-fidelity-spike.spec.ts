@@ -57,7 +57,7 @@ const MIXED_CN = [
   '2. 有序列表项二',
   '   - 嵌套无序项',
   '     - 二级嵌套',
-  '3. `apm://apm/doc/A17` 与 [内嵌链接](apm://apm/issue/A24)',
+  '3. `ordo://ordo/doc/A17` 与 [内嵌链接](ordo://ordo/issue/A24)',
   '',
   '- [ ] 任务列表未完成',
   '- [x] 任务列表已完成',

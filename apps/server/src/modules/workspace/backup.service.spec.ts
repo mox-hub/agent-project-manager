@@ -47,7 +47,7 @@ describe('WorkspaceBackupService', () => {
     new PrismaClient({ datasources: { db: { url: toFileUrl(dbPath) } } });
 
   beforeAll(async () => {
-    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-backup-unit-'));
+    tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-backup-unit-'));
     backupDir = path.join(tmpRoot, '.ordo-backups');
     defaultDbPath = path.join(tmpRoot, 'default-dev.db');
     fs.copyFileSync(

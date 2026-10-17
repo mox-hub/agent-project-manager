@@ -106,9 +106,9 @@ describe('buildInsertText', () => {
     expect(buildInsertText(member)).toBe('@alice ');
   });
 
-  it('文档 + projectCode + shortId → apm:// 短号链接', () => {
-    expect(buildInsertText(docWithShortId, { projectCode: 'apm' })).toBe(
-      '[验收门禁设计](apm://apm/doc/D17) ',
+  it('文档 + projectCode + shortId → ordo:// 短号链接', () => {
+    expect(buildInsertText(docWithShortId, { projectCode: 'ordo' })).toBe(
+      '[验收门禁设计](ordo://ordo/doc/D17) ',
     );
   });
 
@@ -116,7 +116,7 @@ describe('buildInsertText', () => {
     expect(buildInsertText(docWithShortId)).toBe(
       '[验收门禁设计](/app/documents/doc-cuid-1) ',
     );
-    expect(buildInsertText(docWithoutShortId, { projectCode: 'apm' })).toBe(
+    expect(buildInsertText(docWithoutShortId, { projectCode: 'ordo' })).toBe(
       '[旧文档](/app/documents/doc-cuid-2) ',
     );
   });
