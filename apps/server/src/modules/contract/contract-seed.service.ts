@@ -89,7 +89,7 @@ export class ContractSeedService {
   }
 
   /**
-   * AGENTS.md 种生。adoptOnly（格式化纳管）路径：已有文件仅把 apm_ 身份
+   * AGENTS.md 种生。adoptOnly（格式化纳管）路径：已有文件仅把 ordo_ 身份
    * 字段并入 frontmatter（人工字段原样保留），不注入托管区间，绑定落
    * synced + 整文件指纹基线（观察模式）；缺文件时与默认种生一致生成托管镜像。
    */
@@ -105,13 +105,13 @@ export class ContractSeedService {
 
     const updates = this.buildAgentsBlocks(project);
     const frontmatter = {
-      apm_project_id: projectId,
-      apm_file_type: 'agents',
-      apm_sync_mode: adoptOnly ? 'synced' : 'managed',
+      ordo_project_id: projectId,
+      ordo_file_type: 'agents',
+      ordo_sync_mode: adoptOnly ? 'synced' : 'managed',
     };
 
     if (adoptOnly && existing !== null) {
-      const next = this.engine.setApmFrontmatter(existing, frontmatter);
+      const next = this.engine.setOrdoFrontmatter(existing, frontmatter);
       const action: SeedFileResult['action'] =
         next === existing ? 'skipped_unchanged' : 'adopted';
       if (next !== existing) {
@@ -128,7 +128,7 @@ export class ContractSeedService {
     }
 
     if (existing === null) {
-      const base = this.engine.setApmFrontmatter('', frontmatter);
+      const base = this.engine.setOrdoFrontmatter('', frontmatter);
       const content = this.engine.applyManagedBlocks(base, updates, {
         appendMissing: true,
       });
@@ -143,8 +143,8 @@ export class ContractSeedService {
       return { path: relPath, action: 'created', bindingId: binding.id };
     }
 
-    // 已有文件：apm_ 字段并入 frontmatter；缺失区间追加；已有同名区间以文件为准
-    let next = this.engine.setApmFrontmatter(existing, frontmatter);
+    // 已有文件：ordo_ 字段并入 frontmatter；缺失区间追加；已有同名区间以文件为准
+    let next = this.engine.setOrdoFrontmatter(existing, frontmatter);
     const diffs = this.engine.compareManagedBlocks(next, updates);
     const missingIds = new Set(
       diffs.filter((d) => d.state === 'missing_in_file').map((d) => d.id),

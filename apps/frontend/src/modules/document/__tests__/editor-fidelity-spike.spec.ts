@@ -149,15 +149,15 @@ describe('编辑器选型 spike · 保真度测试集', () => {
       const md = [
         '前文。',
         '',
-        '<!-- BEGIN apm:managed:intro -->',
+        '<!-- BEGIN ordo:managed:intro -->',
         '区间内容',
-        '<!-- END apm:managed:intro -->',
+        '<!-- END ordo:managed:intro -->',
         '',
         '后文。',
       ].join('\n');
       const out = remarkRoundTrip(md);
-      expect(out).toContain('<!-- BEGIN apm:managed:intro -->');
-      expect(out).toContain('<!-- END apm:managed:intro -->');
+      expect(out).toContain('<!-- BEGIN ordo:managed:intro -->');
+      expect(out).toContain('<!-- END ordo:managed:intro -->');
     });
   });
 
@@ -202,23 +202,23 @@ describe('编辑器选型 spike · 保真度测试集', () => {
     it('managed 区间安全：区间外编辑不触碰区间字节', () => {
       const md = [
         '---',
-        'apm_sync_mode: managed',
+        'ordo_sync_mode: managed',
         '---',
         '',
-        '<!-- BEGIN apm:managed:intro -->',
+        '<!-- BEGIN ordo:managed:intro -->',
         '系统托管内容 v1',
-        '<!-- END apm:managed:intro -->',
+        '<!-- END ordo:managed:intro -->',
         '',
         '自由区草稿。',
       ].join('\n');
       const out = edit(md, '自由区草稿。', '自由区草稿，已续写。');
       expect(out).toContain('系统托管内容 v1');
-      expect(out).toContain('<!-- BEGIN apm:managed:intro -->');
+      expect(out).toContain('<!-- BEGIN ordo:managed:intro -->');
       // frontmatter 与区间字节逐字未动
       const block = [
-        '<!-- BEGIN apm:managed:intro -->',
+        '<!-- BEGIN ordo:managed:intro -->',
         '系统托管内容 v1',
-        '<!-- END apm:managed:intro -->',
+        '<!-- END ordo:managed:intro -->',
       ].join('\n');
       expect(out).toContain(block);
     });

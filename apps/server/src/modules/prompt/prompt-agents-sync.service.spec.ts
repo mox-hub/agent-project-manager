@@ -11,7 +11,7 @@ import {
  */
 describe('PromptAgentsSyncService（AGENTS.md 受管区块物化）', () => {
   const CONTRACT_BLOCK_BEGIN =
-    '<!-- BEGIN apm:managed:project-intro -->\n# 契约种子项目\n简介\n<!-- END apm:managed:project-intro -->';
+    '<!-- BEGIN ordo:managed:project-intro -->\n# 契约种子项目\n简介\n<!-- END ordo:managed:project-intro -->';
 
   function makeService(overrides: {
     root?: string | null;
@@ -49,7 +49,7 @@ describe('PromptAgentsSyncService（AGENTS.md 受管区块物化）', () => {
     const content = files.get(agentsPath)!;
     expect(content).toContain('# AGENTS.md');
     expect(content).toContain(
-      `<!-- BEGIN apm:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID} -->`,
+      `<!-- BEGIN ordo:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID} -->`,
     );
     expect(content).toContain('项目约定一');
 
@@ -59,7 +59,8 @@ describe('PromptAgentsSyncService（AGENTS.md 受管区块物化）', () => {
     expect(updated).toContain('项目约定二');
     expect(updated).not.toContain('项目约定一');
     expect(
-      updated.split(`apm:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID}`).length - 1,
+      updated.split(`ordo:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID}`).length -
+        1,
     ).toBe(2);
   });
 
@@ -67,7 +68,7 @@ describe('PromptAgentsSyncService（AGENTS.md 受管区块物化）', () => {
     const files = new Map<string, string>();
     files.set(
       'D:/ws/demo/AGENTS.md',
-      `---\napm_project_id: p1\n---\n\n${CONTRACT_BLOCK_BEGIN}\n\n自由区内容保持不变。`,
+      `---\nordo_project_id: p1\n---\n\n${CONTRACT_BLOCK_BEGIN}\n\n自由区内容保持不变。`,
     );
     const { service, agentsPath } = makeService({ files });
 
@@ -77,7 +78,7 @@ describe('PromptAgentsSyncService（AGENTS.md 受管区块物化）', () => {
     expect(next).toContain(CONTRACT_BLOCK_BEGIN);
     expect(next).toContain('自由区内容保持不变。');
     expect(next).toContain('项目协作约定');
-    expect(next).toContain('apm_project_id: p1');
+    expect(next).toContain('ordo_project_id: p1');
 
     // 二次物化后种子区块仍在
     await service.materialize('p1', '项目协作约定 v2');
@@ -90,7 +91,7 @@ describe('PromptAgentsSyncService（AGENTS.md 受管区块物化）', () => {
     const files = new Map<string, string>();
     files.set(
       'D:/ws/demo/AGENTS.md',
-      `---\ntitle: demo\n---\n\n${CONTRACT_BLOCK_BEGIN}\n\n<!-- BEGIN apm:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID} -->\n旧约定\n<!-- END apm:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID} -->\n\n自由区。`,
+      `---\ntitle: demo\n---\n\n${CONTRACT_BLOCK_BEGIN}\n\n<!-- BEGIN ordo:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID} -->\n旧约定\n<!-- END ordo:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID} -->\n\n自由区。`,
     );
     const { service, agentsPath } = makeService({ files });
 
@@ -120,7 +121,7 @@ describe('PromptAgentsSyncService（AGENTS.md 受管区块物化）', () => {
     const files2 = new Map<string, string>();
     files2.set(
       'D:/ws/demo/AGENTS.md',
-      `<!-- BEGIN apm:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID} -->\n文件侧内容\n<!-- END apm:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID} -->`,
+      `<!-- BEGIN ordo:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID} -->\n文件侧内容\n<!-- END ordo:managed:${AGENTS_PROJECT_PROMPT_BLOCK_ID} -->`,
     );
     const { service: service2 } = makeService({ files: files2 });
     const read = await service2.readBlock('p1');

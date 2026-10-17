@@ -279,7 +279,7 @@ export const useTourStore = create<TourState>()(
       },
     }),
     {
-      name: 'apm_tour_progress_storage',
+      name: 'ordo_tour_progress_storage',
       version: 1,
       partialize: (state) => ({
         records: state.records,

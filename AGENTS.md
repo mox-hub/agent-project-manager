@@ -13,9 +13,9 @@ ai-priority: critical
 ai-freshness: realtime
 ai-audiences: 'session:all'
 tags: 'AI, governance, meta, entry, agents'
-apm_project_id: cmu8iciuo001sfyo0kc7uj6m1
-apm_file_type: agents
-apm_sync_mode: managed
+ordo_project_id: cmu8iciuo001sfyo0kc7uj6m1
+ordo_file_type: agents
+ordo_sync_mode: managed
 ---
 
 # AGENTS.md — 跨工具 AI 会话入口
@@ -194,8 +194,8 @@ hotfix/*（从 main 检出） · release/*（从 pre-prod 检出）
 - 定义完成：改完自查 `pnpm quality:gate`（或最小子集 type-check + test + lint），并在回复附变更摘要。
 - 需求入口：新功能想法 / 功能变更 / 功能废弃一律先走 `requirement-intake` skill（流程见 `docs/01-需求/需求入口流程-v1.md`）——**未进能力清单（`docs/01-需求/能力清单-v1.md`）的功能不得开工**；测试映射与缺口账见 `docs/01-需求/测试映射矩阵-v1.md`。
 
-<!-- BEGIN apm:managed:project-intro -->
+<!-- BEGIN ordo:managed:project-intro -->
 # Agent Project Manager
 
 APM 自举（dogfooding）：用 APM 管理 APM 自己的开发——需求管理、发布与版本管理、任务与文档纳入本系统管辖
-<!-- END apm:managed:project-intro -->
+<!-- END ordo:managed:project-intro -->

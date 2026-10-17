@@ -120,9 +120,9 @@ describe('契约与文档知识层 · 实机验收 (e2e)', () => {
       path.join(workspaceRoot, 'AGENTS.md'),
       'utf8',
     );
-    expect(agents).toContain('apm_project_id');
-    expect(agents).toContain('apm_sync_mode: managed');
-    expect(agents).toContain('<!-- BEGIN apm:managed:project-intro -->');
+    expect(agents).toContain('ordo_project_id');
+    expect(agents).toContain('ordo_sync_mode: managed');
+    expect(agents).toContain('<!-- BEGIN ordo:managed:project-intro -->');
     expect(agents).toContain('知识层验收项目');
     expect(
       fs.readFileSync(path.join(workspaceRoot, 'CLAUDE.md'), 'utf8'),

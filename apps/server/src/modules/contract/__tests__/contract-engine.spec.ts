@@ -29,9 +29,9 @@ describe('ContractEngineService', () => {
       const raw = [
         '前文自由区。',
         '',
-        '<!-- BEGIN apm:managed:intro -->',
+        '<!-- BEGIN ordo:managed:intro -->',
         '区间内容',
-        '<!-- END apm:managed:intro -->',
+        '<!-- END ordo:managed:intro -->',
         '',
         '后文自由区。',
         '',
@@ -44,7 +44,7 @@ describe('ContractEngineService', () => {
     });
 
     it('未闭合区间报 malformed 且不产出 span', () => {
-      const raw = '<!-- BEGIN apm:managed:ghost -->\n内容\n';
+      const raw = '<!-- BEGIN ordo:managed:ghost -->\n内容\n';
       const parsed = engine.parse(raw);
       expect(parsed.blocks).toEqual([]);
       expect(parsed.malformed).toHaveLength(1);
@@ -56,7 +56,7 @@ describe('ContractEngineService', () => {
 
     it('重复 id 报 malformed', () => {
       const block = (extra: string) =>
-        `<!-- BEGIN apm:managed:dup -->${extra}<!-- END apm:managed:dup -->`;
+        `<!-- BEGIN ordo:managed:dup -->${extra}<!-- END ordo:managed:dup -->`;
       const parsed = engine.parse(`${block('a')}\n${block('b')}`);
       expect(parsed.blocks).toHaveLength(2);
       expect(parsed.malformed).toHaveLength(1);
@@ -95,17 +95,17 @@ describe('ContractEngineService', () => {
       '',
       '# 文档',
       '',
-      '<!-- BEGIN apm:managed:intro -->',
+      '<!-- BEGIN ordo:managed:intro -->',
       '旧简介',
-      '<!-- END apm:managed:intro -->',
+      '<!-- END ordo:managed:intro -->',
       '',
       '| 列 | 表 |',
       '|---|---|',
       '| a | b |',
       '',
-      '<!-- BEGIN apm:managed:other -->',
+      '<!-- BEGIN ordo:managed:other -->',
       '其他区间',
-      '<!-- END apm:managed:other -->',
+      '<!-- END ordo:managed:other -->',
       '',
       '尾部自由段落。',
       '',
@@ -120,7 +120,7 @@ describe('ContractEngineService', () => {
         { id: 'intro', content: '新简介' },
       ]);
       // 其他区间字节不变
-      expect(out).toContain('<!-- BEGIN apm:managed:other -->');
+      expect(out).toContain('<!-- BEGIN ordo:managed:other -->');
       // 自由区字节不变（frontmatter、标题、表格、尾部段落）
       expect(out).toContain('title: 示例');
       expect(out).toContain('# 文档');
@@ -143,7 +143,7 @@ describe('ContractEngineService', () => {
         { appendMissing: true },
       );
       expect(out.startsWith(trimmed)).toBe(true);
-      expect(out).toContain('<!-- BEGIN apm:managed:new-block -->');
+      expect(out).toContain('<!-- BEGIN ordo:managed:new-block -->');
     });
 
     it('CRLF 文件：替换区间生成 CRLF，未碰字节保持 CRLF', () => {
@@ -152,7 +152,7 @@ describe('ContractEngineService', () => {
         { id: 'intro', content: '换行替换' },
       ]);
       expect(engine.detectEol(out)).toBe('\r\n');
-      expect(out).toContain('<!-- BEGIN apm:managed:intro -->\r\n');
+      expect(out).toContain('<!-- BEGIN ordo:managed:intro -->\r\n');
       const parsed = engine.parse(out);
       expect(parsed.malformed).toEqual([]);
       const intro = parsed.blocks.find((b) => b.id === 'intro');
@@ -160,7 +160,7 @@ describe('ContractEngineService', () => {
     });
 
     it('未闭合区间不被写操作触碰', () => {
-      const raw = 'A\n<!-- BEGIN apm:managed:ghost -->\n内容\nB';
+      const raw = 'A\n<!-- BEGIN ordo:managed:ghost -->\n内容\nB';
       const out = engine.applyManagedBlocks(raw, [
         { id: 'ghost', content: '不应写入' },
       ]);
@@ -175,12 +175,12 @@ describe('ContractEngineService', () => {
     });
   });
 
-  describe('setApmFrontmatter', () => {
+  describe('setOrdoFrontmatter', () => {
     const raw = [
       '---',
       'title: 手工文档',
       'tags: [a, b]',
-      'apm_sync_mode: managed',
+      'ordo_sync_mode: managed',
       '---',
       '',
       '# 正文',
@@ -188,41 +188,41 @@ describe('ContractEngineService', () => {
       '自由区段落。',
     ].join('\n');
 
-    it('apm_ 字段被替换、人工字段保留、正文逐字节保留', () => {
-      const out = engine.setApmFrontmatter(raw, {
-        apm_project_id: 'proj-1',
-        apm_file_type: 'agents',
-        apm_sync_mode: 'managed',
+    it('ordo_ 字段被替换、人工字段保留、正文逐字节保留', () => {
+      const out = engine.setOrdoFrontmatter(raw, {
+        ordo_project_id: 'proj-1',
+        ordo_file_type: 'agents',
+        ordo_sync_mode: 'managed',
       });
       const parsed = engine.parse(out);
       expect(parsed.malformed).toEqual([]);
       expect(parsed.frontmatter['title']).toBe('手工文档');
-      expect(parsed.frontmatter['apm_project_id']).toBe('proj-1');
-      expect(parsed.frontmatter['apm_file_type']).toBe('agents');
+      expect(parsed.frontmatter['ordo_project_id']).toBe('proj-1');
+      expect(parsed.frontmatter['ordo_file_type']).toBe('agents');
       expect(parsed.body.endsWith('自由区段落。')).toBe(true);
     });
 
     it('同一入参重复写入幂等（字节相等）', () => {
-      const once = engine.setApmFrontmatter(raw, { apm_project_id: 'p1' });
-      const twice = engine.setApmFrontmatter(once, { apm_project_id: 'p1' });
+      const once = engine.setOrdoFrontmatter(raw, { ordo_project_id: 'p1' });
+      const twice = engine.setOrdoFrontmatter(once, { ordo_project_id: 'p1' });
       expect(twice).toBe(once);
     });
 
     it('无 frontmatter 文件安全跳过坏 YAML（原样返回）', () => {
       const bad = '---\ntitle: [坏\n---\n正文';
-      expect(engine.setApmFrontmatter(bad, { apm_x: 1 })).toBe(bad);
+      expect(engine.setOrdoFrontmatter(bad, { ordo_x: 1 })).toBe(bad);
     });
   });
 
   describe('compareManagedBlocks', () => {
     const raw = [
-      '<!-- BEGIN apm:managed:equal-block -->',
+      '<!-- BEGIN ordo:managed:equal-block -->',
       '一致内容',
-      '<!-- END apm:managed:equal-block -->',
+      '<!-- END ordo:managed:equal-block -->',
       '',
-      '<!-- BEGIN apm:managed:drift-block -->',
+      '<!-- BEGIN ordo:managed:drift-block -->',
       '文件侧被手改',
-      '<!-- END apm:managed:drift-block -->',
+      '<!-- END ordo:managed:drift-block -->',
     ].join('\n');
 
     it('三态：equal / file_differs / missing_in_file', () => {

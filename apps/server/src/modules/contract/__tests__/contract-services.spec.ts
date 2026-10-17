@@ -172,9 +172,9 @@ describe('ContractSeedService', () => {
     ]);
 
     const agents = fs.get(FILES.agents)!;
-    expect(agents).toContain('apm_project_id: proj-1');
-    expect(agents).toContain('apm_sync_mode: managed');
-    expect(agents).toContain('<!-- BEGIN apm:managed:project-intro -->');
+    expect(agents).toContain('ordo_project_id: proj-1');
+    expect(agents).toContain('ordo_sync_mode: managed');
+    expect(agents).toContain('<!-- BEGIN ordo:managed:project-intro -->');
     expect(agents).toContain('# 示例项目');
     expect(agents).toContain('一个用于测试的项目');
 
@@ -225,18 +225,18 @@ describe('ContractSeedService', () => {
     const next = fs.get(FILES.agents)!;
     expect(next).toContain('title: 项目手册');
     expect(next).toContain('开发者自由撰写的内容。');
-    expect(next).toContain('<!-- BEGIN apm:managed:project-intro -->');
-    expect(next).toContain('apm_project_id: proj-1');
+    expect(next).toContain('<!-- BEGIN ordo:managed:project-intro -->');
+    expect(next).toContain('ordo_project_id: proj-1');
   });
 
   it('已有同名托管区间内容不同：以文件侧为准（adopted）', async () => {
     const { seed, fs, prisma } = buildHarness();
     const preexisting = [
-      '<!-- BEGIN apm:managed:project-intro -->',
+      '<!-- BEGIN ordo:managed:project-intro -->',
       '# 用户自己写的简介',
-      '<!-- END apm:managed:project-intro -->',
+      '<!-- END ordo:managed:project-intro -->',
     ].join('\n');
-    fs.set(FILES.agents, `---\napm_project_id: proj-1\n---\n\n${preexisting}`);
+    fs.set(FILES.agents, `---\nordo_project_id: proj-1\n---\n\n${preexisting}`);
 
     await seed.seedProjectContractFiles('proj-1');
     const binding = prisma.bindings.find((b) => b.fileType === 'agents');
@@ -267,9 +267,9 @@ describe('ContractSeedService', () => {
 
     const next = fs.get(FILES.agents)!;
     expect(next).toContain('title: 项目手册');
-    expect(next).toContain('apm_project_id: proj-1');
+    expect(next).toContain('ordo_project_id: proj-1');
     expect(next).toContain('# 自定义标题');
-    expect(next).not.toContain('<!-- BEGIN apm:managed:');
+    expect(next).not.toContain('<!-- BEGIN ordo:managed:');
 
     const binding = prisma.bindings.find((b) => b.fileType === 'agents');
     expect(binding?.syncMode).toBe('synced');

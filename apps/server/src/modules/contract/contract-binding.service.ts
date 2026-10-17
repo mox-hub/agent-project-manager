@@ -410,7 +410,7 @@ export class ContractBindingService {
             : {}),
         },
         proposerType: 'system',
-        proposerId: 'apm:contract',
+        proposerId: 'ordo:contract',
       },
     });
     await this.prisma.contractFileBinding.update({
@@ -445,7 +445,7 @@ export class ContractBindingService {
           '该文件由平台派生（真相在 DB）。请裁决：重新导出（采纳平台侧）/ 认可手改版 / 解绑。',
         payload: { bindingId, filePath, derived: true },
         proposerType: 'system',
-        proposerId: 'apm:contract',
+        proposerId: 'ordo:contract',
       },
     });
     await this.prisma.contractFileBinding.update({

@@ -99,7 +99,7 @@ describe('契约绑定 REST 面 (e2e)', () => {
       path.join(workspaceRoot, 'AGENTS.md'),
       'utf8',
     );
-    expect(agents).toContain('<!-- BEGIN apm:managed:project-intro -->');
+    expect(agents).toContain('<!-- BEGIN ordo:managed:project-intro -->');
   });
 
   it('POST seed：幂等重跑 + fileTypes 单文件补种', async () => {
@@ -146,8 +146,8 @@ describe('契约绑定 REST 面 (e2e)', () => {
     fs.writeFileSync(
       agentsPath,
       content.replace(
-        '<!-- BEGIN apm:managed:project-intro -->',
-        '<!-- BEGIN apm:managed:project-intro -->\n人工手改的一行',
+        '<!-- BEGIN ordo:managed:project-intro -->',
+        '<!-- BEGIN ordo:managed:project-intro -->\n人工手改的一行',
       ),
       'utf8',
     );
@@ -244,9 +244,9 @@ describe('契约绑定 REST 面 (e2e)', () => {
 
       const next = fs.readFileSync(path.join(root2, 'AGENTS.md'), 'utf8');
       expect(next).toContain('title: 项目手册');
-      expect(next).toContain('apm_project_id:');
+      expect(next).toContain('ordo_project_id:');
       expect(next).toContain('# 自定义标题');
-      expect(next).not.toContain('<!-- BEGIN apm:managed:');
+      expect(next).not.toContain('<!-- BEGIN ordo:managed:');
 
       const list = await wsHttp
         .get(`/_api/projects/${projectId2}/contract/bindings`)

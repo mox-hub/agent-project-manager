@@ -191,7 +191,7 @@ function checkNoTauriMainPath(changed) {
 // 它读的是 `docs/reports/doc-cleanup-soft-delete-candidates-2026-04-04.md`，该文件不存在，
 // `catch {}` 把错误吞掉后由 `if (archivedPaths.length === 0) return;` 静默跳过——
 // 一道永远不执行的检查比没有检查更坏（它会让门禁看起来是绿的）。
-// 且「文档生命周期追踪」应由 APM 自身的文档模块承担（自举原则），
+// 且「文档生命周期追踪」应由 Ordo 自身的文档模块承担（自举原则），
 // 不该由 CI 脚本硬编码一份 2026-04 的过期清单路径。
 
 // Check 2 是全量扫描，与「本次改了什么」无关，必须在早退之前执行——

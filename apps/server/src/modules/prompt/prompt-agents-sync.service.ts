@@ -2,7 +2,7 @@
  * AGENTS.md 受管区块物化服务（CAP-A-24 增强 D）
  *
  * 项目级提示词的投递面：保存时把 AppConfig 中的项目提示词物化到工作区
- * AGENTS.md 的独立受管区块（`apm:managed:project-prompt`），与契约种子的
+ * AGENTS.md 的独立受管区块（`ordo:managed:project-prompt`），与契约种子的
  * 区块（project-intro 等）同文件共存——复用 ContractEngineService 托管
  * 区块原语，applyManagedBlocks 只动同 id 区块、未涉及区块字节不变。
  *
@@ -44,7 +44,7 @@ export interface AgentsBlockReadResult {
 const AGENTS_FILE_HEADER = [
   '# AGENTS.md',
   '',
-  '本文件含 APM 托管的受管区块（`<!-- BEGIN/END apm:managed:... -->`）：',
+  '本文件含 APM 托管的受管区块（`<!-- BEGIN/END ordo:managed:... -->`）：',
   '区块内内容由 APM 维护，请在 APM 内编辑；区块外的自由区归你所有。',
   '',
 ].join('\n');

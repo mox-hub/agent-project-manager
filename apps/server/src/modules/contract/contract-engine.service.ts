@@ -7,17 +7,17 @@ const matter = require('gray-matter');
  * 契约文件区间引擎（契约与文档知识层 v2 纪要 §5.2）。
  *
  * 设计约束：不做全文件 parse→serialize；只对 frontmatter 与
- * `<!-- BEGIN/END apm:managed:{id} -->` 托管区间做结构化处理，
+ * `<!-- BEGIN/END ordo:managed:{id} -->` 托管区间做结构化处理，
  * 自由区字节 verbatim——未涉及的区间与自由区在写入操作中永不改写。
  *
  * 托管区间规范形态：
- *   <!-- BEGIN apm:managed:{id} -->\n{content}\n<!-- END apm:managed:{id} -->
+ *   <!-- BEGIN ordo:managed:{id} -->\n{content}\n<!-- END ordo:managed:{id} -->
  * id 仅允许 [A-Za-z0-9_-]+；区间内容首尾空白在解析时规范化去除。
  */
 
 export const MANAGED_BLOCK_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 
-const BEGIN_RE = /<!--\s*BEGIN apm:managed:([A-Za-z0-9_-]+)\s*-->/g;
+const BEGIN_RE = /<!--\s*BEGIN ordo:managed:([A-Za-z0-9_-]+)\s*-->/g;
 
 export interface ManagedBlockSpan {
   id: string;
@@ -89,14 +89,14 @@ export class ContractEngineService {
       const id = match[1];
       const innerStart = match.index + match[0].length;
       const rest = body.slice(innerStart);
-      const endRe = new RegExp(`<!--\\s*END apm:managed:${id}\\s*-->`);
+      const endRe = new RegExp(`<!--\\s*END ordo:managed:${id}\\s*-->`);
       const endMatch = endRe.exec(rest);
       beginAll.lastIndex = innerStart;
       if (!endMatch) {
         malformed.push({
           kind: 'unclosed_block',
           id,
-          detail: `BEGIN apm:managed:${id} 缺少配对的 END 标记`,
+          detail: `BEGIN ordo:managed:${id} 缺少配对的 END 标记`,
         });
         continue;
       }
@@ -171,14 +171,14 @@ export class ContractEngineService {
       .replace(/\r\n/g, '\n')
       .replace(/\n/g, eol)
       .replace(/\s+$/, '');
-    return `<!-- BEGIN apm:managed:${id} -->${eol}${normalized}${eol}<!-- END apm:managed:${id} -->`;
+    return `<!-- BEGIN ordo:managed:${id} -->${eol}${normalized}${eol}<!-- END ordo:managed:${id} -->`;
   }
 
   /**
-   * 写入 apm_ 命名空间的 frontmatter 字段：人工字段原样保留，apm_ 前缀
+   * 写入 ordo_ 命名空间的 frontmatter 字段：人工字段原样保留，ordo_ 前缀
    * 字段整体由本入参替换。坏 frontmatter 的文件保守跳过（不重写）。
    */
-  setApmFrontmatter(raw: string, apmFields: Record<string, unknown>): string {
+  setOrdoFrontmatter(raw: string, apmFields: Record<string, unknown>): string {
     let parsed: { data: Record<string, unknown>; content: string };
     try {
       parsed = matter(raw);
@@ -187,7 +187,7 @@ export class ContractEngineService {
     }
     const humanData: Record<string, unknown> = { ...parsed.data };
     for (const key of Object.keys(humanData)) {
-      if (key.startsWith('apm_')) delete humanData[key];
+      if (key.startsWith('ordo_')) delete humanData[key];
     }
     const next = { ...humanData, ...apmFields };
     if (Object.keys(next).length === 0) return parsed.content;
