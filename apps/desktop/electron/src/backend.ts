@@ -170,7 +170,7 @@ export function startServerProcess(
       cwd: config.serverCwd,
       env,
       stdio: 'pipe',
-      serviceName: 'apm-server',
+      serviceName: 'ordo-server',
     });
     pipeLog(proc.stdout, 'backend:stdout', markOutput);
     pipeLog(proc.stderr, 'backend:stderr', markOutput);

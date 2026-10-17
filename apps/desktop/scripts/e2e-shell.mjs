@@ -19,7 +19,7 @@ const repoRoot = path.resolve(desktopRoot, '..', '..');
 const require = createRequire(path.join(repoRoot, 'apps', 'frontend', 'package.json'));
 const { _electron } = require('@playwright/test');
 
-const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-e2e-'));
+const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ordo-e2e-'));
 let failures = 0;
 
 function check(name, condition, detail = '') {

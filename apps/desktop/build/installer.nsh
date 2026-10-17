@@ -7,7 +7,7 @@
   IfFileExists "$R0.ordo\*.*" 0 ordo_data_check_done
     DetailPrint "检测到既有数据目录 $R0.ordo（升级安装，数据保留）"
     MessageBox MB_ICONINFORMATION|MB_OK \
-      "检测到已有 Agent Project Manager 数据目录：$\r$\n$\r$\n$R0.ordo$\r$\n$\r$\n本次为升级安装，现有数据库、配置与日志将全部保留。"
+      "检测到已有 Ordo 数据目录：$\r$\n$\r$\n$R0.ordo$\r$\n$\r$\n本次为升级安装，现有数据库、配置与日志将全部保留。"
   ordo_data_check_done:
 !macroend
 

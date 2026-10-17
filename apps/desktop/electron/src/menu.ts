@@ -16,8 +16,8 @@ export interface MenuHandlers {
 function showAbout(): void {
   void dialog.showMessageBox({
     type: 'info',
-    title: '关于 Agent Project Manager',
-    message: `Agent Project Manager ${app.getVersion()}`,
+    title: '关于 Ordo',
+    message: `Ordo ${app.getVersion()}`,
     detail: `AI 驱动的项目管理工具（人类控制面桌面壳）\n数据目录：${process.env.ORDO_DATA_DIR ?? '~/.ordo'}\n日志：${getLogFilePath()}`,
     buttons: ['确定'],
   });
@@ -28,7 +28,7 @@ export function installApplicationMenu(handlers: MenuHandlers): void {
     {
       label: '应用',
       submenu: [
-        { label: '关于 Agent Project Manager', click: showAbout },
+        { label: '关于 Ordo', click: showAbout },
         { label: '检查更新…', click: () => handlers.checkUpdates() },
         { type: 'separator' },
         { label: '隐藏窗口', role: 'hide' },

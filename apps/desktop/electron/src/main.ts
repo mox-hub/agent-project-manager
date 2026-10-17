@@ -1,7 +1,7 @@
 /**
  * Electron 主进程入口（由旧 Tauri 壳 lib.rs 的编排职责）。
  * 启动顺序：目录/密钥（同步毫秒级）→ 窗口（品牌启动屏）→ 后台 db push →
- * 自动拉起 server → 健康检查通过 → 自动拉起 apm-runtime 守护进程 → 切换到正式页面。
+ * 自动拉起 server → 健康检查通过 → 自动拉起 ordo-runtime 守护进程 → 切换到正式页面。
  * 窗口加载源：dev 优先 vite（5173，HMR）；否则 server 静态托管的前端（同源免 CORS，
  * server 侧自带 SPA history fallback）。
  * 生命周期强化（ADR-015）：单实例锁防双开抢 ~/.ordo；关窗最小化到托盘（服务保活）；
@@ -20,7 +20,6 @@ import {
   detectFirstInstall,
   ensureSecrets,
   initializeDirs,
-  migrateLegacyUserData,
   restoreDefaultDbIfNeeded,
 } from './setup';
 import { createTray, hasTray } from './tray';
@@ -34,14 +33,14 @@ import {
   resolveFrontendTarget,
 } from './windows';
 
-const DEEP_LINK_SCHEME = 'apm';
+const DEEP_LINK_SCHEME = 'ordo';
 
 const config = resolveAppConfig();
 // Chromium 自身 profile（缓存/LocalStorage）收敛到 ~/.ordo/electron 子目录，
 // 避免缓存文件污染项目数据根；官方要求在 ready 前设置，故放模块顶层
 app.setPath('userData', path.join(config.userDataDir, 'electron'));
 
-// deep link 协议（ADR-015 P2）：apm://<前端路径> 直达页面（apm://issues/42）。
+// deep link 协议（ADR-015 P2）：ordo://<前端路径> 直达页面（ordo://issues/42）。
 // dev 模式（defaultApp）需带 electron 入口参数注册；解析失败静默忽略
 if (process.defaultApp) {
   app.setAsDefaultProtocolClient(DEEP_LINK_SCHEME, process.execPath, [
@@ -51,7 +50,7 @@ if (process.defaultApp) {
   app.setAsDefaultProtocolClient(DEEP_LINK_SCHEME);
 }
 
-/** 从 argv 提取 apm:// 深链（Windows 冷启动/second-instance 均经 argv 传递） */
+/** 从 argv 提取 ordo:// 深链（Windows 冷启动/second-instance 均经 argv 传递） */
 function extractDeepLink(argv: string[]): string | null {
   return argv.find((a) => a.startsWith(`${DEEP_LINK_SCHEME}://`)) ?? null;
 }
@@ -164,7 +163,7 @@ function createMainWindow(): BrowserWindow {
     x: bounds?.x,
     y: bounds?.y,
     show: false,
-    title: 'Agent Project Manager',
+    title: 'Ordo',
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -228,7 +227,7 @@ async function loadAppSurface(): Promise<void> {
   logger.info(`窗口已加载: ${target}`);
 }
 
-/** server 健康后自动拉起 apm-runtime 守护进程；失败仅记日志，不阻断主流程（设置页可手动重试）。 */
+/** server 健康后自动拉起 ordo-runtime 守护进程；失败仅记日志，不阻断主流程（设置页可手动重试）。 */
 async function autoStartRuntimeDaemon(): Promise<void> {
   const port = state.backend?.info.port;
   if (!port) {
@@ -347,8 +346,6 @@ function bootstrap(): void {
     } devtools=${shouldAutoOpenDevTools() ? 'on' : 'off'} dataDir=${config.userDataDir}`,
   );
 
-  // 旧版数据迁移（v0.6.1 %APPDATA% → ~/.ordo）先行，之后首装校验才准确
-  migrateLegacyUserData(config, path.join(app.getPath('appData'), 'agent-project-manager'));
   // 目录与密钥同步就绪（毫秒级）——服务启动与 db push 都依赖它们，不与后台初始化竞态
   initializeDirs(config);
   state.isFirstInstall = detectFirstInstall(config);

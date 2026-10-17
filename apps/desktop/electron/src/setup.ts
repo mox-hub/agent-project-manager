@@ -32,51 +32,6 @@ export function detectFirstInstall(config: AppConfig): boolean {
 }
 
 /**
- * v0.6.1 旧版数据迁移：旧壳数据根在 %APPDATA%/agent-project-manager（Electron 默认
- * userData，Chromium 缓存混在其中）。按白名单搬迁项目数据到 ~/.ordo（ordo-config.json
- * 特判挪到 desktop/ 子目录，即新版守护进程配置与锁位置），旧目录改名 .migrated.bak
- * 留档防重复迁移。目标已有密钥（已初始化/已迁移过）则不动；失败仅告警不阻断启动。
- */
-export function migrateLegacyUserData(config: AppConfig, legacyDir: string): void {
-  if (!fs.existsSync(legacyDir) || fs.existsSync(path.join(config.userDataDir, 'secrets.json'))) {
-    return;
-  }
-  const entries = [
-    'data',
-    'logs',
-    'uploads',
-    'secrets.json',
-    'desktop-state.json',
-    'workspaces.json',
-    'ordo-config.json',
-  ];
-  try {
-    fs.mkdirSync(config.userDataDir, { recursive: true });
-    for (const entry of entries) {
-      const from = path.join(legacyDir, entry);
-      if (!fs.existsSync(from)) {
-        continue;
-      }
-      fs.rmSync(path.join(config.userDataDir, entry), { force: true, recursive: true });
-      fs.renameSync(from, path.join(config.userDataDir, entry));
-    }
-    if (fs.existsSync(path.join(config.userDataDir, 'ordo-config.json'))) {
-      fs.mkdirSync(path.dirname(config.apmConfigPath), { recursive: true });
-      fs.renameSync(
-        path.join(config.userDataDir, 'ordo-config.json'),
-        config.apmConfigPath,
-      );
-    }
-    fs.renameSync(legacyDir, `${legacyDir}.migrated.bak`);
-    logger.info(`旧版数据已迁移: ${legacyDir} → ${config.userDataDir}`);
-  } catch (err) {
-    logger.warn(
-      `旧版数据迁移失败（按全新安装继续）: ${err instanceof Error ? err.message : String(err)}`,
-    );
-  }
-}
-
-/**
  * 首启生成随机密钥并落盘 secrets.json，后续启动复用（32 字节 = 64 hex，与旧壳一致）。
  * 落盘格式（ADR-015 安全加固）：经 Electron safeStorage 加密（Windows = DPAPI，机器级绑
  * 定）；加密服务不可用时明文回退并标记 is_plaintext。旧版明文格式读入时原样生效（不强制

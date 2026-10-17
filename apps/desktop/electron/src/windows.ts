@@ -120,7 +120,7 @@ export function createAuthWindow(): BrowserWindow {
     height: AUTH_WINDOW_HEIGHT,
     show: false,
     center: true,
-    title: 'Agent Project Manager',
+    title: 'Ordo',
     autoHideMenuBar: true,
     resizable: false,
     maximizable: false,

@@ -21,7 +21,7 @@ export interface AppConfig {
   databasePath: string;
   uploadDir: string;
   /** 守护进程配置文件（ORDO_CONFIG_PATH 指向）——与用户手动 CLI 的 ~/.ordo 隔离 */
-  apmConfigPath: string;
+  ordoConfigPath: string;
   jwtSecret: string;
   integrationKey: string;
   /** 打包模式指向随包分发的 node.exe；开发模式为 null（回退 Electron 内置 Node，见 setup.ts） */
@@ -44,7 +44,7 @@ export function resolveAppConfig(): AppConfig {
   // 生产路径恒为 ~/.ordo（用户主目录固定，不受安装位置影响）
   const userDataDir = process.env.ORDO_DATA_DIR ?? path.join(os.homedir(), '.ordo');
   const logsDir = path.join(userDataDir, 'logs');
-  const databasePath = path.join(userDataDir, 'data', 'agent-project-manager.db');
+  const databasePath = path.join(userDataDir, 'data', 'ordo.db');
   const uploadDir = path.join(userDataDir, 'uploads');
 
   let serverCwd: string;
@@ -78,7 +78,7 @@ export function resolveAppConfig(): AppConfig {
     logsDir,
     databasePath,
     uploadDir,
-    apmConfigPath: path.join(userDataDir, 'desktop', 'ordo-config.json'),
+    ordoConfigPath: path.join(userDataDir, 'desktop', 'ordo-config.json'),
     jwtSecret: '',
     integrationKey: '',
     nodeExe,

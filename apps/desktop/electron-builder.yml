@@ -1,8 +1,8 @@
 # Electron 桌面壳打包配置（CAP-A-14 / ADR-014）
 # 资源准备：pnpm pack:resources → build/desktop-pack/{bin,server,frontend}
 # （壳无关的共享 staging，由 pack.mjs 单独产出）
-appId: com.agentpm.desktop
-productName: Agent Project Manager
+appId: com.ordo.desktop
+productName: Ordo
 # 直接用本地 electron 的已解压产物：跳过「下载 zip→解压到 release/*.tmp→rename」环节——
 # 实测该解压产物会被 Defender 实时扫描长期锁死（EBUSY/EPERM，分钟到小时级），换既过扫描期的
 # node_modules/electron/dist 即根治，打包也更快
@@ -45,7 +45,7 @@ nsis:
   allowToChangeInstallationDirectory: true
   deleteAppDataOnUninstall: false
   artifactName: ${productName}_${version}_x64-setup.exe
-  # 安装期校验既有数据目录（~/.apm）：存在 = 升级安装，提示并保留数据
+  # 安装期校验既有数据目录（~/.ordo）：存在 = 升级安装，提示并保留数据
   include: build/installer.nsh
   # 品牌位图（scripts/gen-icon.mjs 从 logo.svg 生成）；图标沿用 win.icon（build/icon.ico）。
   # 注意：schema 只有 installerHeader/installerSidebar（无 uninstaller 变体，配了会校验失败）

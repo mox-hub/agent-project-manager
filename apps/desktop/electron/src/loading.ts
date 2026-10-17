@@ -15,7 +15,7 @@ const LOGO_SVG = `<svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
 </svg>`;
 
 const BOOT_HTML = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
-<title>正在启动 Agent Project Manager…</title><style>
+<title>正在启动 Ordo…</title><style>
 *{box-sizing:border-box}
 body{font-family:"Segoe UI",system-ui,-apple-system,sans-serif;margin:0;min-height:100vh;
 background:radial-gradient(1200px 700px at 50% 35%,#161b27 0%,#0d1117 55%,#090c12 100%);
@@ -43,7 +43,7 @@ background:linear-gradient(90deg,transparent,#58a6ff,transparent);animation:swee
 .done .bar{display:none}
 </style></head><body><main>
 <div class="logo-wrap"><div class="orbit slow"></div><div class="orbit"></div>${LOGO_SVG}</div>
-<h1>Agent Project Manager</h1>
+<h1>Ordo</h1>
 <p id="status">正在启动…</p>
 <p id="detail"></p>
 </main><div class="bar"><i></i></div>

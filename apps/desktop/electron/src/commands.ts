@@ -547,7 +547,7 @@ export const commandHandlers = {
       return { ok: false, error: '当前系统不支持原生通知' };
     }
     const notification = new Notification({
-      title: args?.title ?? 'Agent Project Manager',
+      title: args?.title ?? 'Ordo',
       body: args?.body ?? '',
       icon: resolveTrayIconPath(),
       silent: false,

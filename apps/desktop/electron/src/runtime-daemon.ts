@@ -2,7 +2,7 @@
 const GRACEFUL_DAEMON_SHUTDOWN_TIMEOUT_MS = 3_000;
 
 /**
- * apm-runtime 守护进程托管（CAP-A-14 体验切片：运行时自动启动 + 手动控制）。
+ * ordo-runtime 守护进程托管（CAP-A-14 体验切片：运行时自动启动 + 手动控制）。
  *
  * AI 执行面（守护进程）此前不随包、也不被壳拉起——设置页「机器列表」永远为空，
  * 用户也无控件可启动。现随包分发 apps/cli 产物，由壳在 server 健康后自动拉起：
@@ -26,7 +26,7 @@ interface RuntimeConfigShape {
 
 export function readApmRuntimeConfig(config: AppConfig): RuntimeConfigShape {
   try {
-    return JSON.parse(fs.readFileSync(config.apmConfigPath, 'utf-8')) as RuntimeConfigShape;
+    return JSON.parse(fs.readFileSync(config.ordoConfigPath, 'utf-8')) as RuntimeConfigShape;
   } catch {
     return {};
   }
@@ -44,8 +44,8 @@ export function writeWorkspaceRoots(config: AppConfig, roots: string[]): string[
     ...current,
     runtime: { ...current.runtime, workspaceRoots: cleaned },
   };
-  fs.mkdirSync(path.dirname(config.apmConfigPath), { recursive: true });
-  fs.writeFileSync(config.apmConfigPath, JSON.stringify(next, null, 2));
+  fs.mkdirSync(path.dirname(config.ordoConfigPath), { recursive: true });
+  fs.writeFileSync(config.ordoConfigPath, JSON.stringify(next, null, 2));
   logger.info(`守护进程工作目录已更新: ${cleaned.join(', ') || '(空)'}`);
   return cleaned;
 }
@@ -71,7 +71,7 @@ function assertCliEntry(config: AppConfig): void {
  * 失败重启。
  */
 function reapOrphanDaemon(config: AppConfig): void {
-  const lockPath = path.join(path.dirname(config.apmConfigPath), 'runtime.lock');
+  const lockPath = path.join(path.dirname(config.ordoConfigPath), 'runtime.lock');
   let holder: { pid?: number } | null = null;
   try {
     holder = JSON.parse(fs.readFileSync(lockPath, 'utf-8')) as { pid?: number };
@@ -173,14 +173,14 @@ export async function startRuntimeDaemon(backendPort: number): Promise<{ pid: nu
   // 先接管上一代壳的孤儿/陈旧锁，再fork——否则锁冲突必失败
   reapOrphanDaemon(config);
   // 配置文件就位：守护进程首启会把 runtimeId/deviceSecret 等写回同一文件
-  if (!fs.existsSync(config.apmConfigPath)) {
+  if (!fs.existsSync(config.ordoConfigPath)) {
     writeWorkspaceRoots(config, readWorkspaceRoots(config));
   }
 
   const env = {
     ...process.env,
     ORDO_BACKEND: `http://127.0.0.1:${backendPort}`,
-    ORDO_CONFIG_PATH: config.apmConfigPath,
+    ORDO_CONFIG_PATH: config.ordoConfigPath,
     NODE_ENV: 'production',
   };
   logger.info(`启动守护进程: entry=${config.cliEntry} backend=${env.ORDO_BACKEND}`);
@@ -189,7 +189,7 @@ export async function startRuntimeDaemon(backendPort: number): Promise<{ pid: nu
     cwd: path.dirname(config.cliEntry),
     env,
     stdio: 'pipe',
-    serviceName: 'apm-runtime-daemon',
+    serviceName: 'ordo-runtime-daemon',
   });
 
   let sawOutput = false;
@@ -214,7 +214,7 @@ export async function startRuntimeDaemon(backendPort: number): Promise<{ pid: nu
         // 优雅优先（P2）：daemon 的 cli 入口经 parentPort 桥接到 SIGTERM 同一 shutdown
         // 路径（socket.close + 锁释放）；Windows kill() 无 SIGTERM，超时强杀兜底
         try {
-          proc.postMessage({ type: 'apm:shutdown' });
+          proc.postMessage({ type: 'ordo:shutdown' });
         } catch {
           // 进程已死，exit 事件即达
         }
@@ -271,7 +271,7 @@ export function getRuntimeDaemonStatus(): {
     running: !!daemon,
     pid: daemon?.pid,
     startedAt: daemon?.startedAt,
-    configPath: config.apmConfigPath,
+    configPath: config.ordoConfigPath,
     workspaceRoots: readWorkspaceRoots(config),
   };
 }

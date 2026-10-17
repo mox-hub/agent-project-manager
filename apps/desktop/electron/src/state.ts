@@ -33,7 +33,7 @@ export interface AppState {
   config: AppConfig;
   backend: { handle: ServerHandle; info: BackendInfo } | null;
   frontend: { handle: ServerHandle; info: FrontendInfo } | null;
-  /** apm-runtime 守护进程托管句柄（AI 执行面，随 server 启动自动拉起） */
+  /** ordo-runtime 守护进程托管句柄（AI 执行面，随 server 启动自动拉起） */
   daemon: RuntimeDaemonHandle | null;
   /** 初始化（db push 等）失败的最新错误；null = 未失败。前端 init 页经 getInitStatus 消费。 */
   initError: string | null;
