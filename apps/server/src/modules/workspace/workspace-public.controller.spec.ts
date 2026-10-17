@@ -17,7 +17,7 @@ import type { WorkspaceBackupService } from './backup.service';
 import type { WorkspacePublicSettingsService } from './public-settings.service';
 import { DEFAULT_WORKSPACE_ID } from '@/core/database/workspace-registry.util';
 
-const CUSTOM_PATH = 'C:/tmp/apm-public-alpha';
+const CUSTOM_PATH = 'C:/tmp/ordo-public-alpha';
 
 interface SettingsStub {
   isPublicListEnabled: ReturnType<typeof vi.fn>;

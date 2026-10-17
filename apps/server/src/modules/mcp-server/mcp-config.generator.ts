@@ -12,7 +12,7 @@
  *     拿到 endpoint 事件后再 POST JSON-RPC 消息
  *   - 简化方案：让客户端持续复用单个 session（共享 sessionId）
  *
- * 下一里程碑：将 stdio 启动器 (apps/server/bin/apm-mcp-stdio.js) 重新加回，
+ * 下一里程碑：将 stdio 启动器 (apps/server/bin/ordo-mcp-stdio.js) 重新加回，
  * 兼容 Claude Desktop 等只支持 stdio 的客户端。
  */
 
@@ -114,7 +114,7 @@ export class McpConfigGenerator {
     return {
       mcpServers: {
         ordo: {
-          ...result.mcpServers['apm'],
+          ...result.mcpServers['ordo'],
           type: 'sse',
         },
       },

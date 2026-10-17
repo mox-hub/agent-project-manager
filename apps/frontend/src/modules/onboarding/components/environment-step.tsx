@@ -3,7 +3,7 @@
  *
  * 聚合 GET /environment 六项检测（node/git/claude-code/codex/zcode/opencode）：
  * 已装显版本；未装给平台对应安装命令（复制）+ 官方下载链接 + 重新检测。
- * 诚实化原则延续：APM 只检测+指引，不代装环境；步骤可跳过、不设门禁，
+ * 诚实化原则延续：Ordo 只检测+指引，不代装环境；步骤可跳过、不设门禁，
  * 检测结果不影响引导完成流程。检测走 server 端点，web/桌面天然同源。
  */
 import { useMemo, useState } from 'react';

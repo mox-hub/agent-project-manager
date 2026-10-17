@@ -246,7 +246,7 @@ describe('CAP-K-03 批四：listReleaseItems 卡点摘要投影', () => {
     expect(preview.projectId).toBe('proj-1');
     expect(preview.content).toContain('## [1.0.0]');
     expect(preview.content).toContain('**首个版本**');
-    expect(preview.content).toContain('apm:derived-file:changelog');
+    expect(preview.content).toContain('ordo:derived-file:changelog');
   });
 });
 

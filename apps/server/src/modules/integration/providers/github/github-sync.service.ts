@@ -103,8 +103,8 @@ export class GitHubSyncService {
       return { recorded: false, trustApplied: false };
     }
 
-    // 映射 → apm state
-    const apmState = this.mapPrState(pr.state, pr.merged);
+    // 映射 → ordo state
+    const ordoState = this.mapPrState(pr.state, pr.merged);
 
     // upsert 记录
     const existing = await this.prisma.remotePullRequest.findFirst({
@@ -116,7 +116,7 @@ export class GitHubSyncService {
       stored = await this.prisma.remotePullRequest.update({
         where: { id: existing.id },
         data: {
-          state: apmState,
+          state: ordoState,
           isMerged: pr.merged,
           mergedAt: pr.merged_at ? new Date(pr.merged_at) : null,
           htmlUrl: pr.html_url,
@@ -132,7 +132,7 @@ export class GitHubSyncService {
           number: pr.number,
           title: pr.title,
           repoFullName: repository.full_name,
-          state: apmState,
+          state: ordoState,
           isMerged: pr.merged,
           mergedAt: pr.merged_at ? new Date(pr.merged_at) : null,
           htmlUrl: pr.html_url,
@@ -149,7 +149,7 @@ export class GitHubSyncService {
       provider: 'github',
       repo: repository.full_name,
       number: pr.number,
-      state: apmState,
+      state: ordoState,
       action,
     });
 
@@ -349,7 +349,7 @@ export class GitHubSyncService {
     state: GitHubPrState | 'open',
     links?: { acceptanceId?: string; executionRunId?: string },
   ) {
-    const apmState = this.mapPrState(pr.state, pr.merged);
+    const ordoState = this.mapPrState(pr.state, pr.merged);
     const existing = await this.prisma.remotePullRequest.findFirst({
       where: { provider: 'github', externalId: String(pr.id) },
     });
@@ -370,7 +370,7 @@ export class GitHubSyncService {
       number: pr.number,
       title: pr.title,
       repoFullName: pr.head.repo.fullName,
-      state: apmState,
+      state: ordoState,
       isMerged: pr.merged,
       mergedAt: pr.mergedAt ? new Date(pr.mergedAt) : null,
       closedAt: pr.closedAt ? new Date(pr.closedAt) : null,

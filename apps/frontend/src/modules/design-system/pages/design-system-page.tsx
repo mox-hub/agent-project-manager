@@ -3579,7 +3579,7 @@ export function DesignSystemPage() {
                                 <span>Alex Chen (@alex)</span>
                               </div>
                             </PreviewRow>
-                            <PreviewRow label="所属项目">Agent Project Manager</PreviewRow>
+                            <PreviewRow label="所属项目">Ordo</PreviewRow>
                             <PreviewRow label="工时进度">
                               <div className="flex items-center gap-2 flex-1">
                                 <Progress value={62} className="h-1.5 flex-1" />
@@ -3721,7 +3721,7 @@ export function DesignSystemPage() {
                             </div>
                           </div>
                           <PreviewSection title="项目大盘">
-                            <PreviewRow label="核心仓库">agent-project-manager (develop)</PreviewRow>
+                            <PreviewRow label="核心仓库">ordo (develop)</PreviewRow>
                             <PreviewRow label="协作团队">4 位人类工程师 + 2 位 AI 同事</PreviewRow>
                             <PreviewRow label="双轨成本">累计 186k Tokens ($1.42) · 38h</PreviewRow>
                           </PreviewSection>
@@ -3864,7 +3864,7 @@ export function DesignSystemPage() {
                         </div>
                         <PreviewSection title="工单属性">
                           <PreviewRow label="负责人">@alex (Alex Chen)</PreviewRow>
-                          <PreviewRow label="所属项目">Agent Project Manager</PreviewRow>
+                          <PreviewRow label="所属项目">Ordo</PreviewRow>
                           <PreviewRow label="工时进度">2.5h / 4h (62%)</PreviewRow>
                         </PreviewSection>
                       </div>
@@ -3977,7 +3977,7 @@ export function DesignSystemPage() {
                           </div>
                         </div>
                         <PreviewSection title="项目大盘">
-                          <PreviewRow label="核心仓库">agent-project-manager</PreviewRow>
+                          <PreviewRow label="核心仓库">ordo</PreviewRow>
                           <PreviewRow label="协作团队">4 位成员 + 2 位 AI</PreviewRow>
                           <PreviewRow label="双轨成本">186k Tokens ($1.42) · 38h</PreviewRow>
                         </PreviewSection>
@@ -6608,7 +6608,7 @@ export function DesignSystemPage() {
                       <span className="text-xs text-foreground">Unassigned</span>
                     </PropertyRow>
                     <PropertyRow icon={<GitBranch className="w-3.5 h-3.5" />} label="Repository">
-                      <span className="text-xs text-foreground">agent-project-manager</span>
+                      <span className="text-xs text-foreground">ordo</span>
                     </PropertyRow>
                     <PropertyRow icon={<Plus className="w-3.5 h-3.5" />} label="Estimate">
                       <span className="text-xs text-foreground">3h</span>

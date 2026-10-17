@@ -63922,7 +63922,7 @@
           },
           "documentsRepoPath": {
             "type": "string",
-            "example": "C:/Users/me/APM/docs",
+            "example": "C:/Users/me/Ordo/docs",
             "nullable": true
           },
           "icon": {
@@ -67806,7 +67806,7 @@
           },
           "formatOnly": {
             "type": "boolean",
-            "description": "格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间"
+            "description": "格式化纳管：已有文件仅并入 ordo_ frontmatter 并建 synced 观察绑定，不注入托管区间"
           }
         }
       },
@@ -80100,7 +80100,7 @@
             "type": "number",
             "description": "变更文件数"
           },
-          "apmState": {
+          "ordoState": {
             "type": "string",
             "description": "Ordo 映射后的最终状态"
           }

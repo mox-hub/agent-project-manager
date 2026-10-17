@@ -245,7 +245,7 @@ export class GitHubPullRequestDto {
   changedFiles?: number;
 
   @ApiPropertyOptional({ description: 'Ordo 映射后的最终状态' })
-  apmState?: string;
+  ordoState?: string;
 }
 
 /** POST /integrations/github/:integrationId/pulls */

@@ -85,7 +85,7 @@ export function DocumentViewPage() {
   // ordo:// 稳定地址（v2 纪要 §13）：projectCode + shortId 齐备才展示
   const projectCode = detailQuery.data?.project?.projectCode;
   const docShortId = detailQuery.data?.shortId;
-  const apmAddress =
+  const ordoAddress =
     projectCode && docShortId ? `ordo://${projectCode}/doc/${docShortId}` : null;
   // 向 AI 助手侧边栏上报「正在查看」上下文（卸载自动清除）
   useSetViewingContext(
@@ -447,16 +447,16 @@ export function DocumentViewPage() {
                     {document.docRole}
                   </Badge>
                 )}
-                {apmAddress ? (
+                {ordoAddress ? (
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(apmAddress)}
+                    onClick={() => copyToClipboard(ordoAddress)}
                     title="复制 ordo:// 地址"
                     data-ai-component="document.document-view.ordo-address"
                     className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 font-mono text-2xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
                     {isCopied ? <Check size={12} /> : <Copy size={12} />}
-                    {apmAddress}
+                    {ordoAddress}
                   </button>
                 ) : null}
               </div>

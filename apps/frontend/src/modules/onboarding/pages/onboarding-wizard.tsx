@@ -228,7 +228,7 @@ function CompleteStep({
           <CheckCircle className="size-4 text-accent-green" />
         </IconStack>
         <h2 className="text-xl font-semibold">{t('onboarding.complete.heading')}</h2>
-        {/* 原来这里写的是「您已准备好开始使用 APM」——一句没有依据的断言：
+        {/* 原来这里写的是「您已准备好开始使用 Ordo」——一句没有依据的断言：
             上一步「配置 AI」是**可跳过**的，跳过之后这条链路一步也跑不起来。
             改为说清"现在能做什么、还差什么"，而"还差什么"由下方那张卡自己去说 */}
         <p className="mt-2 text-muted-foreground">
@@ -311,7 +311,7 @@ function CompleteStep({
 
       <div className="flex flex-col gap-2">
         {/* AI 表面随 2026-10-11 裁决转 DEV-only（CAP-C-08 形态收缩）：回放 CTA 仅 DEV
-            渲染，生产主键提升为「进入 APM」（原 S6「先回放、后实况」裁决在生产构建被
+            渲染，生产主键提升为「进入 Ordo」（原 S6「先回放、后实况」裁决在生产构建被
             收缩裁决取代——回放路由已不存在，入口必须同批撤除）。DEV 内保留 S6 次序：
             刚装好的机器模型多半没配，回放是唯一能在一分钟内说清产品能干什么的路径 */}
         {import.meta.env.DEV ? (

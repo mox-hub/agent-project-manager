@@ -44,8 +44,8 @@ export interface AgentsBlockReadResult {
 const AGENTS_FILE_HEADER = [
   '# AGENTS.md',
   '',
-  '本文件含 APM 托管的受管区块（`<!-- BEGIN/END ordo:managed:... -->`）：',
-  '区块内内容由 APM 维护，请在 APM 内编辑；区块外的自由区归你所有。',
+  '本文件含 Ordo 托管的受管区块（`<!-- BEGIN/END ordo:managed:... -->`）：',
+  '区块内内容由 Ordo 维护，请在 Ordo 内编辑；区块外的自由区归你所有。',
   '',
 ].join('\n');
 

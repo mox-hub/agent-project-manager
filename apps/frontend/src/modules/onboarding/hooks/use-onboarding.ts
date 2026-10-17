@@ -175,7 +175,7 @@ export function useOnboarding() {
     }));
     setOnboardingCompleted(true);
     // 复位侧边栏重开开关：gate 条件是 completed && !open，只落标记不复位的话，
-    // 从侧边栏进入的会话点「进入 APM」后向导关不掉（2026-10-04 实机暴露）
+    // 从侧边栏进入的会话点「进入 Ordo」后向导关不掉（2026-10-04 实机暴露）
     setOnboardingOpen(false);
     // 桌面模式镜像到壳侧：动态端口漂移换 origin 后向导不重弹
     persistOnboardingToShell(true);
@@ -196,7 +196,7 @@ export function useOnboarding() {
   const finishOnboarding = useCallback(() => {
     // 完成标记是前端/壳侧状态（zustand persist + desktop-state.json 镜像），
     // 不走服务端——曾指向从未实现的 POST /onboarding/finish，404 静默失败
-    // 导致「进入 APM」点了没反应（2026-09-12 实机暴露，回归见 use-onboarding.test）
+    // 导致「进入 Ordo」点了没反应（2026-09-12 实机暴露，回归见 use-onboarding.test）
     completeOnboarding();
     navigate('/app');
   }, [completeOnboarding, navigate]);

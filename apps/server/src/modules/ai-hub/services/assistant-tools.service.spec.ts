@@ -131,7 +131,7 @@ describe('AssistantToolsService', () => {
           id: 'i1',
           type: 'task',
           title: '修复登录超时',
-          ordoRef: 'ordo://APM/issue/ORDO-PF-001',
+          ordoRef: 'ordo://ordo/issue/ORDO-PF-001',
         },
       ],
       total: 1,

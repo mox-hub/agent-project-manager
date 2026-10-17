@@ -700,7 +700,7 @@ export class WorkflowV2EngineService implements OnModuleInit, OnModuleDestroy {
     }
 
     const targetMode = node.targetMode ?? 'prompt';
-    // goal 模式（S2 通道 A 亮点）：APM 验收标准喂外部工具目标循环
+    // goal 模式（S2 通道 A 亮点）：Ordo 验收标准喂外部工具目标循环
     const promptOverride = targetMode === 'goal' ? `/goal ${prompt}` : prompt;
 
     try {

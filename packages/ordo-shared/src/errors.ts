@@ -52,7 +52,7 @@ export function parseBackendError(err: unknown): OrdoError {
     // 网络层错误
     if (axiosErr.code === 'ECONNREFUSED' || axiosErr.code === 'ENOTFOUND') {
       return new OrdoError(
-        `无法连接后端（${axiosErr.code}）。请确认 server 已启动，或执行 apm config set backend <url>`,
+        `无法连接后端（${axiosErr.code}）。请确认 server 已启动，或执行 ordo config set backend <url>`,
         ExitCode.BACKEND_UNREACHABLE,
       );
     }
@@ -70,7 +70,7 @@ export function parseBackendError(err: unknown): OrdoError {
 
     if (status === 401) {
       return new OrdoError(
-        message || '认证失败或登录已过期，请执行 apm login',
+        message || '认证失败或登录已过期，请执行 ordo login',
         ExitCode.AUTH,
         errorCode,
         data?.requestId,

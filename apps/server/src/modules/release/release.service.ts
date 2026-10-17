@@ -706,7 +706,7 @@ export class ReleaseService {
     });
     const releases = await this.listReleases(projectId);
     const lines = [
-      '<!-- apm:derived-file:changelog 派生自 Release 实体，请勿手改；发版时自动再生 -->',
+      '<!-- ordo:derived-file:changelog 派生自 Release 实体，请勿手改；发版时自动再生 -->',
       '# Changelog',
       '',
       `${project?.name ?? '项目'}的发版日志。`,

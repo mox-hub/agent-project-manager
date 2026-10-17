@@ -244,6 +244,6 @@ export class DocumentVersionService {
     } catch {
       // ignore
     }
-    return { name: 'APM User', email: `${userId}@ordo.local` };
+    return { name: 'Ordo User', email: `${userId}@ordo.local` };
   }
 }

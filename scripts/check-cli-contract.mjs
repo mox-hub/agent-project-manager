@@ -1,5 +1,5 @@
 /**
- * CLI 契约护栏：断言 openapi.json 包含 apm CLI / 守护进程依赖的关键端点。
+ * CLI 契约护栏：断言 openapi.json 包含 ordo CLI / 守护进程依赖的关键端点。
  *
  * 目的：防止后端重构时悄然删除/改签 CLI 依赖的端点，导致 CLI 在 build 后仍可
  * 编译但运行时 404。缺失时退出码 1。

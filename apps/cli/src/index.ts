@@ -15,7 +15,7 @@ async function main() {
 
   program
     .name('ordo')
-    .description('Agent Project Manager CLI（瘦客户端直连后端 REST）')
+    .description('Ordo CLI（瘦客户端直连后端 REST）')
     .version('0.1.0')
     .option('--backend <url>', '后端地址（覆盖配置）')
     .option('--workspace <id>', '工作区 id（注入 x-workspace-id）')
@@ -32,13 +32,13 @@ async function main() {
 }
 
 main().catch((err: unknown) => {
-  const apmErr =
+  const ordoErr =
     err instanceof OrdoError
       ? err
       : new OrdoError(err instanceof Error ? err.message : String(err));
-  console.error(`错误：${apmErr.message}`);
-  if (apmErr.backendErrorCode) {
-    console.error(`后端错误码：${apmErr.backendErrorCode}`);
+  console.error(`错误：${ordoErr.message}`);
+  if (ordoErr.backendErrorCode) {
+    console.error(`后端错误码：${ordoErr.backendErrorCode}`);
   }
-  process.exit(apmErr.exitCode);
+  process.exit(ordoErr.exitCode);
 });

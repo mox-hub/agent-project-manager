@@ -197,7 +197,7 @@ describe('ReleasePublishService（发布执行状态机）', () => {
         } as never,
         bus as never,
         { exportChangelog: async () => ({ exported: false }) } as never,
-        { resolveRoot: async () => 'C:/ws/apm' } as never,
+        { resolveRoot: async () => 'C:/ws/ordo' } as never,
         {
           getClientForIntegration: async () => ({
             createTagRef: async () => ({}),

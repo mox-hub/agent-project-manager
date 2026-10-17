@@ -139,7 +139,7 @@ function makePrisma(
             type: 'bug',
             priority: 'high',
             status: 'todo',
-            project: { name: 'APM', projectCode: 'APM' },
+            project: { name: 'Ordo', projectCode: 'Ordo' },
           },
         ].find((i) => i.id === args.where.id) as unknown) ?? null,
     },
@@ -427,7 +427,7 @@ describe('PromptService（REST 面）', () => {
         scope: 'project',
         projectId: 'p1',
         key: PROJECT_PROMPT_CONFIG_KEY,
-        value: 'APM 侧约定',
+        value: 'Ordo 侧约定',
       },
     ]);
     const agentsSync = {
@@ -470,9 +470,9 @@ describe('PromptService（REST 面）', () => {
     const service = new PromptService(db as never, agentsSync as never);
     const result = await service.updateConfig({
       projectId: 'p1',
-      projectPrompt: '只有 APM 侧',
+      projectPrompt: '只有 Ordo 侧',
     });
-    expect(result.projectPrompt).toBe('只有 APM 侧');
+    expect(result.projectPrompt).toBe('只有 Ordo 侧');
     expect(result.agentsSync).toEqual({
       synced: false,
       reason: '项目未绑定本地工作区',

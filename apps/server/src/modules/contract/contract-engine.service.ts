@@ -178,7 +178,7 @@ export class ContractEngineService {
    * 写入 ordo_ 命名空间的 frontmatter 字段：人工字段原样保留，ordo_ 前缀
    * 字段整体由本入参替换。坏 frontmatter 的文件保守跳过（不重写）。
    */
-  setOrdoFrontmatter(raw: string, apmFields: Record<string, unknown>): string {
+  setOrdoFrontmatter(raw: string, ordoFields: Record<string, unknown>): string {
     let parsed: { data: Record<string, unknown>; content: string };
     try {
       parsed = matter(raw);
@@ -189,7 +189,7 @@ export class ContractEngineService {
     for (const key of Object.keys(humanData)) {
       if (key.startsWith('ordo_')) delete humanData[key];
     }
-    const next = { ...humanData, ...apmFields };
+    const next = { ...humanData, ...ordoFields };
     if (Object.keys(next).length === 0) return parsed.content;
     let out = matter.stringify(parsed.content, next);
     // gray-matter.stringify 会在 content 不以换行结尾时补一个尾换行，

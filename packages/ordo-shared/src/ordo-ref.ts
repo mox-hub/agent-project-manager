@@ -2,7 +2,7 @@
  * ordo:// 实体引用方言（契约与文档知识层 v2 纪要 §13）。
  *
  * 文本层形态：标准 CommonMark 链接，href = ordo://{projectCode}/{kind}/{shortId}
- * 如 `ordo://apm/doc/D17`。纯函数、无 IO——解析责任分层：
+ * 如 `ordo://ordo/doc/D17`。纯函数、无 IO——解析责任分层：
  *   - 本模块：方言 parse/format/应用路由前缀映射（双端同源）；
  *   - 后端：kind=doc 的 shortId → 实体（Document.findOne 兼容 shortId 查询）；
  *   - 前端：chip 渲染 + 点击展开（expandOrdoRefToPath → react-router navigate）。
@@ -53,7 +53,7 @@ export function isOrdoRef(href: string | null | undefined): href is string {
 
 /**
  * 解析 ordo://{projectCode}/{kind}/{shortId}。
- * 容错：scheme 大小写不敏感、`apm:/`（单斜杠）归一；
+ * 容错：scheme 大小写不敏感、`ordo:/`（单斜杠）归一；
  * projectCode/shortId 非空、kind 必须在枚举内；其余形态返回 null。
  */
 export function parseOrdoRef(href: string | null | undefined): OrdoRef | null {

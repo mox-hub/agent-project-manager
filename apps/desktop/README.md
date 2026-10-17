@@ -121,9 +121,9 @@ tag 必须与 package.json version 一致（electron-builder 以 `v{version}` �
 ## 用户数据位置
 
 `~/.ordo/`（用户主目录，固定不受安装位置影响；与手动 CLI 的 config.json 同根）。
-安装器在安装期校验该目录：已存在 = 升级安装（提示且数据全保留），应用首启时若
-检测到 v0.6.1 旧版数据（`%APPDATA%\agent-project-manager\`）会自动迁移并留档
-（`.migrated.bak`）。Chromium 自身 profile（缓存/LocalStorage）单独放 `~/.ordo/electron/`。
+安装器在安装期校验该目录：已存在 = 升级安装（提示且数据全保留）。v0.6.1 旧版
+`%APPDATA%gent-project-manager\` 数据不再自动迁移（ADR-020 无兼容裁决，如需
+保留请手工移动到 `~/.ordo/`）。
 
 | 路径 | 内容 |
 |------|------|

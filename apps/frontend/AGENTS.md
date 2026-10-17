@@ -9,7 +9,7 @@
 
 ## 1. 项目整体介绍
 
-Agent Project Manager (APM) 是一个 AI 驱动的项目管理工具。前端为单页应用（SPA），采用 **React 19 + Vite 7 + TypeScript 5 + TailwindCSS 4**，UI 组件为 **shadcn/ui 官方配方（base-ui 原语）+ 产品自研组件** 构建。
+Ordo 是一个 AI 驱动的项目管理工具。前端为单页应用（SPA），采用 **React 19 + Vite 7 + TypeScript 5 + TailwindCSS 4**，UI 组件为 **shadcn/ui 官方配方（base-ui 原语）+ 产品自研组件** 构建。
 
 ### 技术栈
 

@@ -114,9 +114,9 @@ export const ISSUE_DRAFT_DEFINITION: V2WorkflowDoc = {
   ],
 };
 
-// ── APM 研发流程内置模板（2026-09-18 内化，2026-09-26 v2 化）──
+// ── Ordo 研发流程内置模板（2026-09-18 内化，2026-09-26 v2 化）──
 // 把仓库自身已验证的四条研发工作流（需求承接 / 开发主线 / 发版管道 / 夜航巡检）
-// 经 v2 节点树文法入账 AIWorkflowDefinition——APM 用自己管自己。
+// 经 v2 节点树文法入账 AIWorkflowDefinition——Ordo 用自己管自己。
 // 走查型模板步骤全部 human 节点：每站人工打卡，message 承载该站 SOP 与已知坑；
 // 承接型模板按「代写→确认→把关→产出」主线语法（闸门后步骤进 condition.then），可直接运行。
 
@@ -134,7 +134,8 @@ export const ORDO_REQUIREMENT_INTAKE_DEFINITION: V2WorkflowDoc = {
       id: 'conflict-draft',
       type: 'llm',
       title: '入口初筛（AI 代写）',
-      system: '你是 APM 需求治理助手，用简体中文输出，克制、具体、不堆形容词。',
+      system:
+        '你是 Ordo 需求治理助手，用简体中文输出，克制、具体、不堆形容词。',
       prompt:
         '针对需求「{input.requirement}」做入口初筛：① 疑似重复或冲突的既有能力方向；② 可能影响的功能域；③ 判定（新能力 / 既有变更 / 废弃）。',
     },
@@ -142,7 +143,7 @@ export const ORDO_REQUIREMENT_INTAKE_DEFINITION: V2WorkflowDoc = {
       id: 'six-questions',
       type: 'llm',
       title: '六问评审起草',
-      system: '你是 APM 需求治理助手，用简体中文输出。',
+      system: '你是 Ordo 需求治理助手，用简体中文输出。',
       prompt:
         '基于需求与初筛，起草六问评审：① 用户价值 ② 范围边界 ③ 验收标准 ④ 成本（Token+工时） ⑤ 风险与依赖 ⑥ 优先级建议。\n需求：{input.requirement}\n初筛结论：{steps.conflict-draft.value}',
     },
@@ -361,7 +362,7 @@ export const ORDO_NIGHT_PATROL_DEFINITION: V2WorkflowDoc = {
       id: 'report',
       type: 'llm',
       title: '④ 巡检报告起草',
-      system: '你是 APM 质量巡检助手，用简体中文输出，克制、具体、结论先行。',
+      system: '你是 Ordo 质量巡检助手，用简体中文输出，克制、具体、结论先行。',
       prompt:
         '汇总夜航巡检为一份报告：① 门禁结果一览 ② 自修清单 ③ 待人工处置项（文件:行号 + 根因）。\n门禁记录：{steps.gate-run.note}\n自修记录：{steps.autofix.note}\n定位记录：{steps.locate.note}',
     },
@@ -402,28 +403,28 @@ export const BUILTIN_WORKFLOW_TEMPLATES: Array<{
   },
   {
     key: ORDO_REQUIREMENT_INTAKE_KEY,
-    name: '需求承接六步流（内置：APM 研发流程）',
+    name: '需求承接六步流（内置：Ordo 研发流程）',
     description:
       'AI 初筛 + 六问评审起草 → 人工裁决闸门 → 裁决归档 → 开工登记建卡；对齐 requirement-intake skill，未进清单不得开工',
     definition: ORDO_REQUIREMENT_INTAKE_DEFINITION,
   },
   {
     key: ORDO_DEV_MAINLINE_KEY,
-    name: '功能开发主线走查（内置：APM 研发流程）',
+    name: '功能开发主线走查（内置：Ordo 研发流程）',
     description:
       '清单闸门 → 契约先行 → 分支实现 → quality:gate 七连 → 文档与变更账 → PR 评审合入 develop；六站逐站人工打卡',
     definition: ORDO_DEV_MAINLINE_DEFINITION,
   },
   {
     key: ORDO_RELEASE_PIPELINE_KEY,
-    name: '发版管道走查（内置：APM 研发流程）',
+    name: '发版管道走查（内置：Ordo 研发流程）',
     description:
       'CHANGELOG 归版 → 全量门禁 → release PR（develop→pre-prod→main）→ 打 tag → 发版草案落库 → 核对 → GitHub Release 人工 Publish',
     definition: ORDO_RELEASE_PIPELINE_DEFINITION,
   },
   {
     key: ORDO_NIGHT_PATROL_KEY,
-    name: '夜航巡检走查（内置：APM 研发流程）',
+    name: '夜航巡检走查（内置：Ordo 研发流程）',
     description:
       '跑满质量门禁 → 机械自修安全项 → 失败定位到 文件:行号 → AI 起草巡检报告 → 报告落库；对齐夜航质检流程',
     definition: ORDO_NIGHT_PATROL_DEFINITION,

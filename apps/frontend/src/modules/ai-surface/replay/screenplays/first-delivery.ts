@@ -33,7 +33,7 @@ const iso = (offsetMs: number) => new Date(STORY_AT_MS + offsetMs).toISOString()
 /** 本次演示里唯一那次执行——工位卡的进展靠它对齐（`subjectId === currentRun.id`） */
 const RUN_ID = 'run-export-1';
 const PROJECT_ID = 'sample-project-1';
-const PROJECT_NAME = '示例项目：Agent Project Manager';
+const PROJECT_NAME = '示例项目：Ordo';
 
 /** 同事档案：同一份底稿在多帧之间复用，只覆盖当帧变化的部分 */
 function colleague(

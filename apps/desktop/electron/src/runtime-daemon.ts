@@ -24,7 +24,7 @@ interface RuntimeConfigShape {
   daemon?: Record<string, unknown>;
 }
 
-export function readApmRuntimeConfig(config: AppConfig): RuntimeConfigShape {
+export function readOrdoRuntimeConfig(config: AppConfig): RuntimeConfigShape {
   try {
     return JSON.parse(fs.readFileSync(config.ordoConfigPath, 'utf-8')) as RuntimeConfigShape;
   } catch {
@@ -34,12 +34,12 @@ export function readApmRuntimeConfig(config: AppConfig): RuntimeConfigShape {
 
 /** 守护进程的 AI 执行工作根目录（初始化向导「工作目录」步骤写入，守护进程每次启动读取）。 */
 export function readWorkspaceRoots(config: AppConfig): string[] {
-  return readApmRuntimeConfig(config).runtime?.workspaceRoots ?? [];
+  return readOrdoRuntimeConfig(config).runtime?.workspaceRoots ?? [];
 }
 
 export function writeWorkspaceRoots(config: AppConfig, roots: string[]): string[] {
   const cleaned = [...new Set(roots.map((r) => r.trim()).filter(Boolean))];
-  const current = readApmRuntimeConfig(config);
+  const current = readOrdoRuntimeConfig(config);
   const next: RuntimeConfigShape = {
     ...current,
     runtime: { ...current.runtime, workspaceRoots: cleaned },

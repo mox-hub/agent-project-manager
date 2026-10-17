@@ -83,7 +83,7 @@ afterAll(async () => {
 });
 
 describe('ExecutionWorktreeService', () => {
-  it('prepareWorktree：建隔离 worktree + apm/exec 分支 + 幂等补 .gitignore', async () => {
+  it('prepareWorktree：建隔离 worktree + ordo/exec 分支 + 幂等补 .gitignore', async () => {
     const prep = await service.prepareWorktree(repoRoot, 'exec_abcd1234');
 
     expect(prep.branch).toBe(`${WORKTREE_BRANCH_PREFIX}abcd1234`);
@@ -178,7 +178,7 @@ describe('ExecutionWorktreeService', () => {
       prep.baseRef,
       {
         message: 'chore(ordo): execution uncomm001 snapshot',
-        author: { name: 'APM Execution', email: 'execution@ordo.local' },
+        author: { name: 'Ordo Execution', email: 'execution@ordo.local' },
       },
     );
     expect(changes.hasChanges).toBe(true);

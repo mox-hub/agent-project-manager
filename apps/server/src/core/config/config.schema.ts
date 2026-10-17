@@ -31,7 +31,7 @@ export const configSchema = Joi.object({
   MAIL_SMTP_PORT: Joi.number().default(587),
   MAIL_SMTP_USER: Joi.string().optional(),
   MAIL_SMTP_PASS: Joi.string().optional(),
-  MAIL_FROM: Joi.string().default('APM <no-reply@ordo.local>'),
+  MAIL_FROM: Joi.string().default('Ordo <no-reply@ordo.local>'),
 
   // AI (optional)
   AI_OPENAI_API_KEY: Joi.string().optional(),

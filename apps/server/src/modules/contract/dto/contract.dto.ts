@@ -27,7 +27,7 @@ export class SeedContractFilesDto {
 
   @ApiPropertyOptional({
     description:
-      '格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间',
+      '格式化纳管：已有文件仅并入 ordo_ frontmatter 并建 synced 观察绑定，不注入托管区间',
   })
   @IsOptional()
   @IsBoolean()

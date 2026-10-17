@@ -6,7 +6,7 @@
  * - 版本探测：`gemini --version`
  * - 非交互入口：`gemini -p <prompt>`（-p 强制 non-interactive；非 TTY 自动 headless）
  * - 全权限：`--approval-mode yolo`（`--yolo/-y` 已标记 Deprecated 不用；值闭集
- *   default/auto_edit/yolo/plan，APM permissionMode 合法值映射、非法回落 yolo）
+ *   default/auto_edit/yolo/plan，Ordo permissionMode 合法值映射、非法回落 yolo）
  * - `--output-format stream-json`：stdout 为 NDJSON 事件流，**原生信封（非 Claude 风格）**：
  *   `{type:"init",session_id?,model}` → `{type:"message",role,content,delta?}` →
  *   `{type:"tool_use",tool_id,tool_name,parameters}` → `{type:"tool_result",tool_id,output}` →

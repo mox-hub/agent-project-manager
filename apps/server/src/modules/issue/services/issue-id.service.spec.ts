@@ -49,7 +49,7 @@ describe('IssueIdService.nextShortId 全局序列自愈跳号', () => {
     const upsertSpy = vi.fn().mockResolvedValue({});
     const prisma = {
       appConfig: {
-        findFirst: vi.fn().mockResolvedValue(null), // 未配置 → APM
+        findFirst: vi.fn().mockResolvedValue(null), // 未配置 → ORDO
       },
       $transaction: vi.fn(async (fn: (tx: any) => Promise<number>) =>
         fn({

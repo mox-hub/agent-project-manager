@@ -1,7 +1,7 @@
 // issue-id.service.ts - 短 ID 生成器
 //
 // 两段式全局短 ID: {前缀}-{全局递增序号}，如 "MOX-1"、"MOX-99"、"MOX-139"。
-//   - 前缀读全局配置 task.shortIdPrefix（未配置回落 APM），改前缀只影响新号
+//   - 前缀读全局配置 task.shortIdPrefix（未配置回落 ORDO），改前缀只影响新号
 //   - 序号来自全局唯一序列（GlobalSequence），与项目/模块无关：
 //     创建、跨项目移动、修改其他属性都不改变 shortId，shortId 生命周期 = 任务生命周期
 //   - 事务内自增 + 跳过被占用序号（存量/导入导致计数器落后时自愈）

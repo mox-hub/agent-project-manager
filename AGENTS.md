@@ -69,7 +69,7 @@ Ordo (Ordo) 是一个 **AI 驱动的项目管理工具**，采用**双表面架�
 ## 四、仓库结构（pnpm 11 + turbo 2 + pnpm catalog）
 
 ```
-agent-project-manager/
+ordo/
 ├── apps/
 │   ├── server/        # NestJS 10 + Prisma 6 (SQLite) —— 控制面 REST/WS + 执行核心 + 数据层
 │   ├── frontend/      # React 19 + Vite 7 + Tailwind 4 —— 人类控制面 (web)

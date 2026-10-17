@@ -8228,7 +8228,7 @@ export interface components {
             };
             /** @example ORDO-123 */
             projectCode?: string;
-            /** @example C:/Users/me/APM/docs */
+            /** @example C:/Users/me/Ordo/docs */
             documentsRepoPath?: string | null;
             /** @example rocket */
             icon?: string;
@@ -9943,7 +9943,7 @@ export interface components {
         SeedContractFilesDto: {
             /** @description 仅种生指定类型（缺省全量三件套） */
             fileTypes?: ("agents" | "claude_alias" | "changelog" | "readme" | "docs_dir")[];
-            /** @description 格式化纳管：已有文件仅并入 apm_ frontmatter 并建 synced 观察绑定，不注入托管区间 */
+            /** @description 格式化纳管：已有文件仅并入 ordo_ frontmatter 并建 synced 观察绑定，不注入托管区间 */
             formatOnly?: boolean;
         };
         SeedFileResultDto: {
@@ -14656,7 +14656,7 @@ export interface components {
             /** @description 变更文件数 */
             changedFiles?: number;
             /** @description Ordo 映射后的最终状态 */
-            apmState?: string;
+            ordoState?: string;
         };
         GitHubCreatePrResponseDto: {
             /** @description 是否成功 */

@@ -22,7 +22,7 @@ describe('parseOrdoRef', () => {
 
   it('scheme 大小写不敏感、单斜杠与多斜杠归一', () => {
     expect(parseOrdoRef('ORDO:/ordo/issue/ORDO-139')?.shortId).toBe('ORDO-139');
-    expect(parseOrdoRef('ordo:////apm/doc/D1')?.shortId).toBe('D1');
+    expect(parseOrdoRef('ordo:////ordo/doc/D1')?.shortId).toBe('D1');
   });
 
   it('kind 枚举外的返回 null', () => {
@@ -36,7 +36,7 @@ describe('parseOrdoRef', () => {
     expect(parseOrdoRef('ordo://ordo/doc/')).toBeNull();
   });
 
-  it('非 apm: 输入返回 null', () => {
+  it('非 ordo: 输入返回 null', () => {
     expect(parseOrdoRef('https://example.com')).toBeNull();
     expect(parseOrdoRef('/app/documents/abc')).toBeNull();
     expect(parseOrdoRef(null)).toBeNull();

@@ -32,7 +32,7 @@ export function createTray(handlers: {
     return null;
   }
   tray = new Tray(icon);
-  tray.setToolTip('Agent Project Manager');
+  tray.setToolTip('Ordo');
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: '显示主窗口', click: () => handlers.showMainWindow() },

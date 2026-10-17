@@ -77,9 +77,9 @@ describe('类型管理面扩展：字段类型 / defaultValue / description / en
       validateCustomFields(schema, { ref: 'ftp://x' }, 'create'),
     ).toThrow(BadRequestException);
     expect(
-      validateCustomFields(schema, { ref: 'https://apm.dev' }, 'create'),
+      validateCustomFields(schema, { ref: 'https://ordo.dev' }, 'create'),
     ).toEqual({
-      ref: 'https://apm.dev',
+      ref: 'https://ordo.dev',
     });
     expect(
       validateCustomFields(schema, { owner: 'member-1' }, 'create'),

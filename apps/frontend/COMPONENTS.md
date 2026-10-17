@@ -530,7 +530,7 @@
 | 工单类型胶囊 | `IssueTypePill`（shared/components/）：pill=图标+类型名+浅色底、frame=图标圆框 |
 | 实体图标注册表 | `EntityIcon`/`getEntityIcon`（shared/entity-icons/）：实体→图标+语义 tone 的唯一映射 |
 | Markdown 渲染/编辑 | `MarkdownView` / `MarkdownEditor` / `MarkdownLiveEditor`（shared/components/） |
-| 全局实体引用 | `SlashRefTextarea`（shared/entity-ref/）：`/` 触发补全；渲染侧 `ApmRefLink` |
+| 全局实体引用 | `SlashRefTextarea`（shared/entity-ref/）：`/` 触发补全；渲染侧 `OrdoRefLink` |
 | 提示词编辑/查看 | `PromptEditor`（shared/components/） |
 | 决策卡/收件箱 | `DecisionCard`/`DecisionCardShell`（shared/decision-card/） |
 | 主 AI 助手 | `AssistantPanel` 等（modules/assistant/components/） |

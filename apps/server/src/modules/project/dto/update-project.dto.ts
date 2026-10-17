@@ -78,7 +78,7 @@ export class UpdateProjectDto {
 
   @ApiProperty({
     required: false,
-    example: 'C:/Users/me/APM/docs',
+    example: 'C:/Users/me/Ordo/docs',
     type: String,
     nullable: true,
   })

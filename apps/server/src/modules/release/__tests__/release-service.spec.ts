@@ -269,7 +269,7 @@ describe('ReleaseService（1b：Release 实体 + CHANGELOG 单向导出）', () 
     });
 
     const md = await releases.generateChangelog('proj-1');
-    expect(md).toContain('<!-- apm:derived-file:changelog');
+    expect(md).toContain('<!-- ordo:derived-file:changelog');
     expect(md.indexOf('## [0.2.0] - 2026-09-08')).toBeLessThan(
       md.indexOf('## [0.1.0] - 2026-09-01'),
     );

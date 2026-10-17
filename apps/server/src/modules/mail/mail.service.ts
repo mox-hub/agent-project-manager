@@ -72,7 +72,7 @@ export class MailService {
     try {
       await transporter.sendMail({
         from: (this.config.get('MAIL_FROM') ??
-          'APM <no-reply@ordo.local>') as string,
+          'Ordo <no-reply@ordo.local>') as string,
         to: input.to,
         subject: input.subject,
         html: input.body,
@@ -105,7 +105,7 @@ export class MailService {
     const link = `${baseUrl.replace(/\/$/, '')}/invite/${params.token}`;
     const body = `
       <h2>加入团队「${params.teamName}」</h2>
-      <p>${params.inviterName} 邀请你以「${params.role}」身份加入 APM 团队「${params.teamName}」。</p>
+      <p>${params.inviterName} 邀请你以「${params.role}」身份加入 Ordo 团队「${params.teamName}」。</p>
       <p>点击以下链接接受邀请（过期前有效）：</p>
       <p><a href="${link}">${link}</a></p>
       <p>如果你没有账号，可先通过该链接注册。</p>
@@ -130,8 +130,8 @@ export class MailService {
       'http://localhost:5173') as string;
     const link = `${baseUrl.replace(/\/$/, '')}/register?invite=${params.token}`;
     const body = `
-      <h2>注册 APM 账号</h2>
-      <p>${params.inviterName} 邀请你注册 APM（Ordo）账号。</p>
+      <h2>注册 Ordo 账号</h2>
+      <p>${params.inviterName} 邀请你注册 Ordo 账号。</p>
       <p>点击以下链接完成注册（${params.expiresAt.toLocaleString('zh-CN')} 前有效）：</p>
       <p><a href="${link}">${link}</a></p>
     `;
