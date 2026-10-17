@@ -23,6 +23,7 @@ tags: "changelog,release"
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
 | --- | --- | --- | --- | --- |
+| desktop pack/shell + server environment + frontend onboarding | **环境自足一期（CAP-A-30 开工，2026-10-17 用户裁决：git/node 随包 + AI CLI 首用按需装；推翻 2026-10-03「只检测不代装」显式入账）**：①pack.mjs staging 增 MinGit 2.47.1（git-for-windows 官方嵌入发行版；本地缓存 build/pack-cache + ORDO_PACK_GIT_URL 镜像口 + PowerShell Expand-Archive 解压[GNU tar 把 D:\ 当远程主机的坑]）与 npm 运行时树（打包机 node 自带，~25MB 剥 test/md）②壳侧 `withBundledEnv`——backend/daemon 拉起统一前插 PATH（resources/git/cmd + bin + userData/tools）并注入 ORDO_BUNDLED_NODE/ORDO_BUNDLED_NPM_CLI/ORDO_TOOLS_DIR，派发链免预装 ③server environment 模块扩安装作业：POST /environment/install（包名服务端白名单 claude-code/codex/opencode + 受控 prefix `~/.ordo/tools` 不碰系统全局）+ GET install/:jobId 轮询；状态机含 10m 超时强杀/同工具并发 409/安装器缺失 422/日志尾 16KB；ORDO_ENV_INSTALL_STUB 测试零网络口 ④引导环境步一键安装按钮+1.5s 轮询+失败回落手动指引（安装中徽注/错误文案/手动命令保留）⑤契约三件套再生零漂移；包体代价约 +135MB（git 112+npm 25） | CAP-A-30（A-14 边界「分发评估留二期」升格立卡；§4.1 升 30 卡）| environment 模块 13 例（状态机 8：runner 拼参/成败终态/白名单 422/并发 409/无安装器 422/超时/未知作业）+ e2e 5 例（stub runner 零网络全链）+ 前端环境步 7 例（一键安装四态）+ server/desktop/frontend tsc 0 错 + 触及文件 lint 0 error + desktop:pack 实跑（随包 git 2.47.1 与 npm 11.19.1 冒烟过） | 能力清单 §4.1 30 卡 + A-14 边界注记 + §七变更记录；测试映射矩阵 GAP-T-70（真机冒烟余留） |
 
 ## [0.8.0-beta] - 2026-10-17
 
