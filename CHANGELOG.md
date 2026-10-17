@@ -23,9 +23,20 @@ tags: "changelog,release"
 
 | 模块 | 变更 | linked_fr | test_evidence | doc_impact |
 | --- | --- | --- | --- | --- |
+
+## [0.8.0-beta] - 2026-10-17
+
+### v0.8.0-beta 发版总览——品牌换代 apm → Ordo 全仓迁移 + 移动端 M0 材料入库（0.8.0 归版批一并首发）
+
+> 内测声明（pre-release 标记）：本 beta 一并首发尚未 tag 的 [0.8.0] 归版批（第一公里闭环/交付出口/argv 预检/内测反馈渠道，已知限制承其内测声明）。**品牌换代无兼容包袱（用户裁决，ADR-020）**：存量 PAT（apm_pat_ 前缀）、实体引用 apm://、数据目录 ~/.apm、localStorage 键、CLI 可执行名（apm/apm-runtime → ordo/ordo-runtime）直接换代失效，不做迁移 shim；已装 v0.7.x 用户升级后须重新生成 PAT 并重配 CLI Provider 与工作区。
+
+| 模块 | 变更 | linked_fr | test_evidence | doc_impact |
+| --- | --- | --- | --- | --- |
 | docs(design mobile) + 需求治理 | **移动端建设 M0 前期材料全套落地（新立 M 线，v0.8.0 后推进前沿）：产能材料零代码，全部落 `docs/design/mobile/`（docs/ 唯一入库例外）**：①需求治理闸门五步——能力清单新立 **§4.8 M 移动线 10 卡**（`CAP-M-01…M-10`，全 `planned`，逐卡含价值/边界/依赖/@测试 GAP-T-69/六问作答）+ §七变更记录行 + 测试映射矩阵 `GAP-T-69` 占位登记（M 线零实现代码，开工时逐卡拆细）②设计规范**另立独立卷** `PRINCIPLES-MOBILE.md`（`scope: apps/mobile`，13 章 + M-D1…M-D13 决策记录）——前端宪法效力链依赖 `apps/frontend/scripts/check-*.mjs`（扫 Tailwind 类名/CSS 产物）对 RN 不适用，并入会失去机器镜像，故不并入；`PRINCIPLES.md` §15.2「桌面优先/1024 基线/不做手机版适配」**原文保留** + 追加交叉引用（不静默覆盖，经用户裁决）③技术选型 `ADR-M-001`（Expo + RN 裁决、六候选排除、遗留风险 R1-R6、spike 七步跑法 + 判据 1-7）+ 决策日志 **ADR-018** 登记（移动端命名空间避开既有全局 ADR-001）④交互契约 `交互模式-原语映射.md`（P1-P18 桌面原语→移动替代 + C1-C6 冲突裁决 + N1-N6 新原语 + X1-X8 不迁移清单）⑤`页面蓝图.md`（Stack+Tab 导航树、页清单含真实端点、深链映射复用 Web 路由、数据/状态策略、MVP 边界）⑥`能力卡-M线-副本.md`（可评审副本，账本真相源为 §4.8）⑦`工程接入方案.md`（`.github/workflows/quality-gate.yml` 分类器静默失效根因 + `test-mobile` job、`packages/ordo-contract` 抽包、契约单源化四步含删 `packages/ordo-shared/src/generated/api-types.gen.ts` 手工滞后产物【实测 50812 vs 50923 行、无生成器无 import】与纠正 `AGENTS.md` L167/L190/`architecture.md` L190「双份生成」不实表述、knip/lint-staged/Rust 治理脚本候选）⑧`后端适配清单.md`（B1-B7 分级阻断/增强 + §3.2 已核无需改实测证据；**核心结论：除推送全链 B1+B2 外一期 MVP 全部读/写路径后端已具备——移动端是客户端项目不是后端项目**）⑨`测试策略.md`（L1-L6 分层 + CI 边界 + D1-D12 降级流【D7 决策指纹拒批/D8 审计缺失不默认通过为红线】+ 双轴质量 + GAP-T-69 逐卡拆解）⑩`发布与分发方案.md`（EAS 三件套、iOS/Android 签名凭据纪律、OTA/runtimeVersion、版本号与 PC 契约对齐、发版前检查单、凭据红线）⑪`排期与出口判据.md`（M0-M3 阶段与逐阶段出口 + PC 0.8.x/0.9.x 并行咬合 + 五项 PC 周期内前置 + 风险回退点）+ `README.md` 总索引（12 项材料状态表）| CAP-M-01…M-10（M 线新立，全 `planned`）| **M0 期零移动端实现代码**：材料质量验证 = `git ls-files docs/design/mobile` 12 项齐 + 每份含 frontmatter（过 `check-doc-sync` Check 2）+ 每条 `[MUST]` 均指向 `check-*.mjs` 或登记「评审 + 机器化候选」；技术 spike（判据 1-7）**待单独确认后创建 `apps/mobile` 试验工程**（M0 唯一会写 docs/design 之外代码的动作，未确认前保持「待跑」） | 能力清单 §4.8 M 线 10 卡 + §七变更记录；测试映射矩阵 GAP-T-69；PRINCIPLES.md §15.2 交叉引用（原文保留）；决策日志 ADR-018；docs/design/mobile/ 12 份材料入库 |
 
 | chore(brand) 全仓 | **品牌换代 apm → Ordo 全仓迁移（分支 `chore/ordo-rebrand`，用户裁决无兼容包袱：存量 PAT / localStorage 键 / 深链注册 / 文档内 apm:// 链接直接换代失效，不做迁移 shim）**：①包体系 `@apm/*`→`@ordo/*`、`packages/apm-shared`→`packages/ordo-shared`、根包名 ordo ②CLI bin `apm`/`apm-runtime`→`ordo`/`ordo-runtime`（命令教学文案全套联动）③运行时面 `~/.apm`→`~/.ordo`、`data/apm.db`→`ordo.db`、环境变量族 `APM_*`→`ORDO_*`、PAT 前缀 `apm_pat_`→`ordo_pat_`、壳桥 `__ORDO_DESKTOP__`、`mcpServers.ordo` ④实体引用方言 `apm://`→`ordo://`（ORDO_REF_SCHEME 单源 + AI 提示词生产者 + DTO 契约描述）⑤文档托管协议 `apm:managed`→`ordo:managed` + frontmatter `apm_*`→`ordo_*`（本仓 AGENTS.md 同批迁移）⑥桌面 `com.ordo.desktop` / productName Ordo / 深链 scheme ordo / v0.6 旧版 appData 迁移代码退役 ⑦工单新号前缀 APM→ORDO（历史号保留）⑧显示面 openapi title / mail / prompt 模板 / seed / logger / i18n 双语全量 ⑨template.db 重建（admin@ordo.local，integrity ok）⑩GitHub 仓库改名 mox-hub/ordo + electron-builder publish.repo 同步 | 全局（ADR-020）| quality:gate 全链 + contract:check 零漂移 + check:i18n-sync 5323 键 + check:docs-sync 32 governed + 全仓测试绿 | AGENTS/architecture/README/DESIGN/PRINCIPLES/mobile 卷品牌口径统一；决策日志 ADR-020；命名方案文档未决事项落账；历史条目保留旧名不改写 |
+
+| desktop | 桌面版本对齐 0.8.0-beta（tag 与包版本一致，electron-builder 以 v{version} 命名 Release；prerelease 渠道——stable 0.7.x 安装默认不收 beta 更新，beta 安装收后续 beta/rc） | 版本对齐 | quality:gate 全链绿（type-check/lint/全仓 test/contract:check/server e2e/api:audit/docs-sync）+ draft 三资产自检 | — |
 
 ## [0.8.0] - 2026-10-11
 
