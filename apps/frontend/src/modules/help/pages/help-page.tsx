@@ -331,7 +331,7 @@ export function HelpPage() {
               {t('help.feedback.description')}
             </p>
             <a
-              href="https://github.com/mox-hub/agent-project-manager/issues/new/choose"
+              href="https://github.com/mox-hub/ordo/issues/new/choose"
               target="_blank"
               rel="noreferrer"
               className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-foreground transition-colors hover:bg-muted/50"

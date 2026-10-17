@@ -24,7 +24,7 @@ tags: "docs,index,readme"
 
 **方式一：桌面版（推荐）**
 
-1. 到 [Releases](https://github.com/mox-hub/agent-project-manager/releases) 下载最新 Windows 安装包（`.exe`）并安装；
+1. 到 [Releases](https://github.com/mox-hub/ordo/releases) 下载最新 Windows 安装包（`.exe`）并安装；
 2. 首启注册账号（首个注册用户自动成为管理员），引导向导会带你完成：工作目录 → 环境检查 → 建第一个项目 → 连接仓库 → 配置 AI；
 3. 「配置 AI」步填入模型服务的 API Key（支持 OpenAI / Anthropic / GLM / DeepSeek 等），测试通过后 Ordo 会自动创建你的第一个 AI 员工；
 4. 到项目里建一张工单，指派给 AI 员工——它会读取需求、隔离执行、回来提交验收。
@@ -44,7 +44,7 @@ pnpm dev          # server :4300 + frontend :5173
 - 至少一个 AI CLI（Claude Code / Codex / ZCode 等，按你要用的 AI 员工而定）；
 - 一个模型服务的 API Key。
 
-> 已知限制见对应 Release 的发布说明：远程/移动端访问暂不可用；部分新接入的 CLI Provider（gemini/qwen/codebuddy/grok）为文档级接入未实测。遇到问题欢迎 [提 issue](https://github.com/mox-hub/agent-project-manager/issues/new/choose)。
+> 已知限制见对应 Release 的发布说明：远程/移动端访问暂不可用；部分新接入的 CLI Provider（gemini/qwen/codebuddy/grok）为文档级接入未实测。遇到问题欢迎 [提 issue](https://github.com/mox-hub/ordo/issues/new/choose)。
 
 ## 文档入口
 

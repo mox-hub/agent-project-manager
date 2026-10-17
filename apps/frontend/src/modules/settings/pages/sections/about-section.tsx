@@ -23,8 +23,8 @@ import { FavoriteToggle } from '@/shared/components/favorite-toggle';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-const RELEASES_URL = 'https://github.com/mox-hub/agent-project-manager/releases';
-const REPO_URL = 'https://github.com/mox-hub/agent-project-manager';
+const RELEASES_URL = 'https://github.com/mox-hub/ordo/releases';
+const REPO_URL = 'https://github.com/mox-hub/ordo';
 
 export function AboutSection() {
   const { t } = useTranslation();

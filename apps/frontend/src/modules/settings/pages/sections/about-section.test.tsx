@@ -62,7 +62,7 @@ describe('AboutSection', () => {
     const hrefs = Array.from(view.container.querySelectorAll('a[href]')).map((a) =>
       a.getAttribute('href'),
     );
-    expect(hrefs).toContain('https://github.com/mox-hub/agent-project-manager/releases');
-    expect(hrefs).toContain('https://github.com/mox-hub/agent-project-manager');
+    expect(hrefs).toContain('https://github.com/mox-hub/ordo/releases');
+    expect(hrefs).toContain('https://github.com/mox-hub/ordo');
   });
 });

@@ -37,7 +37,7 @@ win:
 publish:
   provider: github
   owner: mox-hub
-  repo: agent-project-manager
+  repo: ordo
 nsis:
   # 向导模式：允许用户自选安装位置（oneClick 单击安装无目录选择页）
   oneClick: false
