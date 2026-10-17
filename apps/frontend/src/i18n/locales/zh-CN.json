@@ -6347,7 +6347,10 @@
       "copy": "复制",
       "copied": "已复制",
       "officialSite": "官方下载",
-      "installHint": "复制命令到终端执行即可；安装后可能需要重启 Ordo 才能识别新装的命令行工具。环境也可以稍后再配，不影响继续使用。"
+      "installHint": "复制命令到终端执行即可；安装后可能需要重启 Ordo 才能识别新装的命令行工具。环境也可以稍后再配，不影响继续使用。",
+      "install": "一键安装",
+      "installing": "安装中…",
+      "installFailed": "安装失败"
     },
     "welcome": {
       "title": "欢迎使用 Ordo",

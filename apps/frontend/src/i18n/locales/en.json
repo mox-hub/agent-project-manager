@@ -6347,7 +6347,10 @@
       "copy": "Copy",
       "copied": "Copied",
       "officialSite": "Download",
-      "installHint": "Copy the command into your terminal. You may need to restart Ordo after installing so new CLI tools are picked up. The environment can also be set up later — it won't block you."
+      "installHint": "Copy the command into your terminal. You may need to restart Ordo after installing so new CLI tools are picked up. The environment can also be set up later — it won't block you.",
+      "install": "Install",
+      "installing": "Installing…",
+      "installFailed": "Install failed"
     },
     "welcome": {
       "title": "Welcome to Ordo",

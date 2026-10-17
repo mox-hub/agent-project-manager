@@ -2,16 +2,18 @@
  * 引导「环境检查」步骤（2026-10-03 改版切片；2026-10-11 七步统一批起双端共用）。
  *
  * 聚合 GET /environment 六项检测（node/git/claude-code/codex/zcode/opencode）：
- * 已装显版本；未装给平台对应安装命令（复制）+ 官方下载链接 + 重新检测。
- * 诚实化原则延续：Ordo 只检测+指引，不代装环境；步骤可跳过、不设门禁，
- * 检测结果不影响引导完成流程。检测走 server 端点，web/桌面天然同源。
+ * 已装显版本；未装的 npm 系 AI CLI 一键代装（CAP-A-30 环境自足：白名单 + 受控
+ * prefix，作业轮询），其余给平台安装命令（复制）+ 官方下载链接 + 重新检测。
+ * 步骤可跳过、不设门禁，检测结果不影响引导完成流程。检测走 server 端点，
+ * web/桌面天然同源。
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   CheckCircle,
   Copy,
+  Download,
   ExternalLink,
   GitBranch,
   Hexagon,
@@ -121,18 +123,57 @@ function ToolIcon({ meta, size = 16 }: { meta: ToolMeta; size?: number }) {
 function EnvironmentToolCard({
   tool,
   nodeInstalled,
+  installable,
+  onInstalled,
 }: {
   tool?: EnvironmentToolInfo;
   nodeInstalled: boolean;
+  /** 该工具在服务端 npm 白名单内，可一键代装（CAP-A-30） */
+  installable: boolean;
+  /** 安装成功后回调（父级重新拉取环境检测） */
+  onInstalled: () => void;
 }) {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [installError, setInstallError] = useState<string | null>(null);
   const meta = TOOL_META[tool?.key ?? ''] ?? { name: tool?.key ?? '' };
   const platform = useMemo(() => detectPlatform(), []);
   const installed = tool?.installed === true;
   const detectionUnavailable = !installed && tool?.error === 'Detection unavailable';
   const installCommand =
     meta.universalCommand ?? meta.commands?.[platform] ?? null;
+
+  const jobQuery = useQuery({
+    queryKey: ['environment-install', jobId],
+    queryFn: () => onboardingApi.getEnvironmentInstallJob(jobId as string),
+    enabled: !!jobId,
+    refetchInterval: (query) =>
+      query.state.data?.status === 'running' ? 1500 : false,
+  });
+  const job = jobQuery.data;
+  const installing = !!jobId && (!job || job.status === 'running');
+
+  useEffect(() => {
+    if (job?.status === 'succeeded') {
+      setJobId(null);
+      setInstallError(null);
+      onInstalled();
+    } else if (job?.status === 'failed') {
+      setJobId(null);
+      setInstallError(job.error ?? t('onboarding.environment.installFailed'));
+    }
+  }, [job?.status, job?.error, onInstalled, t]);
+
+  const handleInstall = async () => {
+    setInstallError(null);
+    try {
+      const started = await onboardingApi.installEnvironmentTool(tool?.key ?? '');
+      setJobId(started.jobId);
+    } catch (err) {
+      setInstallError(err instanceof Error ? err.message : String(err));
+    }
+  };
 
   const handleCopy = async () => {
     if (!installCommand) return;
@@ -145,6 +186,27 @@ function EnvironmentToolCard({
     }
   };
 
+  const statusBadge = installing ? (
+    <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-accent-yellow">
+      <RefreshCw className="size-3.5 animate-spin" />
+      {t('onboarding.environment.installing')}
+    </span>
+  ) : installed ? (
+    <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-accent-green">
+      <CheckCircle className="size-3.5" />
+      {t('onboarding.environment.installed')}
+    </span>
+  ) : detectionUnavailable ? (
+    <span className="shrink-0 text-xs text-muted-foreground">
+      {t('onboarding.environment.unknown')}
+    </span>
+  ) : (
+    <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-accent-red">
+      <XCircle className="size-3.5" />
+      {t('onboarding.environment.notInstalled')}
+    </span>
+  );
+
   return (
     <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3" data-testid={`env-tool-${tool?.key}`}>
       <div className="flex items-center gap-2">
@@ -152,25 +214,33 @@ function EnvironmentToolCard({
           <ToolIcon meta={meta} />
         </span>
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{meta.name}</span>
-        {installed ? (
-          <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-accent-green">
-            <CheckCircle className="size-3.5" />
-            {t('onboarding.environment.installed')}
-          </span>
-        ) : detectionUnavailable ? (
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {t('onboarding.environment.unknown')}
-          </span>
-        ) : (
-          <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-accent-red">
-            <XCircle className="size-3.5" />
-            {t('onboarding.environment.notInstalled')}
-          </span>
-        )}
+        {statusBadge}
       </div>
 
       {installed && tool?.version ? (
         <p className="pl-9 font-mono text-3xs text-muted-foreground">{tool.version}</p>
+      ) : null}
+      {!installed && !detectionUnavailable && installable ? (
+        <div className="space-y-1.5 pl-9">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 px-2.5 text-3xs"
+            disabled={installing}
+            onClick={() => void handleInstall()}
+          >
+            <Download className="mr-1 size-3" />
+            {installing
+              ? t('onboarding.environment.installing')
+              : t('onboarding.environment.install')}
+          </Button>
+          {installError ? (
+            <p className="text-3xs text-accent-red" title={installError}>
+              {installError}
+            </p>
+          ) : null}
+        </div>
       ) : null}
       {!installed && !detectionUnavailable && installCommand ? (
         <div className="space-y-1.5 pl-9">
@@ -225,6 +295,10 @@ export function EnvironmentStep() {
   });
 
   const tools = useMemo(() => query.data?.tools ?? [], [query.data]);
+  const installableTools = useMemo(
+    () => new Set(query.data?.installableTools ?? []),
+    [query.data],
+  );
   const byKey = useMemo(
     () => new Map(tools.map((tool) => [tool.key, tool])),
     [tools],
@@ -269,6 +343,8 @@ export function EnvironmentStep() {
             key={key}
             tool={byKey.get(key)}
             nodeInstalled={nodeInstalled}
+            installable={installableTools.has(key)}
+            onInstalled={() => void query.refetch()}
           />
         ))}
       </div>

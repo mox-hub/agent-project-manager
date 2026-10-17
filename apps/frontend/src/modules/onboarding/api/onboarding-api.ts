@@ -25,7 +25,22 @@ export interface EnvironmentToolInfo {
 /** GET /environment 响应（镜像 server EnvironmentReportDto） */
 export interface EnvironmentReport {
   tools: EnvironmentToolInfo[];
+  /** 可一键代装的工具键（npm 白名单，CAP-A-30） */
+  installableTools: string[];
   checkedAt: string;
+}
+
+/** POST /environment/install 作业（镜像 server EnvironmentInstallJobDto） */
+export interface EnvironmentInstallJob {
+  jobId: string;
+  tool: string;
+  package: string;
+  status: 'running' | 'succeeded' | 'failed';
+  startedAt: string;
+  finishedAt?: string | null;
+  exitCode?: number | null;
+  error?: string | null;
+  log: string;
 }
 
 /**
@@ -47,4 +62,10 @@ export const onboardingApi = {
     }),
   /** 本地基础环境检测（node/git/AI CLI）——引导「环境检查」步骤消费 */
   getEnvironment: () => api.get<EnvironmentReport>('/environment'),
+  /** 按需安装 AI CLI（npm 白名单，CAP-A-30）——非白名单/安装器缺失/重复发起会 4xx */
+  installEnvironmentTool: (tool: string) =>
+    api.post<EnvironmentInstallJob>('/environment/install', { tool }),
+  /** 安装作业状态轮询 */
+  getEnvironmentInstallJob: (jobId: string) =>
+    api.get<EnvironmentInstallJob>(`/environment/install/${jobId}`),
 };
