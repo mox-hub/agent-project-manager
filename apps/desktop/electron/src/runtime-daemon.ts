@@ -55,7 +55,7 @@ function assertCliEntry(config: AppConfig): void {
     return;
   }
   if (config.nodeExe === null) {
-    throw new Error(`未找到守护进程入口（${config.cliEntry}）。请先构建 CLI：pnpm --filter @apm/cli build`);
+    throw new Error(`未找到守护进程入口（${config.cliEntry}）。请先构建 CLI：pnpm --filter @ordo/cli build`);
   }
   throw new Error(`未找到守护进程入口（${config.cliEntry}）。安装包可能不完整，请重新安装。`);
 }

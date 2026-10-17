@@ -2,7 +2,7 @@
  * workspace：工作区列表 / 切换 / 创建
  */
 import { Command } from 'commander';
-import { getProfile, writeConfig } from '@apm/shared';
+import { getProfile, writeConfig } from '@ordo/shared';
 import { buildContext, out } from '../context';
 
 export function registerWorkspaceCommands(program: Command): void {

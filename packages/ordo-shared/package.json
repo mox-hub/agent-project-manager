@@ -1,7 +1,7 @@
 {
-  "name": "@apm/shared",
+  "name": "@ordo/shared",
   "version": "0.1.0",
-  "description": "APM 框架无关共享层：CLI 瘦客户端与 runtime 守护进程共用的协议/客户端/配置/CLI 适配器",
+  "description": "Ordo 框架无关共享层：CLI 瘦客户端与 runtime 守护进程共用的协议/客户端/配置/CLI 适配器",
   "private": true,
   "license": "UNLICENSED",
   "main": "dist/index.js",

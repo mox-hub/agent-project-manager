@@ -8,7 +8,7 @@ import {
   isApmRef,
   parseApmRef,
   type ApmRefKind,
-} from '@apm/shared/apm-ref';
+} from '@ordo/shared/apm-ref';
 import { cn } from '@/lib/utils';
 import { getEntityIcon } from '@/shared/entity-icons/entity-icons';
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger';

@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
-import { DomainEventTypes } from '@apm/shared/events/domain-events';
+import { DomainEventTypes } from '@ordo/shared/events/domain-events';
 import {
   SURFACE_FEED_CAPACITY,
   normalizeSurfaceEvent,

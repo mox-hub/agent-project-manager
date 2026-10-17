@@ -3,7 +3,7 @@
  * apm CLI 入口
  */
 import { Command } from 'commander';
-import { ApmError } from '@apm/shared';
+import { ApmError } from '@ordo/shared';
 import { registerAuthCommands } from './commands/auth';
 import { registerConfigCommands } from './commands/config';
 import { registerWorkspaceCommands } from './commands/workspace';

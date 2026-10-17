@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { DomainEventTypes } from '@apm/shared/events/domain-events';
+import { DomainEventTypes } from '@ordo/shared/events/domain-events';
 import { createLogger } from '@/shared/lib/logger';
 
 type EventHandler<T = unknown> = (payload: T) => void;
@@ -7,7 +7,7 @@ type EventHandler<T = unknown> = (payload: T) => void;
 const log = createLogger({ prefix: 'EventClient' });
 
 /**
- * WS 订阅白名单 —— 一律从 `@apm/shared` 的事件名单源取，**禁止在此写字面量**。
+ * WS 订阅白名单 —— 一律从 `@ordo/shared` 的事件名单源取，**禁止在此写字面量**。
  *
  * 2026-09-14 收口：此前本文件硬编码 `'ai.workflow.update'` / `'linear.*'` /
  * `'runtime.dispatch.changed'`，而它们不在单源里——契约已漂移，本次补齐单源。

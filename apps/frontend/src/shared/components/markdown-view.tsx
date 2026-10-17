@@ -14,7 +14,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { isApmRef } from '@apm/shared/apm-ref';
+import { isApmRef } from '@ordo/shared/apm-ref';
 import { ApmRefLink } from '@/shared/apm-ref/apm-ref-chip';
 
 const components: Components = {

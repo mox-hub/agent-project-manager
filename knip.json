@@ -27,7 +27,7 @@
     "apps/desktop": {
       "entry": ["electron/src/main.ts"]
     },
-    "packages/apm-shared": {
+    "packages/ordo-shared": {
       "entry": ["src/index.ts"]
     }
   },

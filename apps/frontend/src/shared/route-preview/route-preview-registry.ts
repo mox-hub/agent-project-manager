@@ -7,7 +7,7 @@
  * 未命中的静态路由（列表页、设置页等）返回 generic 类型，由通用卡片兜底展示。
  */
 
-import { parseApmRef } from '@apm/shared/apm-ref';
+import { parseApmRef } from '@ordo/shared/apm-ref';
 
 export type RoutePreviewType =
   | 'project'

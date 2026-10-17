@@ -55,9 +55,9 @@ jobs:
           FRONTEND=$(yes_no has '^apps/frontend/')
           SERVER=$(yes_no has '^apps/server/')
           CLI=$(yes_no has '^apps/cli/')
-          SHARED=$(yes_no has '^packages/apm-shared/')
+          SHARED=$(yes_no has '^packages/ordo-shared/')
           GLOBAL=$(yes_no has '^(package\.json|pnpm-workspace\.yaml|pnpm-lock\.yaml|turbo\.json|scripts/|\.github/)')
-          CONTRACT=$(yes_no has '^(openapi\.json|apps/server/src/|packages/apm-shared/src/)')
+          CONTRACT=$(yes_no has '^(openapi\.json|apps/server/src/|packages/ordo-shared/src/)')
           DOCS=$(yes_no has '^(docs/|AGENTS\.md|README\.md|CHANGELOG\.md)')
 
           if [ "$BASE" = "pre-prod" ] || [ "$BASE" = "main" ]; then FULL=true; else FULL=false; fi
@@ -174,7 +174,7 @@ jobs:
         if: needs.changes.outputs.full == 'true'
         run: pnpm --filter "./apps/server" run test
 
-  # 补盲区：apps/cli 与 packages/apm-shared 的单测此前在 CI 中从未被执行
+  # 补盲区：apps/cli 与 packages/ordo-shared 的单测此前在 CI 中从未被执行
   test-workspace:
     needs: changes
     if: needs.changes.outputs.workspace == 'true'
@@ -188,7 +188,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter "./packages/apm-shared" run test
+      - run: pnpm --filter "./packages/ordo-shared" run test
       - run: pnpm --filter "./apps/cli" run test
 
   contract:

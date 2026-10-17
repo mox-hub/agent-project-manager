@@ -375,7 +375,7 @@ import type { RunStation } from '@/modules/workflow/components/run-view/build-ru
 import { DecisionCardShell } from '@/shared/decision-card/decision-card-shell'
 import { MemberCard } from '@/modules/auth/components/member-card'
 import { ApmRefLink } from '@/shared/apm-ref/apm-ref-chip'
-import type { ApmRefKind } from '@apm/shared/apm-ref'
+import type { ApmRefKind } from '@ordo/shared/apm-ref'
 import { SlashRefTextarea } from '@/shared/entity-ref/slash-ref-textarea'
 import { RoutePreviewTrigger } from '@/shared/route-preview/route-preview-trigger'
 import { ComponentReviewBoard } from '@/modules/design-system/sections/component-review-board'

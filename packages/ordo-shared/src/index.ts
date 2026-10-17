@@ -1,5 +1,5 @@
 /**
- * @apm/shared —— APM 框架无关共享层
+ * @ordo/shared —— APM 框架无关共享层
  */
 
 export * from './errors';

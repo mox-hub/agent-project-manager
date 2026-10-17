@@ -1,8 +1,8 @@
 /**
  * 领域事件名常量（server 侧镜像）。
  *
- * 真相源：packages/apm-shared/src/events/domain-events.ts（与前端共享）。
- * server 不直接依赖 apm-shared（与 runtime/protocol.ts 同为镜像 +
+ * 真相源：packages/ordo-shared/src/events/domain-events.ts（与前端共享）。
+ * server 不直接依赖 ordo-shared（与 runtime/protocol.ts 同为镜像 +
  * check:cli-contract 门禁防漂移的架构约定），本文件仅镜像事件名常量；
  * payload zod 契约见真相源。新增事件时两处必须同步。
  */

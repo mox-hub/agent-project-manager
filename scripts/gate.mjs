@@ -86,9 +86,9 @@ const BUCKETS = {
   frontend: (f) => f.startsWith('apps/frontend/'),
   server: (f) => f.startsWith('apps/server/'),
   cli: (f) => f.startsWith('apps/cli/'),
-  shared: (f) => f.startsWith('packages/apm-shared/'),
+  shared: (f) => f.startsWith('packages/ordo-shared/'),
   contract: (f) =>
-    f === 'openapi.json' || f.startsWith('apps/server/src/') || f.startsWith('packages/apm-shared/src/'),
+    f === 'openapi.json' || f.startsWith('apps/server/src/') || f.startsWith('packages/ordo-shared/src/'),
   docs: (f) => f.startsWith('docs/') || f === 'AGENTS.md' || f === 'README.md' || f === 'CHANGELOG.md',
   // 构建/工具链改动会影响所有包：直接回退全量
   global: (f) =>
@@ -201,7 +201,7 @@ function main() {
     if (hit.server)
       steps.push(['server 单测（受影响文件）', 'pnpm', ['--filter', './apps/server', 'exec', 'vitest', 'run', '--changed', base]]);
     if (hit.cli) steps.push(['cli 单测', 'pnpm', ['--filter', './apps/cli', 'run', 'test']]);
-    if (hit.shared) steps.push(['apm-shared 单测', 'pnpm', ['--filter', './packages/apm-shared', 'run', 'test']]);
+    if (hit.shared) steps.push(['ordo-shared 单测', 'pnpm', ['--filter', './packages/ordo-shared', 'run', 'test']]);
   }
 
   // 3. server e2e

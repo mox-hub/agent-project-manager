@@ -14,7 +14,7 @@ import {
   getProfile,
   readConfig,
   writeConfig,
-} from '@apm/shared';
+} from '@ordo/shared';
 import { buildContext, out } from '../context';
 
 interface LoginResult {

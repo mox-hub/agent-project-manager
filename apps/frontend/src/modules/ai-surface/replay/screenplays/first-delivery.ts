@@ -1,4 +1,4 @@
-import { DomainEventTypes } from '@apm/shared/events/domain-events';
+import { DomainEventTypes } from '@ordo/shared/events/domain-events';
 import type { OfficeColleague } from '@/modules/office/api/office-api';
 import type { Decision } from '@/shared/decision-card/types';
 import type { Screenplay, ScreenplayFrame, ScreenplayLaneFacts } from '../screenplay-format';

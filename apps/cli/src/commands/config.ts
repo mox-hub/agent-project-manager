@@ -2,7 +2,7 @@
  * config：本地 ~/.apm/config.json 管理
  */
 import { Command } from 'commander';
-import { getProfile, readConfig, writeConfig } from '@apm/shared';
+import { getProfile, readConfig, writeConfig } from '@ordo/shared';
 
 export function registerConfigCommands(program: Command): void {
   const config = program

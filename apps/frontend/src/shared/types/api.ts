@@ -1,7 +1,7 @@
 /**
  * Shared API types aligned with backend standardized response body.
  *
- * 信封类型与分页负载单源于 @apm-shared（前后端/CLI 共用一份实现），
+ * 信封类型与分页负载单源于 @ordo-shared（前后端/CLI 共用一份实现），
  * 此处仅按旧路径再导出，保持既有 import 稳定。
  */
 
@@ -11,7 +11,7 @@ export type {
   BackendErrorEnvelope,
   BackendEnvelope,
   PaginatedData,
-} from '@apm/shared/http/envelope';
+} from '@ordo/shared/http/envelope';
 
 /**
  * Standardized client-side error thrown by the `api` client.

@@ -121,7 +121,7 @@ export function collectSourceFiles(absDir) {
  * 与 LAYER_DIRS / MODULES_DIR 的 `src/...` 前缀同口径）。
  * - 别名形态：`@/...` → `src/...`（@ 即 src/）；
  * - 相对形态：`./...` / `../...` 相对当前文件所在目录归一化；
- * - 裸包名（react、@apm/shared/... 等）返回 null，不参与层判定。
+ * - 裸包名（react、@ordo/shared/... 等）返回 null，不参与层判定。
  */
 export function resolveSrcRel(fileSrcRel, spec) {
   if (spec.startsWith("@/")) return posix.normalize(posix.join("src", spec.slice(2)));

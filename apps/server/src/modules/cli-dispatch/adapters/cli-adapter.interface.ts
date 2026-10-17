@@ -16,7 +16,7 @@ export type ProviderId =
 
 /**
  * CLI adapter 治理语义能力位（P1-22a）。
- * 镜像自 packages/apm-shared/src/cli/adapters/interface.ts（单源），server 侧
+ * 镜像自 packages/ordo-shared/src/cli/adapters/interface.ts（单源），server 侧
  * 进程内派发告警按此读；两侧口径必须一致，修改需同步镜像。
  */
 export interface CliAdapterCapabilities {
@@ -51,7 +51,7 @@ export const CLI_ADAPTER_CAPABILITIES: Record<
     approval: false,
     mcpTools: true,
   },
-  // 以下五家为 2026-10-11 扩容批一（镜像 packages/apm-shared src/cli/adapters/interface.ts，
+  // 以下五家为 2026-10-11 扩容批一（镜像 packages/ordo-shared src/cli/adapters/interface.ts，
   // 证据分级与逐家判定依据见 shared 侧同表注）
   'cursor-agent': {
     allowedTools: false,
@@ -142,7 +142,7 @@ export interface StreamEmitter {
   usage?: (usage: CliUsage) => void;
 }
 
-/** CLI token 用量（统一为 prompt/completion/total 口径；镜像 packages/apm-shared src/cli/adapters/interface.ts 的 CliUsage） */
+/** CLI token 用量（统一为 prompt/completion/total 口径；镜像 packages/ordo-shared src/cli/adapters/interface.ts 的 CliUsage） */
 export interface CliUsage {
   promptTokens: number;
   completionTokens: number;

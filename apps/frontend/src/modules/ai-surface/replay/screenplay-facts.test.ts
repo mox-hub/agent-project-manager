@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DomainEventTypes } from '@apm/shared/events/domain-events';
+import { DomainEventTypes } from '@ordo/shared/events/domain-events';
 import { PIPELINE_STAGES } from '@/shared/layout/pipeline-stages';
 import type { OfficeColleague } from '@/modules/office/api/office-api';
 import type { Decision } from '@/shared/decision-card/types';

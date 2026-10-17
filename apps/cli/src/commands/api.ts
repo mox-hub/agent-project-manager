@@ -4,7 +4,7 @@
  *   apm api GET /tasks '{"projectId":"p1"}'
  */
 import { Command } from 'commander';
-import { ApmError } from '@apm/shared';
+import { ApmError } from '@ordo/shared';
 import { buildContext, out } from '../context';
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];

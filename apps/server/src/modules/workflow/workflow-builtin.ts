@@ -215,7 +215,7 @@ export const APM_DEV_MAINLINE_DEFINITION: V2WorkflowDoc = {
       mode: 'inline',
       title: '② 契约先行',
       message:
-        '确认 API 变更先动根 openapi.json / 后端 DTO，再 contract:export 生成双端类型（禁手工改 api-types.gen.ts）；CLI 协议变更同步 packages/apm-shared runtime/protocol.ts 并跑 check:cli-contract。',
+        '确认 API 变更先动根 openapi.json / 后端 DTO，再 contract:export 生成双端类型（禁手工改 api-types.gen.ts）；CLI 协议变更同步 packages/ordo-shared runtime/protocol.ts 并跑 check:cli-contract。',
     },
     {
       id: 'implement',

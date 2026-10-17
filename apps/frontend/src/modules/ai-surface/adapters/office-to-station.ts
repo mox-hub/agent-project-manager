@@ -1,4 +1,4 @@
-import type { RuntimeUsagePayload } from '@apm/shared/events/domain-events';
+import type { RuntimeUsagePayload } from '@ordo/shared/events/domain-events';
 import type {
   OfficeAcceptability,
   OfficeColleague,

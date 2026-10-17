@@ -1,4 +1,4 @@
-import type { RuntimeUsagePayload } from '@apm/shared/events/domain-events';
+import type { RuntimeUsagePayload } from '@ordo/shared/events/domain-events';
 import type { StationCard as StationCardModel, StationProgress } from '../adapters/office-to-station';
 import { cn } from '@/lib/utils';
 import { STATE_DOT } from '@/modules/assistant/components/assistant-status-dot';

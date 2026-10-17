@@ -2,7 +2,7 @@
  * OpenCode CLI Adapter（anomalyco/opencode）
  *
  * 协议：`opencode run --format json`（NDJSON 事件流）。
- * 事件采样与解析口径见 packages/apm-shared/src/cli/adapters/opencode.ts（单源），
+ * 事件采样与解析口径见 packages/ordo-shared/src/cli/adapters/opencode.ts（单源），
  * 本文件为 server 侧镜像实现（接口不含 usage 回调，与既有双轨结构一致）。
  */
 

@@ -8,17 +8,17 @@ import {
   RUNTIME_ENDPOINTS,
   RuntimeDispatch,
   RunnerCallbacks,
-} from '@apm/shared';
+} from '@ordo/shared';
 
-vi.mock('@apm/shared', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@apm/shared')>();
+vi.mock('@ordo/shared', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@ordo/shared')>();
   return {
     ...actual,
     runCliProcess: vi.fn(),
   };
 });
 
-import { runCliProcess } from '@apm/shared';
+import { runCliProcess } from '@ordo/shared';
 import { startWorker } from './worker';
 
 const mockRun = vi.mocked(runCliProcess);

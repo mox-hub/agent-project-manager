@@ -12,7 +12,7 @@ import {
   persistWorkspaceToShell,
 } from '@/shared/lib/desktop-session';
 import { getApiBaseUrl, isDesktopShellAvailable } from '@/shared/types/electron-api';
-import { unwrapEnvelope as parseEnvelope } from '@apm/shared/http/envelope';
+import { unwrapEnvelope as parseEnvelope } from '@ordo/shared/http/envelope';
 import {
   ApiClientError,
   type BackendEnvelope,
@@ -313,7 +313,7 @@ apiClient.interceptors.response.use(
  * Unwrap a backend envelope to its business data.
  * Returns `null` when the body is null/undefined.
  * Throws ApiClientError when the envelope is an error envelope.
- * 解析逻辑单源于 @apm-shared/http/envelope，这里只负责错误抛出。
+ * 解析逻辑单源于 @ordo-shared/http/envelope，这里只负责错误抛出。
  */
 function unwrapEnvelope<T>(body: unknown): T {
   const { data, error } = parseEnvelope<T>(body);

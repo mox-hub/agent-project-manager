@@ -23,7 +23,7 @@ import {
   WS_EVENTS,
   WS_NAMESPACE,
   writeConfig,
-} from '@apm/shared';
+} from '@ordo/shared';
 import { acquireRuntimeLock } from './lock';
 import { startWorker } from './worker';
 

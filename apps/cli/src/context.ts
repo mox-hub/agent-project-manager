@@ -12,7 +12,7 @@ import {
   getBackend,
   getProfile,
   readConfig,
-} from '@apm/shared';
+} from '@ordo/shared';
 
 export interface CliContext {
   backend: string;

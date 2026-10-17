@@ -6,7 +6,7 @@
  * 因此本命令只生成 PAT 通道配置：无可用 PAT 时输出创建指引，绝不生成连不上的配置。
  */
 import { Command } from 'commander';
-import { ApmError, ExitCode } from '@apm/shared';
+import { ApmError, ExitCode } from '@ordo/shared';
 import { buildContext, out } from '../context';
 
 /** 无 PAT 时的创建指引（保底形态：输出路径与命令，不自动生成凭据） */

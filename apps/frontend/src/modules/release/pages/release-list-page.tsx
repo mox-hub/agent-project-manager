@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { List, Rocket, Sparkles, TableProperties } from 'lucide-react';
-import { DomainEventTypes } from '@apm/shared/events/domain-events';
+import { DomainEventTypes } from '@ordo/shared/events/domain-events';
 import { PageShell } from '@/components/semantic/page-shell';
 import { PageHeader, nodeToText } from '@/components/semantic/page-header';
 import { FavoriteToggle } from '@/shared/components/favorite-toggle';

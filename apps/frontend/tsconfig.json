@@ -8,7 +8,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@apm/shared/*": ["../../packages/apm-shared/src/*"]
+      "@ordo/shared/*": ["../../packages/ordo-shared/src/*"]
     }
   }
 }

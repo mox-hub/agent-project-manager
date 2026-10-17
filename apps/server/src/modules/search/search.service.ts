@@ -231,8 +231,8 @@ export class SearchService {
     shortId: string | null,
   ): string | null {
     if (!projectCode || !shortId) return null;
-    // apm:// 方言（packages/apm-shared/src/apm-ref.ts formatApmRef 同构）；
-    // server 未依赖 @apm/shared，此处内联同构串，格式漂移由 spec 钉住
+    // apm:// 方言（packages/ordo-shared/src/apm-ref.ts formatApmRef 同构）；
+    // server 未依赖 @ordo/shared，此处内联同构串，格式漂移由 spec 钉住
     return `apm://${projectCode}/${kind}/${shortId}`;
   }
 }

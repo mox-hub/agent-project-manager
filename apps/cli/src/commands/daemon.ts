@@ -12,7 +12,7 @@ import {
   getProfile,
   readConfig,
   writeConfig,
-} from '@apm/shared';
+} from '@ordo/shared';
 import { isProcessAlive, readLockHolderPid } from '../runtime/lock';
 import { buildContext, out } from '../context';
 

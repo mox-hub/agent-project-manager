@@ -1,7 +1,7 @@
 {
-  "name": "@apm/cli",
+  "name": "@ordo/cli",
   "version": "0.1.0",
-  "description": "Agent Project Manager CLI：瘦客户端（apm）+ 常驻 runtime 守护进程（apm-runtime）",
+  "description": "Ordo CLI：瘦客户端（ordo）+ 常驻 runtime 守护进程（ordo-runtime）",
   "private": true,
   "license": "UNLICENSED",
   "bin": {
@@ -12,14 +12,14 @@
     "dist"
   ],
   "scripts": {
-    "prebuild": "cd ../.. && pnpm --filter @apm/shared build",
+    "prebuild": "cd ../.. && pnpm --filter @ordo/shared build",
     "build": "tsc -p tsconfig.build.json",
     "type-check": "tsc -p tsconfig.build.json --noEmit",
-    "pretest": "cd ../.. && pnpm --filter @apm/shared build",
+    "pretest": "cd ../.. && pnpm --filter @ordo/shared build",
     "test": "vitest run"
   },
   "dependencies": {
-    "@apm/shared": "workspace:*",
+    "@ordo/shared": "workspace:*",
     "commander": "^12.1.0",
     "socket.io-client": "^4.8.1"
   },

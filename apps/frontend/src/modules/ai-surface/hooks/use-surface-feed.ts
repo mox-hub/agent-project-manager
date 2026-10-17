@@ -14,7 +14,7 @@ import {
   type ReleaseApprovedPayload,
   type RuntimeDispatchChangedPayload,
   type RuntimeUsagePayload,
-} from '@apm/shared/events/domain-events';
+} from '@ordo/shared/events/domain-events';
 import { eventClient } from '@/infrastructure/event-client';
 import { createLogger } from '@/shared/lib/logger';
 

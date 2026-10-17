@@ -25,7 +25,7 @@ import {
   RuntimeDispatch,
   RUNTIME_ENDPOINTS,
   ZCodeAdapter,
-} from '@apm/shared';
+} from '@ordo/shared';
 
 const ADAPTERS: Record<string, CliAdapter> = {
   'claude-code': new ClaudeCodeAdapter(),

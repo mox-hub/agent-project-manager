@@ -19,7 +19,7 @@
  *   - 共享的前提是依赖声明一致。worktree 若改了 package.json / pnpm-lock.yaml，
  *     软链指向的仍是主仓那份，**必须在该 worktree 里独立安装**。
  *   - vitest 通过 `resolve.preserveSymlinks=false` 把模块解析成真实路径，工作区
- *     内部包（`@apm/shared` 等）请以各自的 alias 为准（前端 vitest.config.ts 已配）。
+ *     内部包（`@ordo/shared` 等）请以各自的 alias 为准（前端 vitest.config.ts 已配）。
  *
  * 用法：
  *   node scripts/worktree-deps.mjs check               # 只读巡检
@@ -45,7 +45,7 @@ const SHARED_DIRS = [
   'apps/server/node_modules',
   'apps/cli/node_modules',
   'apps/desktop/node_modules',
-  'packages/apm-shared/node_modules',
+  'packages/ordo-shared/node_modules',
 ];
 
 /** 依赖声明文件：这些文件在两个树之间必须逐字节一致，共享依赖才成立 */

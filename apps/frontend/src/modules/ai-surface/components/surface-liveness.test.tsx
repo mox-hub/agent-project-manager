@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
-import { DomainEventTypes } from '@apm/shared/events/domain-events';
+import { DomainEventTypes } from '@ordo/shared/events/domain-events';
 import { SurfaceLiveness } from './surface-liveness';
 import { normalizeSurfaceEvent, useSurfaceFeedStore } from '../hooks/use-surface-feed';
 

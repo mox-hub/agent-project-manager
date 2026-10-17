@@ -82,8 +82,8 @@ console.log(
   `[check-cli-contract] OK：CLI 依赖的 ${REQUIRED_PATHS.length} 个端点全部存在`,
 );
 
-// ---------- 领域事件名镜像对比（apm-shared 真相源 ↔ server 镜像） ----------
-// server 不直接依赖 apm-shared（镜像架构），事件名漂移在此拦截。
+// ---------- 领域事件名镜像对比（ordo-shared 真相源 ↔ server 镜像） ----------
+// server 不直接依赖 ordo-shared（镜像架构），事件名漂移在此拦截。
 
 function extractEventNames(filePath) {
   const src = readFileSync(filePath, 'utf8');
@@ -99,7 +99,7 @@ function extractEventNames(filePath) {
 
 const eventsTruthPath = path.join(
   root,
-  'packages/apm-shared/src/events/domain-events.ts',
+  'packages/ordo-shared/src/events/domain-events.ts',
 );
 const eventsMirrorPath = path.join(
   root,

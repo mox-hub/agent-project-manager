@@ -2,7 +2,7 @@
  * task：工单管理（Task/Bug 统一为 Issue 族；命令名保留 task，API 走 /issues 口径）
  */
 import { Command } from 'commander';
-import { ApmError } from '@apm/shared';
+import { ApmError } from '@ordo/shared';
 import { buildContext, out } from '../context';
 
 export function registerTaskCommands(program: Command): void {

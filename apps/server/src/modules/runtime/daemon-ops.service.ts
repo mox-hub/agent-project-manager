@@ -151,7 +151,7 @@ export class DaemonOpsService {
     });
     if (!entry) {
       throw new NotFoundException(
-        '未找到守护进程入口（apps/cli/dist/runtime/index.js），请先构建 @apm/cli 或设置 APM_CLI_ENTRY',
+        '未找到守护进程入口（apps/cli/dist/runtime/index.js），请先构建 @ordo/cli 或设置 APM_CLI_ENTRY',
       );
     }
 
