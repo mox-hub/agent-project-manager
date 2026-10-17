@@ -26,7 +26,7 @@ function renderInput(overrides?: Partial<Parameters<typeof PathInput>[0]>) {
 }
 
 afterEach(() => {
-  delete (window as { __APM_DESKTOP__?: unknown }).__APM_DESKTOP__;
+  delete (window as { __ORDO_DESKTOP__?: unknown }).__ORDO_DESKTOP__;
 });
 
 describe('PathInput（CAP-A-28 路径输入统一件）', () => {
@@ -50,7 +50,7 @@ describe('PathInput（CAP-A-28 路径输入统一件）', () => {
 
   it('桌面壳内渲染选择器按钮，选取目录后回写 onChange', async () => {
     const invokeMock = vi.fn().mockResolvedValue({ path: 'D:\\\\picked\\\\dir' });
-    (window as { __APM_DESKTOP__?: unknown }).__APM_DESKTOP__ = {
+    (window as { __ORDO_DESKTOP__?: unknown }).__ORDO_DESKTOP__ = {
       invoke: invokeMock,
     };
     const { onChange } = renderInput();
@@ -71,7 +71,7 @@ describe('PathInput（CAP-A-28 路径输入统一件）', () => {
 
   it('kind=file 走 choose_file 通道', async () => {
     const invokeMock = vi.fn().mockResolvedValue({ path: null });
-    (window as { __APM_DESKTOP__?: unknown }).__APM_DESKTOP__ = {
+    (window as { __ORDO_DESKTOP__?: unknown }).__ORDO_DESKTOP__ = {
       invoke: invokeMock,
     };
     renderInput({ kind: 'file' });

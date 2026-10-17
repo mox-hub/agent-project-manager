@@ -995,8 +995,8 @@ describe('ProposalService', () => {
         executionId: 'exec_1',
         issueId: 't-1',
         projectRoot: 'E:\\repo',
-        worktreePath: 'E:\\repo\\.apm\\worktrees\\abcd1234',
-        branch: 'apm/exec/abcd1234',
+        worktreePath: 'E:\\repo\\.ordo\\worktrees\\abcd1234',
+        branch: 'ordo/exec/abcd1234',
         baseRef: 'base_sha',
         headRef: 'head_sha_at_card',
         files: ['a.ts'],
@@ -1033,13 +1033,13 @@ describe('ProposalService', () => {
 
       expect(mockWorktree.integrate).toHaveBeenCalledWith(
         'E:\\repo',
-        'apm/exec/abcd1234',
+        'ordo/exec/abcd1234',
         expect.stringContaining('exec_1'),
       );
       expect(mockWorktree.cleanup).toHaveBeenCalledWith(
         'E:\\repo',
-        'E:\\repo\\.apm\\worktrees\\abcd1234',
-        'apm/exec/abcd1234',
+        'E:\\repo\\.ordo\\worktrees\\abcd1234',
+        'ordo/exec/abcd1234',
         { force: true },
       );
       // 记账在事务内：metadata.integration={status:merged, mergeCommit}
@@ -1183,8 +1183,8 @@ describe('ProposalService', () => {
         payload: {
           executionId: 'exec_2',
           projectRoot: 'E:\\repo',
-          worktreePath: 'E:\\repo\\.apm\\worktrees\\deadbeef',
-          branch: 'apm/exec/deadbeef',
+          worktreePath: 'E:\\repo\\.ordo\\worktrees\\deadbeef',
+          branch: 'ordo/exec/deadbeef',
         },
       };
       mockPrismaService.decisionProposal.findUnique.mockResolvedValue(proposal);
@@ -1201,8 +1201,8 @@ describe('ProposalService', () => {
 
       expect(mockWorktree.cleanup).toHaveBeenCalledWith(
         'E:\\repo',
-        'E:\\repo\\.apm\\worktrees\\deadbeef',
-        'apm/exec/deadbeef',
+        'E:\\repo\\.ordo\\worktrees\\deadbeef',
+        'ordo/exec/deadbeef',
         { force: true },
       );
       expect(tx.execution.update).toHaveBeenCalledWith(
@@ -1223,7 +1223,7 @@ describe('ProposalService', () => {
       );
     });
 
-    it('非 apm/exec/ 前缀分支的 payload：400 拒绝操作', async () => {
+    it('非 ordo/exec/ 前缀分支的 payload：400 拒绝操作', async () => {
       const proposal = {
         id: 'pr-int-3',
         kind: 'integration',

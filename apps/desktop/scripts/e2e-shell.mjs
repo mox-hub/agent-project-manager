@@ -1,7 +1,7 @@
 /**
  * 桌面壳 e2e 冒烟（ADR-015 壳级测试工程）：Playwright _electron 拉起真实壳进程，
  * 断言窗口生命周期与 IPC 契约，替代纯 CDP 取证的 smoke-ipc.mjs（后者保留作排障工具）。
- * 隔离：APM_DATA_DIR 指向临时目录——不污染真实 ~/.apm；断言 dataPath 与之精确一致。
+ * 隔离：ORDO_DATA_DIR 指向临时目录——不污染真实 ~/.ordo；断言 dataPath 与之精确一致。
  * 覆盖：窗口出现 → get_app_info（数据根/首装标记/模式）→ desktop-state 读写 →
  * 更新命令（dev 恒 idle）→ 优雅退出（子进程清理在 before-quit）。
  * 运行：pnpm --filter desktop build:electron && pnpm --filter desktop e2e:shell
@@ -33,7 +33,7 @@ function check(name, condition, detail = '') {
 const app = await _electron.launch({
   args: ['.'],
   cwd: desktopRoot,
-  env: { ...process.env, APM_DATA_DIR: dataDir, APM_DESKTOP_DEBUG: undefined },
+  env: { ...process.env, ORDO_DATA_DIR: dataDir, ORDO_DESKTOP_DEBUG: undefined },
 });
 try {
   const win = await app.firstWindow();
@@ -42,7 +42,7 @@ try {
   /** 渲染进程经 preload 桥调用主进程命令面（与生产前端同一条链路） */
   const invoke = (cmd, args) =>
     win.evaluate(
-      ([cmd, args]) => window.__APM_DESKTOP__.invoke(cmd, args),
+      ([cmd, args]) => window.__ORDO_DESKTOP__.invoke(cmd, args),
       [cmd, args],
     );
 

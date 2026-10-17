@@ -120,10 +120,10 @@ export const ISSUE_DRAFT_DEFINITION: V2WorkflowDoc = {
 // 走查型模板步骤全部 human 节点：每站人工打卡，message 承载该站 SOP 与已知坑；
 // 承接型模板按「代写→确认→把关→产出」主线语法（闸门后步骤进 condition.then），可直接运行。
 
-export const APM_REQUIREMENT_INTAKE_KEY = 'apm-requirement-intake';
+export const ORDO_REQUIREMENT_INTAKE_KEY = 'apm-requirement-intake';
 
 /** 需求承接六步流：AI 初筛 → 六问起草 → 人工裁决（闸门）→ 归档 → 开工登记。对齐 requirement-intake skill。 */
-export const APM_REQUIREMENT_INTAKE_DEFINITION: V2WorkflowDoc = {
+export const ORDO_REQUIREMENT_INTAKE_DEFINITION: V2WorkflowDoc = {
   version: 2,
   inputHint: {
     projectId: '目标项目 ID（裁决归档与开工登记落在这里）',
@@ -191,10 +191,10 @@ export const APM_REQUIREMENT_INTAKE_DEFINITION: V2WorkflowDoc = {
   ],
 };
 
-export const APM_DEV_MAINLINE_KEY = 'apm-dev-mainline';
+export const ORDO_DEV_MAINLINE_KEY = 'apm-dev-mainline';
 
 /** 功能开发主线六站走查：清单闸门 → 契约先行 → 分支实现 → 质量门禁 → 文档变更账 → PR 合入。 */
-export const APM_DEV_MAINLINE_DEFINITION: V2WorkflowDoc = {
+export const ORDO_DEV_MAINLINE_DEFINITION: V2WorkflowDoc = {
   version: 2,
   inputHint: {
     capId: '能力卡编号（如 CAP-A-19）',
@@ -252,10 +252,10 @@ export const APM_DEV_MAINLINE_DEFINITION: V2WorkflowDoc = {
   ],
 };
 
-export const APM_RELEASE_PIPELINE_KEY = 'apm-release-pipeline';
+export const ORDO_RELEASE_PIPELINE_KEY = 'apm-release-pipeline';
 
 /** 发版管道七站走查：CHANGELOG 归版 → 全量门禁 → release PR → tag → 发版草案 → 核对 → 人工 Publish。 */
-export const APM_RELEASE_PIPELINE_DEFINITION: V2WorkflowDoc = {
+export const ORDO_RELEASE_PIPELINE_DEFINITION: V2WorkflowDoc = {
   version: 2,
   inputHint: {
     projectId: '发版登记落库的项目 ID',
@@ -323,10 +323,10 @@ export const APM_RELEASE_PIPELINE_DEFINITION: V2WorkflowDoc = {
   ],
 };
 
-export const APM_NIGHT_PATROL_KEY = 'apm-night-patrol';
+export const ORDO_NIGHT_PATROL_KEY = 'apm-night-patrol';
 
 /** 夜航巡检五站走查：跑满门禁 → 机械自修 → 失败定位 → 报告起草 → 报告落库。 */
-export const APM_NIGHT_PATROL_DEFINITION: V2WorkflowDoc = {
+export const ORDO_NIGHT_PATROL_DEFINITION: V2WorkflowDoc = {
   version: 2,
   inputHint: {
     projectId: '巡检报告落库的项目 ID',
@@ -401,31 +401,31 @@ export const BUILTIN_WORKFLOW_TEMPLATES: Array<{
     definition: ISSUE_DRAFT_DEFINITION,
   },
   {
-    key: APM_REQUIREMENT_INTAKE_KEY,
+    key: ORDO_REQUIREMENT_INTAKE_KEY,
     name: '需求承接六步流（内置：APM 研发流程）',
     description:
       'AI 初筛 + 六问评审起草 → 人工裁决闸门 → 裁决归档 → 开工登记建卡；对齐 requirement-intake skill，未进清单不得开工',
-    definition: APM_REQUIREMENT_INTAKE_DEFINITION,
+    definition: ORDO_REQUIREMENT_INTAKE_DEFINITION,
   },
   {
-    key: APM_DEV_MAINLINE_KEY,
+    key: ORDO_DEV_MAINLINE_KEY,
     name: '功能开发主线走查（内置：APM 研发流程）',
     description:
       '清单闸门 → 契约先行 → 分支实现 → quality:gate 七连 → 文档与变更账 → PR 评审合入 develop；六站逐站人工打卡',
-    definition: APM_DEV_MAINLINE_DEFINITION,
+    definition: ORDO_DEV_MAINLINE_DEFINITION,
   },
   {
-    key: APM_RELEASE_PIPELINE_KEY,
+    key: ORDO_RELEASE_PIPELINE_KEY,
     name: '发版管道走查（内置：APM 研发流程）',
     description:
       'CHANGELOG 归版 → 全量门禁 → release PR（develop→pre-prod→main）→ 打 tag → 发版草案落库 → 核对 → GitHub Release 人工 Publish',
-    definition: APM_RELEASE_PIPELINE_DEFINITION,
+    definition: ORDO_RELEASE_PIPELINE_DEFINITION,
   },
   {
-    key: APM_NIGHT_PATROL_KEY,
+    key: ORDO_NIGHT_PATROL_KEY,
     name: '夜航巡检走查（内置：APM 研发流程）',
     description:
       '跑满质量门禁 → 机械自修安全项 → 失败定位到 文件:行号 → AI 起草巡检报告 → 报告落库；对齐夜航质检流程',
-    definition: APM_NIGHT_PATROL_DEFINITION,
+    definition: ORDO_NIGHT_PATROL_DEFINITION,
   },
 ];

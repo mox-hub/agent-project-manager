@@ -8,7 +8,7 @@ export interface DesktopAppInfo {
   dataPath: string;
   logPath: string;
   mode: 'development' | 'production';
-  /** 首装校验：true = ~/.apm 无既有数据（全新安装）；false = 升级安装 */
+  /** 首装校验：true = ~/.ordo 无既有数据（全新安装）；false = 升级安装 */
   isFirstInstall: boolean;
 }
 
@@ -42,7 +42,7 @@ export interface DesktopActionResult {
 /** 壳侧跨 origin 持久化的会话状态（desktop-state.json；键名与前端 localStorage 键对齐） */
 export interface DesktopPersistentState {
   access_token?: string;
-  'apm-workspace-id'?: string;
+  'ordo-workspace-id'?: string;
   onboarding_completed?: boolean;
   /** 关窗行为（ADR-015）：true（默认）= 最小化到托盘服务保活；false = 关窗即退出 */
   close_to_tray?: boolean;
@@ -95,7 +95,7 @@ export interface DesktopLogSnapshot {
 declare global {
   interface Window {
     /** 桌面壳桥（Electron preload 注入，ADR-014）：invoke 走主进程 desktop:command 路由 */
-    __APM_DESKTOP__?: {
+    __ORDO_DESKTOP__?: {
       invoke: <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
       /** apm:// 深链订阅（ADR-015 P2）；返回解绑函数。旧壳版本无此能力为可选 */
       onDeepLink?: (callback: (url: string) => void) => () => void;
@@ -109,7 +109,7 @@ declare global {
 let _apiBaseUrl: string | null = null;
 
 export function isDesktopShellAvailable(): boolean {
-  return typeof window !== 'undefined' && !!window.__APM_DESKTOP__;
+  return typeof window !== 'undefined' && !!window.__ORDO_DESKTOP__;
 }
 
 export function setApiBaseUrl(url: string): void {
@@ -124,10 +124,10 @@ export function getApiBaseUrl(): string | null {
 }
 
 export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
-  if (!window.__APM_DESKTOP__) {
-    throw new Error('桌面壳桥（__APM_DESKTOP__）不可用');
+  if (!window.__ORDO_DESKTOP__) {
+    throw new Error('桌面壳桥（__ORDO_DESKTOP__）不可用');
   }
-  return window.__APM_DESKTOP__.invoke<T>(cmd, args);
+  return window.__ORDO_DESKTOP__.invoke<T>(cmd, args);
 }
 
 /**
@@ -138,6 +138,6 @@ export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Pr
 export function subscribeUpdateStatus(
   callback: (status: DesktopUpdateStatus) => void,
 ): () => void {
-  const unsubscribe = window.__APM_DESKTOP__?.onUpdateStatus?.(callback);
+  const unsubscribe = window.__ORDO_DESKTOP__?.onUpdateStatus?.(callback);
   return unsubscribe ?? (() => undefined);
 }

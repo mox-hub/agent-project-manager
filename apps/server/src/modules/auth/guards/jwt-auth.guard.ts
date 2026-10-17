@@ -14,7 +14,7 @@ import {
 
 /**
  * 全局认证守卫。JWT 之外支持访问 token（PAT）：
- * `Authorization: Bearer apm_pat_...` 走 AccessTokenService 校验，
+ * `Authorization: Bearer ordo_pat_...` 走 AccessTokenService 校验，
  * principal 形态与 validateJwtPayload 一致（sessionId: null）。
  */
 @Injectable()

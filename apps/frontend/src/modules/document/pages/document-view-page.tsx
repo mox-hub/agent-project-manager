@@ -452,7 +452,7 @@ export function DocumentViewPage() {
                     type="button"
                     onClick={() => copyToClipboard(apmAddress)}
                     title="复制 apm:// 地址"
-                    data-ai-component="document.document-view.apm-address"
+                    data-ai-component="document.document-view.ordo-address"
                     className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border px-2 py-0.5 font-mono text-2xs text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
                     {isCopied ? <Check size={12} /> : <Copy size={12} />}

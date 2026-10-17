@@ -15,7 +15,7 @@ const integrationDecision: Decision = {
   status: 'pending',
   title: 'AI 执行完成：3 个文件 +12 −2，建议合入',
   detail:
-    '分支 apm/exec/abcd1234（基于 base12345）共 2 个提交。合入将对主工作区执行 git merge --no-ff。',
+    '分支 ordo/exec/abcd1234（基于 base12345）共 2 个提交。合入将对主工作区执行 git merge --no-ff。',
   urgency: 'advisory',
   projectId: 'p1',
   projectName: 'APM',
@@ -26,8 +26,8 @@ const integrationDecision: Decision = {
     executionId: 'exec_abcd1234',
     issueId: 'issue-1',
     projectRoot: 'E:\\repo',
-    worktreePath: 'E:\\repo\\.apm\\worktrees\\abcd1234',
-    branch: 'apm/exec/abcd1234',
+    worktreePath: 'E:\\repo\\.ordo\\worktrees\\abcd1234',
+    branch: 'ordo/exec/abcd1234',
     baseRef: 'base1234567890',
     headRef: 'head1234567890',
     diffStat: ' 3 files changed, 12 insertions(+), 2 deletions(-)',
@@ -59,7 +59,7 @@ describe('DecisionCard integration（G5-b 成果合入卡 · A-18 两层样板�
     // 结论行：来自工单 + 隔离分支短名（分支短名同时出现在 detail 里，取全部）
     expect(screen.getByText('实现登录页')).toBeTruthy();
     expect(
-      screen.getAllByText(/apm\/exec\/abcd1234/).length,
+      screen.getAllByText(/ordo\/exec\/abcd1234/).length,
     ).toBeGreaterThan(0);
     // 推荐语
     expect(screen.getByText('decision.integration.recommend')).toBeTruthy();

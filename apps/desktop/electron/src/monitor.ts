@@ -196,7 +196,7 @@ export async function getProcessStats(): Promise<ProcessStat[]> {
       running: !!backend && isLive(backend.info.pid),
       port: backend?.info.port,
       memoryMB: backend && isLive(backend.info.pid) ? sample.memByPid.get(backend.info.pid) : undefined,
-      transport: backend ? (process.env.APM_SERVER_TRANSPORT === 'node' ? 'node' : 'utility') : undefined,
+      transport: backend ? (process.env.ORDO_SERVER_TRANSPORT === 'node' ? 'node' : 'utility') : undefined,
     },
     {
       role: 'daemon',

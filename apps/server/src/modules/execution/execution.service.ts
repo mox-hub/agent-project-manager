@@ -770,7 +770,7 @@ export class ExecutionService {
     }
   }
 
-  /** 快照 commit 主体：AI 成员/用户邮箱可得则用之，缺省 execution@apm.local（设计稿 §七 开放问题口径） */
+  /** 快照 commit 主体：AI 成员/用户邮箱可得则用之，缺省 execution@ordo.local（设计稿 §七 开放问题口径） */
   private async resolveExecutionAuthor(run: {
     subjectType: string;
     subjectId: string;

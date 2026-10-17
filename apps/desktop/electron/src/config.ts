@@ -1,9 +1,9 @@
 /**
  * 桌面端应用配置（由旧 Tauri 壳 config.rs + lib.rs create_app_config）。
  * 路径布局与旧壳一致（bin/server/frontend 资源 + 用户数据目录三件套）。
- * 用户数据根固定在 ~/.apm（与手动 CLI 的 config.json 同根）：项目数据（库/日志/上传/
+ * 用户数据根固定在 ~/.ordo（与手动 CLI 的 config.json 同根）：项目数据（库/日志/上传/
  * 密钥/会话状态）全部收敛于此，升级安装数据天然保留；守护进程配置与单实例锁放
- * ~/.apm/desktop/ 子目录——锁文件 runtime.lock 若落 ~/.apm 根会与手动 CLI 守护进程
+ * ~/.ordo/desktop/ 子目录——锁文件 runtime.lock 若落 ~/.ordo 根会与手动 CLI 守护进程
  * 的锁互抢（CLI 锁 = 配置文件同目录，见 apps/cli/src/runtime/lock.ts）。
  */
 import { app } from 'electron';
@@ -20,7 +20,7 @@ export interface AppConfig {
   logsDir: string;
   databasePath: string;
   uploadDir: string;
-  /** 守护进程配置文件（APM_CONFIG_PATH 指向）——与用户手动 CLI 的 ~/.apm 隔离 */
+  /** 守护进程配置文件（ORDO_CONFIG_PATH 指向）——与用户手动 CLI 的 ~/.ordo 隔离 */
   apmConfigPath: string;
   jwtSecret: string;
   integrationKey: string;
@@ -40,9 +40,9 @@ function resolveWorkspaceRoot(): string {
 }
 
 export function resolveAppConfig(): AppConfig {
-  // APM_DATA_DIR 仅测试/CI 隔离用（e2e-shell.mjs 指向临时目录，避免污染真实 ~/.apm）；
-  // 生产路径恒为 ~/.apm（用户主目录固定，不受安装位置影响）
-  const userDataDir = process.env.APM_DATA_DIR ?? path.join(os.homedir(), '.apm');
+  // ORDO_DATA_DIR 仅测试/CI 隔离用（e2e-shell.mjs 指向临时目录，避免污染真实 ~/.ordo）；
+  // 生产路径恒为 ~/.ordo（用户主目录固定，不受安装位置影响）
+  const userDataDir = process.env.ORDO_DATA_DIR ?? path.join(os.homedir(), '.ordo');
   const logsDir = path.join(userDataDir, 'logs');
   const databasePath = path.join(userDataDir, 'data', 'agent-project-manager.db');
   const uploadDir = path.join(userDataDir, 'uploads');
@@ -78,7 +78,7 @@ export function resolveAppConfig(): AppConfig {
     logsDir,
     databasePath,
     uploadDir,
-    apmConfigPath: path.join(userDataDir, 'desktop', 'apm-config.json'),
+    apmConfigPath: path.join(userDataDir, 'desktop', 'ordo-config.json'),
     jwtSecret: '',
     integrationKey: '',
     nodeExe,

@@ -72,7 +72,7 @@ export class MailService {
     try {
       await transporter.sendMail({
         from: (this.config.get('MAIL_FROM') ??
-          'APM <no-reply@apm.local>') as string,
+          'APM <no-reply@ordo.local>') as string,
         to: input.to,
         subject: input.subject,
         html: input.body,

@@ -8,7 +8,7 @@ export class AccessTokenResponseDto {
   @ApiProperty({ description: 'Token 名称' })
   name: string;
 
-  @ApiProperty({ description: 'Token 前缀（apm_pat_ + 6 位）' })
+  @ApiProperty({ description: 'Token 前缀（ordo_pat_ + 6 位）' })
   tokenPrefix: string;
 
   @ApiProperty({ description: '所属用户 ID' })

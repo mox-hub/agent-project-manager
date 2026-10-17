@@ -45,7 +45,7 @@ function diffHint(name, fixCmd) {
 }
 
 let failed = false;
-const tmp = mkdtempSync(join(tmpdir(), 'apm-contract-'));
+const tmp = mkdtempSync(join(tmpdir(), 'ordo-contract-'));
 try {
   // 1. 后端 → openapi.json
   if (!readExists(OPENAPI_PATH)) {

@@ -31,7 +31,7 @@ export const DEFAULT_WORKSPACE = DEFAULT_WORKSPACE_ID;
 
 export interface IsolatedWorkspace {
   id: string;
-  /** 工作区根目录（含 data/apm.db），cleanup 时整目录删除 */
+  /** 工作区根目录（含 data/ordo.db），cleanup 时整目录删除 */
   root: string;
   /** 直连该工作区库的独立客户端：测试进程内做种子数据/断言用，
    *  不依赖应用内的多库代理（jest 下代理的 ALS 实例与测试进程不完全一致） */
@@ -48,7 +48,7 @@ export function createIsolatedWorkspace(suiteName: string): IsolatedWorkspace {
   const db = new PrismaClient({
     datasources: {
       db: {
-        url: 'file:' + path.join(root, 'data', 'apm.db').replace(/\\/g, '/'),
+        url: 'file:' + path.join(root, 'data', 'ordo.db').replace(/\\/g, '/'),
       },
     },
   });

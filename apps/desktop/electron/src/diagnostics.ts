@@ -50,7 +50,7 @@ function collectMetadata(
     onboarding_completed: state.onboarding_completed ?? null,
     close_to_tray: state.close_to_tray ?? null,
     has_access_token: !!state.access_token,
-    has_workspace_selection: !!state['apm-workspace-id'],
+    has_workspace_selection: !!state['ordo-workspace-id'],
   };
   return {
     appVersion: app.getVersion(),

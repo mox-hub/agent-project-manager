@@ -49,8 +49,8 @@ describe('Access Tokens (PAT) e2e', () => {
       .expect(201);
 
     const data = res.body.data;
-    expect(data.token).toMatch(/^apm_pat_[0-9a-f]{64}$/);
-    expect(data.tokenPrefix).toMatch(/^apm_pat_/);
+    expect(data.token).toMatch(/^ordo_pat_[0-9a-f]{64}$/);
+    expect(data.tokenPrefix).toMatch(/^ordo_pat_/);
     expect(JSON.stringify(data)).not.toContain('tokenHash');
   });
 
@@ -101,7 +101,7 @@ describe('Access Tokens (PAT) e2e', () => {
   it('非法/伪造 PAT 返回 401', async () => {
     await wsHttp
       .get('/_api/auth/me')
-      .set('Authorization', 'Bearer apm_pat_deadbeef')
+      .set('Authorization', 'Bearer ordo_pat_deadbeef')
       .expect(401);
     await wsHttp
       .get('/_api/auth/me')

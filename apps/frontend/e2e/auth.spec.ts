@@ -119,13 +119,13 @@ test.describe('认证流程', () => {
     await page.waitForURL(/\/app/, { timeout: 30_000 })
 
     // 模拟残留的失效工作区选择（曾在桌面壳/浏览器里选过、之后该工作区被删或未注册）
-    await page.evaluate(() => localStorage.setItem('apm-workspace-id', 'ws-does-not-exist-999'))
+    await page.evaluate(() => localStorage.setItem('ordo-workspace-id', 'ws-does-not-exist-999'))
     await page.goto('/app')
 
     // 必须留在 /app：选择被丢弃、登录态保留
     await expect(page).toHaveURL(/\/app/, { timeout: 30_000 })
     await expect
-      .poll(async () => page.evaluate(() => localStorage.getItem('apm-workspace-id')), {
+      .poll(async () => page.evaluate(() => localStorage.getItem('ordo-workspace-id')), {
         timeout: 15_000,
       })
       .toBeNull()
@@ -134,14 +134,14 @@ test.describe('认证流程', () => {
 
   test('A07 登录请求携带失效工作区选择时仍能登录成功', async ({ page }) => {
     await page.goto('/login')
-    await page.evaluate(() => localStorage.setItem('apm-workspace-id', 'ws-does-not-exist-999'))
+    await page.evaluate(() => localStorage.setItem('ordo-workspace-id', 'ws-does-not-exist-999'))
     await page.locator('#username').fill(E2E_USER.username)
     await page.locator('#password').fill(E2E_USER.password)
     await page.getByRole('button', { name: /登录|Sign In/ }).click()
 
     await page.waitForURL(/\/app/, { timeout: 30_000 })
     await expect
-      .poll(async () => page.evaluate(() => localStorage.getItem('apm-workspace-id')), {
+      .poll(async () => page.evaluate(() => localStorage.getItem('ordo-workspace-id')), {
         timeout: 15_000,
       })
       .toBeNull()

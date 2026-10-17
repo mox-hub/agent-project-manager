@@ -1,7 +1,7 @@
 /**
  * 访问 token（PAT）服务
  *
- * 供 AI/外部工具免登录调用 API：`Authorization: Bearer apm_pat_...`。
+ * 供 AI/外部工具免登录调用 API：`Authorization: Bearer ordo_pat_...`。
  * 只存 SHA-256 hash，明文仅在 create 返回一次；validate 返回与
  * AuthService.validateJwtPayload 一致的 principal 形态（sessionId: null）。
  */
@@ -10,7 +10,7 @@ import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../../core/database/prisma.service';
 import { CreateAccessTokenDto } from './dto/create-access-token.dto';
 
-export const ACCESS_TOKEN_PREFIX = 'apm_pat_';
+export const ACCESS_TOKEN_PREFIX = 'ordo_pat_';
 
 const LAST_USED_THROTTLE_MS = 60_000;
 

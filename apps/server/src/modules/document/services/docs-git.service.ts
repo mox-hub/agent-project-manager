@@ -89,7 +89,7 @@ export class DocsGitService {
       await execFileP('git', ['init'], { cwd: repoDir });
       const gitignorePath = path.join(repoDir, '.gitignore');
       if (!(await pathExists(gitignorePath))) {
-        await fs.writeFile(gitignorePath, '.apm-tmp/\n', 'utf8');
+        await fs.writeFile(gitignorePath, '.ordo-tmp/\n', 'utf8');
       }
       this.logger.log(`Initialized git repo at ${repoDir}`);
     }

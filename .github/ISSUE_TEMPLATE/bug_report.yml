@@ -67,6 +67,6 @@ body:
     id: logs
     attributes:
       label: 日志/截图
-      description: 桌面版日志位于 %USERPROFILE%/.apm/logs（脱敏后粘贴或拖入截图）
+      description: 桌面版日志位于 %USERPROFILE%/.ordo/logs（脱敏后粘贴或拖入截图）
     validations:
       required: false

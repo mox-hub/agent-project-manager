@@ -44,9 +44,9 @@ describe('startup-migrations（打包模式启动链编排）', () => {
   let exitSpy: ReturnType<typeof vi.spyOn>;
 
   const managedEnv = [
-    'APM_PACKAGED',
-    'APM_DATA_DIR',
-    'APM_MIGRATIONS_DIR',
+    'ORDO_PACKAGED',
+    'ORDO_DATA_DIR',
+    'ORDO_MIGRATIONS_DIR',
     'DATABASE_URL',
     'WORKSPACE_REGISTRY_PATH',
     'WORKSPACE_BACKUP_DIR',
@@ -67,10 +67,10 @@ describe('startup-migrations（打包模式启动链编排）', () => {
     for (const key of managedEnv) {
       envBackup[key] = process.env[key];
     }
-    process.env.APM_MIGRATIONS_DIR = migrationsDir;
+    process.env.ORDO_MIGRATIONS_DIR = migrationsDir;
     process.env.WORKSPACE_BACKUP_DIR = path.join(tmpRoot, 'bk');
-    process.env.APM_DATA_DIR = path.join(tmpRoot, 'data-dir');
-    fs.mkdirSync(process.env.APM_DATA_DIR, { recursive: true });
+    process.env.ORDO_DATA_DIR = path.join(tmpRoot, 'data-dir');
+    fs.mkdirSync(process.env.ORDO_DATA_DIR, { recursive: true });
     exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
       throw new Error(`process.exit(${code})`); // 接管退出：让调用栈抛回测试断言
     }) as never);
@@ -90,18 +90,18 @@ describe('startup-migrations（打包模式启动链编排）', () => {
     });
   });
 
-  it('isPackagedServer：仅 APM_PACKAGED=1 判定打包', () => {
-    delete process.env.APM_PACKAGED;
+  it('isPackagedServer：仅 ORDO_PACKAGED=1 判定打包', () => {
+    delete process.env.ORDO_PACKAGED;
     expect(isPackagedServer()).toBe(false);
-    process.env.APM_PACKAGED = '0';
+    process.env.ORDO_PACKAGED = '0';
     expect(isPackagedServer()).toBe(false);
-    process.env.APM_PACKAGED = '1';
+    process.env.ORDO_PACKAGED = '1';
     expect(isPackagedServer()).toBe(true);
   });
 
   it('非打包模式零参与：不触碰任何库与文件', async () => {
-    delete process.env.APM_PACKAGED;
-    const dbPath = path.join(tmpRoot, 'db', 'apm.db');
+    delete process.env.ORDO_PACKAGED;
+    const dbPath = path.join(tmpRoot, 'db', 'ordo.db');
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
     fs.writeFileSync(dbPath, '');
     await runPackagedStartupMigrations();
@@ -109,9 +109,9 @@ describe('startup-migrations（打包模式启动链编排）', () => {
   });
 
   it('打包模式：default 库与注册表工作区库都被迁移', async () => {
-    process.env.APM_PACKAGED = '1';
+    process.env.ORDO_PACKAGED = '1';
     const defaultDb = path.join(tmpRoot, 'db', 'default.db');
-    const wsDb = path.join(tmpRoot, 'ws-x', 'data', 'apm.db');
+    const wsDb = path.join(tmpRoot, 'ws-x', 'data', 'ordo.db');
     fs.mkdirSync(path.dirname(defaultDb), { recursive: true });
     fs.mkdirSync(path.dirname(wsDb), { recursive: true });
     fs.writeFileSync(defaultDb, '');
@@ -173,7 +173,7 @@ describe('startup-migrations（打包模式启动链编排）', () => {
   });
 
   it('迁移失败：写失败标记 + 以专用退出码 42 拒启', async () => {
-    process.env.APM_PACKAGED = '1';
+    process.env.ORDO_PACKAGED = '1';
     const defaultDb = path.join(tmpRoot, 'db', 'default.db');
     fs.mkdirSync(path.dirname(defaultDb), { recursive: true });
     fs.writeFileSync(defaultDb, '');
@@ -190,7 +190,7 @@ describe('startup-migrations（打包模式启动链编排）', () => {
     );
 
     const markerPath = path.join(
-      process.env.APM_DATA_DIR as string,
+      process.env.ORDO_DATA_DIR as string,
       MIGRATION_FAILURE_MARKER_FILE,
     );
     expect(fs.existsSync(markerPath)).toBe(true);

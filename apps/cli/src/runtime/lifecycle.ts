@@ -40,7 +40,7 @@ export async function runRuntimeDaemon(): Promise<void> {
   const lock = acquireRuntimeLock(path.dirname(getConfigPath()));
 
   const config = readConfig();
-  const backend = getBackend(config) || process.env.APM_BACKEND;
+  const backend = getBackend(config) || process.env.ORDO_BACKEND;
   if (!backend) {
     throw new Error('未配置后端地址：请先执行 apm config set backend <url>');
   }

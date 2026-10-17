@@ -9,7 +9,7 @@
  * 鉴权（P0-6 止血）：
  * - sse / messages 标记 @Public 绕过全局 JWT 守卫（MCP 客户端走 ?token= 通道，
  *   无法带 Authorization 头），鉴权在本控制器内完成；
- * - token 必须是有效 PAT（AccessTokenService.validate，apm_pat_ 前缀），
+ * - token 必须是有效 PAT（AccessTokenService.validate，ordo_pat_ 前缀），
  *   无 token → 401，token 无效/过期/吊销 → 401；
  * - SSE 长连接只在建连时查库校验一次；token 摘要存入 session，
  *   消息上行时做零成本比对（防跨会话伪造），不重复查库。

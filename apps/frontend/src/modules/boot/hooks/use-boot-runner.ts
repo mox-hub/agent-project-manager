@@ -10,7 +10,7 @@ import type {
   BootRuntimeState,
 } from '../types';
 
-const SKIP_STORAGE_KEY = 'apm:boot:skip-next-time';
+const SKIP_STORAGE_KEY = 'ordo:boot:skip-next-time';
 
 function readEnvironment(): BootEnvironment {
   const env = import.meta.env;
@@ -48,7 +48,7 @@ function captureErrorContext(stepId: string, stepTitle: string, error: unknown):
       mode: env.MODE,
       url: typeof window !== 'undefined' ? window.location.pathname : '/',
       apiBaseUrl: env.VITE_API_BASE_URL || '/_api',
-      isDesktopShell: !!window.__APM_DESKTOP__,
+      isDesktopShell: !!window.__ORDO_DESKTOP__,
     },
   };
 }

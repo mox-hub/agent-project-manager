@@ -102,17 +102,17 @@ describe('schema-migrator（CAP-A-14 桌面升级迁移）', () => {
     fs.mkdirSync(migrationsDir, { recursive: true });
     backupRoot = path.join(tmpRoot, 'backup-root');
     previousBackupDir = process.env.WORKSPACE_BACKUP_DIR;
-    previousDataDir = process.env.APM_DATA_DIR;
+    previousDataDir = process.env.ORDO_DATA_DIR;
     process.env.WORKSPACE_BACKUP_DIR = backupRoot;
-    delete process.env.APM_DATA_DIR;
+    delete process.env.ORDO_DATA_DIR;
   });
 
   afterEach(() => {
     if (previousBackupDir === undefined)
       delete process.env.WORKSPACE_BACKUP_DIR;
     else process.env.WORKSPACE_BACKUP_DIR = previousBackupDir;
-    if (previousDataDir === undefined) delete process.env.APM_DATA_DIR;
-    else process.env.APM_DATA_DIR = previousDataDir;
+    if (previousDataDir === undefined) delete process.env.ORDO_DATA_DIR;
+    else process.env.ORDO_DATA_DIR = previousDataDir;
     fs.rmSync(tmpRoot, {
       recursive: true,
       force: true,
@@ -312,8 +312,8 @@ describe('schema-migrator（CAP-A-14 桌面升级迁移）', () => {
       { name: MIG_1, sql: SQL_1 },
       { name: MIG_2, sql: SQL_2 },
     ]);
-    const dbA = path.join(tmpRoot, 'nested-a', 'data', 'apm.db');
-    const dbB = path.join(tmpRoot, 'nested-b', 'data', 'apm.db');
+    const dbA = path.join(tmpRoot, 'nested-a', 'data', 'ordo.db');
+    const dbB = path.join(tmpRoot, 'nested-b', 'data', 'ordo.db');
     fs.mkdirSync(path.dirname(dbA), { recursive: true });
     fs.mkdirSync(path.dirname(dbB), { recursive: true });
     fs.writeFileSync(dbA, '');
@@ -445,19 +445,19 @@ describe('splitSqlStatements / deriveLatestSchemaProbe / 资产回归', () => {
   });
 
   it('fileUrlToDbPath：file: URL 与裸路径均可还原', () => {
-    const p = path.join('C:' + path.sep, 'data', 'apm.db');
+    const p = path.join('C:' + path.sep, 'data', 'ordo.db');
     expect(fileUrlToDbPath(dbFileUrl(p))).toBe(p);
     expect(fileUrlToDbPath(p)).toBe(p);
   });
 
-  it('备份根目录：APM_DATA_DIR 优先于 cwd，WORKSPACE_BACKUP_DIR 最高', () => {
+  it('备份根目录：ORDO_DATA_DIR 优先于 cwd，WORKSPACE_BACKUP_DIR 最高', () => {
     const prevBackup = process.env.WORKSPACE_BACKUP_DIR;
-    const prevData = process.env.APM_DATA_DIR;
+    const prevData = process.env.ORDO_DATA_DIR;
     try {
       delete process.env.WORKSPACE_BACKUP_DIR;
-      process.env.APM_DATA_DIR = path.join('X:', 'data');
+      process.env.ORDO_DATA_DIR = path.join('X:', 'data');
       expect(resolvePreMigrateBackupRoot()).toBe(
-        path.resolve('X:' + path.sep + 'data', '.apm-backups'),
+        path.resolve('X:' + path.sep + 'data', '.ordo-backups'),
       );
       process.env.WORKSPACE_BACKUP_DIR = path.join('Y:', 'bk');
       expect(resolvePreMigrateBackupRoot()).toBe(
@@ -466,8 +466,8 @@ describe('splitSqlStatements / deriveLatestSchemaProbe / 资产回归', () => {
     } finally {
       if (prevBackup === undefined) delete process.env.WORKSPACE_BACKUP_DIR;
       else process.env.WORKSPACE_BACKUP_DIR = prevBackup;
-      if (prevData === undefined) delete process.env.APM_DATA_DIR;
-      else process.env.APM_DATA_DIR = prevData;
+      if (prevData === undefined) delete process.env.ORDO_DATA_DIR;
+      else process.env.ORDO_DATA_DIR = prevData;
     }
   });
 });

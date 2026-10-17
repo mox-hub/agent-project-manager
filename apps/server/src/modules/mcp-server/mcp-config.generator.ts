@@ -66,7 +66,7 @@ export class McpConfigGenerator {
 
     return {
       mcpServers: {
-        apm: {
+        ordo: {
           type: 'http',
           url: url.toString(),
           headers: {
@@ -90,7 +90,7 @@ export class McpConfigGenerator {
 
     return {
       mcpServers: {
-        apm: {
+        ordo: {
           type: 'http',
           url: url.toString(),
         },
@@ -113,7 +113,7 @@ export class McpConfigGenerator {
     );
     return {
       mcpServers: {
-        apm: {
+        ordo: {
           ...result.mcpServers['apm'],
           type: 'sse',
         },

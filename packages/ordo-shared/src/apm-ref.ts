@@ -9,9 +9,9 @@
  * 通道 A（仓库内文件）里外部 AI 读到 apm:// 原文即可凭 catalog 理解，无需工具。
  */
 
-export const APM_REF_SCHEME = 'apm';
+export const ORDO_REF_SCHEME = 'apm';
 
-export const APM_REF_KINDS = [
+export const ORDO_REF_KINDS = [
   'doc',
   'issue',
   'bug',
@@ -21,7 +21,7 @@ export const APM_REF_KINDS = [
   'release',
 ] as const;
 
-export type ApmRefKind = (typeof APM_REF_KINDS)[number];
+export type ApmRefKind = (typeof ORDO_REF_KINDS)[number];
 
 export interface ApmRef {
   /** 项目代码（Project.projectCode），apm:// 命名空间 */
@@ -31,10 +31,10 @@ export interface ApmRef {
   shortId: string;
 }
 
-const KIND_SET: ReadonlySet<string> = new Set(APM_REF_KINDS);
+const KIND_SET: ReadonlySet<string> = new Set(ORDO_REF_KINDS);
 
 /** kind → 应用内路由前缀（与前端 route-preview-registry 的 DYNAMIC_RULES 对齐） */
-export const APM_REF_ROUTE_PREFIX: Record<ApmRefKind, string | null> = {
+export const ORDO_REF_ROUTE_PREFIX: Record<ApmRefKind, string | null> = {
   doc: '/app/documents',
   issue: '/app/issues',
   bug: '/app/bugs',
@@ -48,7 +48,7 @@ export const APM_REF_ROUTE_PREFIX: Record<ApmRefKind, string | null> = {
 /** 是否为 apm:// 引用（不校验 kind 与段合法性，供快速分流） */
 export function isApmRef(href: string | null | undefined): href is string {
   if (!href) return false;
-  return href.toLowerCase().startsWith(`${APM_REF_SCHEME}:`);
+  return href.toLowerCase().startsWith(`${ORDO_REF_SCHEME}:`);
 }
 
 /**
@@ -58,7 +58,7 @@ export function isApmRef(href: string | null | undefined): href is string {
  */
 export function parseApmRef(href: string | null | undefined): ApmRef | null {
   if (!isApmRef(href)) return null;
-  const rest = href!.slice(APM_REF_SCHEME.length + 1).replace(/^\//, '');
+  const rest = href!.slice(ORDO_REF_SCHEME.length + 1).replace(/^\//, '');
   const segments = rest.split('/').filter((s) => s.length > 0);
   if (segments.length !== 3) return null;
   const [projectCode, rawKind, shortId] = segments;
@@ -70,7 +70,7 @@ export function parseApmRef(href: string | null | undefined): ApmRef | null {
 
 /** 结构 → 方言字符串（parse 的逆，往返幂等） */
 export function formatApmRef(ref: ApmRef): string {
-  return `${APM_REF_SCHEME}://${ref.projectCode}/${ref.kind}/${ref.shortId}`;
+  return `${ORDO_REF_SCHEME}://${ref.projectCode}/${ref.kind}/${ref.shortId}`;
 }
 
 /**
@@ -83,7 +83,7 @@ export function expandApmRefToPath(
   ref: ApmRef,
   resolveId: (ref: ApmRef) => string | null,
 ): string | null {
-  const prefix = APM_REF_ROUTE_PREFIX[ref.kind];
+  const prefix = ORDO_REF_ROUTE_PREFIX[ref.kind];
   if (!prefix) return null;
   const id = resolveId(ref);
   if (!id) return null;

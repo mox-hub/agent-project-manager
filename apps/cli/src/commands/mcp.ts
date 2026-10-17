@@ -1,7 +1,7 @@
 /**
  * mcp：为外部 AI 客户端（Claude Desktop / Codex 等）生成 apm MCP server 配置
  *
- * P0-6 收口后 MCP 通道只认 PAT（apm_pat_ 前缀，?token= 建连时经
+ * P0-6 收口后 MCP 通道只认 PAT（ordo_pat_ 前缀，?token= 建连时经
  * AccessTokenService.validate 校验）；runtime session token / JWT 直连会 401。
  * 因此本命令只生成 PAT 通道配置：无可用 PAT 时输出创建指引，绝不生成连不上的配置。
  */
@@ -15,7 +15,7 @@ function printPatGuide(backend: string): void {
   console.error(
     [
       '',
-      'MCP 通道需要访问令牌（PAT，apm_pat_ 前缀）。runtime session token / 登录 JWT 直连 MCP 会 401（P0-6 收口）。',
+      'MCP 通道需要访问令牌（PAT，ordo_pat_ 前缀）。runtime session token / 登录 JWT 直连 MCP 会 401（P0-6 收口）。',
       '创建 PAT（二选一）：',
       `  1. Web 控制面：设置 → 访问令牌（${base}/app/settings/tokens），新建后复制明文 token（仅显示一次）`,
       `  2. CLI（需已 apm login）：apm api POST /auth/tokens '{"name":"mcp"}'，取返回中的 token 字段`,
@@ -35,7 +35,7 @@ export function registerMcpCommands(program: Command): void {
       '生成 apm MCP server 接入配置（mcpServers.apm）。MCP 通道需 PAT：无 --pat 时输出创建指引（runtime token 通道已废弃，直连 401）',
     )
     .option('--project <id>', '项目 id（生成项目上下文配置）')
-    .option('--pat <token>', 'MCP 通道访问令牌（PAT，apm_pat_ 前缀；设置页或 apm api POST /auth/tokens 创建）')
+    .option('--pat <token>', 'MCP 通道访问令牌（PAT，ordo_pat_ 前缀；设置页或 apm api POST /auth/tokens 创建）')
     .action(
       async (
         opts: { project?: string; pat?: string },
@@ -62,7 +62,7 @@ export function registerMcpCommands(program: Command): void {
 
         const config = {
           mcpServers: {
-            apm: {
+            ordo: {
               type: 'http' as const,
               url,
               headers: opts.project ? { 'x-project-id': opts.project } : {},

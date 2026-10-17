@@ -172,7 +172,7 @@ export function SectionTaskLinksList({ documentId, projectId }: SectionTaskLinks
           onSelect={(issueId, linkType) => {
             // 触发 SectionGroupCard 内的 mutation (通过 CustomEvent 转发)
             window.dispatchEvent(
-              new CustomEvent('apm:create-section-link', {
+              new CustomEvent('ordo:create-section-link', {
                 detail: {
                   sectionId: picker.sectionId,
                   documentId: picker.documentId,
@@ -231,8 +231,8 @@ function SectionGroupCard({
         linkType: detail.linkType,
       });
     };
-    window.addEventListener('apm:create-section-link', handler);
-    return () => window.removeEventListener('apm:create-section-link', handler);
+    window.addEventListener('ordo:create-section-link', handler);
+    return () => window.removeEventListener('ordo:create-section-link', handler);
   }, [group.sectionId, currentUserId, create]);
 
   return (

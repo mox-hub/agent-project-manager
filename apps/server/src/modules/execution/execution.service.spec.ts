@@ -257,8 +257,8 @@ describe('ExecutionService 单活跃互斥（需求重审 G5，2026-09-17 裁决
 describe('ExecutionService G5-b worktree 成果收集（completeExecution 成功路径）', () => {
   const isolation = {
     mode: 'worktree',
-    worktreePath: 'E:\\repo\\.apm\\worktrees\\abcd1234',
-    branch: 'apm/exec/abcd1234',
+    worktreePath: 'E:\\repo\\.ordo\\worktrees\\abcd1234',
+    branch: 'ordo/exec/abcd1234',
     baseRef: 'base_sha',
     projectRoot: 'E:\\repo',
     preparedAt: '2026-10-01T00:00:00.000Z',
@@ -299,9 +299,10 @@ describe('ExecutionService G5-b worktree 成果收集（completeExecution 成功
       aIUsageLog: { findMany: vi.fn().mockResolvedValue([]) },
       issue: { findUnique: vi.fn().mockResolvedValue({ title: '实现登录页' }) },
       member: {
-        findUnique: vi
-          .fn()
-          .mockResolvedValue({ displayName: 'Coder', email: 'coder@apm.test' }),
+        findUnique: vi.fn().mockResolvedValue({
+          displayName: 'Coder',
+          email: 'coder@ordo.test',
+        }),
       },
       user: { findUnique: vi.fn().mockResolvedValue(null) },
       approvalRequest: { findFirst: vi.fn().mockResolvedValue(null) },
@@ -351,8 +352,8 @@ describe('ExecutionService G5-b worktree 成果收集（completeExecution 成功
 
     expect(worktree.cleanup).toHaveBeenCalledWith(
       'E:\\repo',
-      'E:\\repo\\.apm\\worktrees\\abcd1234',
-      'apm/exec/abcd1234',
+      'E:\\repo\\.ordo\\worktrees\\abcd1234',
+      'ordo/exec/abcd1234',
       { force: true },
     );
     expect(createIntegrationProposal).not.toHaveBeenCalled();
@@ -380,11 +381,11 @@ describe('ExecutionService G5-b worktree 成果收集（completeExecution 成功
     await svc.completeExecution('exec_abcd1234zzzz', { summary: 'done' });
 
     expect(worktree.collectChanges).toHaveBeenCalledWith(
-      'E:\\repo\\.apm\\worktrees\\abcd1234',
+      'E:\\repo\\.ordo\\worktrees\\abcd1234',
       'base_sha',
       expect.objectContaining({
         message: 'chore(apm): execution 1234zzzz snapshot',
-        author: { name: 'Coder', email: 'coder@apm.test' },
+        author: { name: 'Coder', email: 'coder@ordo.test' },
       }),
     );
     expect(createIntegrationProposal).toHaveBeenCalledWith(
@@ -392,7 +393,7 @@ describe('ExecutionService G5-b worktree 成果收集（completeExecution 成功
         executionId: 'exec_abcd1234zzzz',
         issueId: 'i1',
         projectId: 'p1',
-        branch: 'apm/exec/abcd1234',
+        branch: 'ordo/exec/abcd1234',
         headRef: 'head_sha',
         insertions: 5,
         files: ['a.ts', 'b.ts'],
@@ -489,8 +490,8 @@ describe('ExecutionService G5-b 取消即时清理（cancelExecution）', () => 
     const { svc, worktree, prisma } = makeCancelService({
       isolation: {
         mode: 'worktree',
-        worktreePath: 'E:\\repo\\.apm\\worktrees\\abcd1234',
-        branch: 'apm/exec/abcd1234',
+        worktreePath: 'E:\\repo\\.ordo\\worktrees\\abcd1234',
+        branch: 'ordo/exec/abcd1234',
         baseRef: 'base_sha',
         projectRoot: 'E:\\repo',
         preparedAt: '2026-10-01T00:00:00.000Z',
@@ -501,8 +502,8 @@ describe('ExecutionService G5-b 取消即时清理（cancelExecution）', () => 
 
     expect(worktree.cleanup).toHaveBeenCalledWith(
       'E:\\repo',
-      'E:\\repo\\.apm\\worktrees\\abcd1234',
-      'apm/exec/abcd1234',
+      'E:\\repo\\.ordo\\worktrees\\abcd1234',
+      'ordo/exec/abcd1234',
       { force: true },
     );
     const metadata = prisma.execution.update.mock.calls[0][0].data.metadata;

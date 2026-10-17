@@ -31,7 +31,7 @@ export interface WorkspaceRecord {
   lastOpenedAt?: string;
 }
 
-export const WORKSPACE_STORAGE_KEY = 'apm-workspace-id';
+export const WORKSPACE_STORAGE_KEY = 'ordo-workspace-id';
 
 /** 本机最近使用过的工作区（CAP-A-26 登录卡片在公开名单关闭时的回落项） */
 export const RECENT_WORKSPACES_KEY = 'apm-recent-workspaces';

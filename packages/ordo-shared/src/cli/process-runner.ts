@@ -25,7 +25,7 @@ export interface RunnerCallbacks {
   ) => void;
   /** 逐轮 token 用量（适配器从 stream-json usage 块提取） */
   onUsage?: (usage: CliUsage) => void;
-  /** 追加环境变量（如 APM_EXECUTION_ID） */
+  /** 追加环境变量（如 ORDO_EXECUTION_ID） */
   env?: Record<string, string>;
 }
 

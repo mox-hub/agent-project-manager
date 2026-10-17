@@ -16,7 +16,7 @@
  *    不存在说明库版本落后且历史不可重放（历史含重复建表，实测 migrate deploy
  *    空库 P3018），拒绝静默 baseline，走失败拒绝启动 + 指引恢复路径。
  * 3. 迁移前自动备份：差集非空才备份（幂等重入零成本），VACUUM INTO 快照
- *    到 `.apm-backups/pre-migrate-*`，失败错误携带备份目录供指引恢复。
+ *    到 `.ordo-backups/pre-migrate-*`，失败错误携带备份目录供指引恢复。
  * 4. 执行失败抛 SchemaMigrationError（迁移名 + SQL 错误摘要 + 备份目录），
  *    由启动链编排（startup-migrations.ts）决定拒绝启动。
  *

@@ -13,8 +13,8 @@
  *   至多产生一份（幂等重入零产生），体量随升级频次线性增长，可控；纳入滚动
  *   保留策略留给后续切片。
  * - 落点：WORKSPACE_BACKUP_DIR 优先（与备份服务同根，测试可注入）；缺省时
- *   落 APM_DATA_DIR/.apm-backups——打包模式 cwd 在安装目录（resources）内
- *   不可写，必须落用户数据目录。因此与备份服务缺省根（cwd/.apm-backups）
+ *   落 ORDO_DATA_DIR/.ordo-backups——打包模式 cwd 在安装目录（resources）内
+ *   不可写，必须落用户数据目录。因此与备份服务缺省根（cwd/.ordo-backups）
  *   不同，属启动链时序的必然取舍，路径始终在错误信息中显式给出。
  */
 import { PrismaClient } from '@prisma/client';
@@ -34,8 +34,8 @@ export function resolvePreMigrateBackupRoot(
   if (env.WORKSPACE_BACKUP_DIR) {
     return path.resolve(env.WORKSPACE_BACKUP_DIR);
   }
-  const base = env.APM_DATA_DIR ?? process.cwd();
-  return path.resolve(base, '.apm-backups');
+  const base = env.ORDO_DATA_DIR ?? process.cwd();
+  return path.resolve(base, '.ordo-backups');
 }
 
 /**

@@ -37,7 +37,7 @@ export interface AppState {
   daemon: RuntimeDaemonHandle | null;
   /** 初始化（db push 等）失败的最新错误；null = 未失败。前端 init 页经 getInitStatus 消费。 */
   initError: string | null;
-  /** 首装校验：true = ~/.apm 无既有密钥与数据库（全新安装）。启动时迁移与 ensureSecrets 之间检测。 */
+  /** 首装校验：true = ~/.ordo 无既有密钥与数据库（全新安装）。启动时迁移与 ensureSecrets 之间检测。 */
   isFirstInstall: boolean;
   /**
    * 认证窗（登录态紧凑小窗，CAP-A-14 切片）：非 null = 前端正处认证面

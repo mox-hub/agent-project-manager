@@ -59,7 +59,7 @@ interface AppInfo {
   dataPath: string;
   logPath: string;
   mode: 'development' | 'production';
-  /** 首装校验：true = ~/.apm 无既有数据（全新安装）；false = 升级安装 */
+  /** 首装校验：true = ~/.ordo 无既有数据（全新安装）；false = 升级安装 */
   isFirstInstall: boolean;
 }
 
@@ -105,7 +105,7 @@ let serverCrashCount = 0;
  */
 const SERVER_MIGRATION_FAILURE_EXIT_CODE = 42;
 
-/** server 迁移失败标记文件（APM_DATA_DIR 下，server 写、壳读取后删除） */
+/** server 迁移失败标记文件（ORDO_DATA_DIR 下，server 写、壳读取后删除） */
 interface MigrationFailureInfo {
   timestamp: string;
   database: string;
@@ -416,7 +416,7 @@ export const commandHandlers = {
   async clear_desktop_state(args?: { keys?: string[] }): Promise<DesktopPersistentState> {
     return clearDesktopStateKeys(
       state.config.userDataDir,
-      args?.keys ?? ['access_token', 'apm-workspace-id', 'onboarding_completed'],
+      args?.keys ?? ['access_token', 'ordo-workspace-id', 'onboarding_completed'],
     );
   },
 

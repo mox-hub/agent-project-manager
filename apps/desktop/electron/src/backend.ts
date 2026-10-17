@@ -3,7 +3,7 @@
  * 承载双路径（ADR-014 E① 实验项）：
  *   'utility'（默认）— Electron utilityProcess 直接跑 server dist，复用内置 Node，省 ~75MB 随包 node.exe。
  *   'node' — spawn 随包 node.exe（与旧壳已冒烟路径同构，回退用）。
- * 经环境变量 APM_SERVER_TRANSPORT=node 切换。
+ * 经环境变量 ORDO_SERVER_TRANSPORT=node 切换。
  */
 import { spawn, type ChildProcess } from 'node:child_process';
 import net from 'node:net';
@@ -23,7 +23,7 @@ const GRACEFUL_SHUTDOWN_TIMEOUT_MS = 3_000;
 export type ServerTransport = 'utility' | 'node';
 
 export function resolveTransport(): ServerTransport {
-  return process.env.APM_SERVER_TRANSPORT === 'node' ? 'node' : 'utility';
+  return process.env.ORDO_SERVER_TRANSPORT === 'node' ? 'node' : 'utility';
 }
 
 export interface ServerHandle {
@@ -120,10 +120,10 @@ function buildServerEnv(config: AppConfig, port: number): NodeJS.ProcessEnv {
     WORKSPACE_REGISTRY_PATH: path.join(config.userDataDir, 'workspaces.json'),
     // 用户数据目录（CAP-A-14）：server 迁移失败标记文件 migration-failure.json
     // 的落点，壳侧弹窗按同目录读取
-    APM_DATA_DIR: config.userDataDir,
+    ORDO_DATA_DIR: config.userDataDir,
     // 打包模式信号（CAP-A-14）：server 启动链据此执行 SQLite 升级迁移；dev 链路
     // schema 由 db push 对齐（setup.ts alignDevDatabaseSchema），不注入零参与
-    ...(isDevMode() ? {} : { APM_PACKAGED: '1' }),
+    ...(isDevMode() ? {} : { ORDO_PACKAGED: '1' }),
   };
 }
 

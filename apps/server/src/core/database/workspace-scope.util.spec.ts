@@ -80,7 +80,7 @@ describe('workspace-scope.util', () => {
   it('库文件缺失（未初始化/已删除）的工作区不参与扫描', () => {
     const dir = path.join(tmpRoot, 'ws-broken');
     const broken = createWorkspace({ name: 'broken', path: dir });
-    fs.rmSync(path.join(dir, 'data', 'apm.db'), { force: true });
+    fs.rmSync(path.join(dir, 'data', 'ordo.db'), { force: true });
 
     expect(scannableWorkspaceIds()).not.toContain(broken.id);
   });

@@ -191,8 +191,8 @@ describe('ExecutionReconcileService', () => {
   describe('G5-b worktree 巡检', () => {
     const worktreeIsolation = {
       mode: 'worktree',
-      worktreePath: 'E:\\repo\\.apm\\worktrees\\old00001',
-      branch: 'apm/exec/old00001',
+      worktreePath: 'E:\\repo\\.ordo\\worktrees\\old00001',
+      branch: 'ordo/exec/old00001',
       baseRef: 'base_sha',
       projectRoot: 'E:\\repo',
       preparedAt: '2026-09-01T00:00:00.000Z',
@@ -218,8 +218,8 @@ describe('ExecutionReconcileService', () => {
 
       expect(worktreeMock.cleanup).toHaveBeenCalledWith(
         'E:\\repo',
-        'E:\\repo\\.apm\\worktrees\\old00001',
-        'apm/exec/old00001',
+        'E:\\repo\\.ordo\\worktrees\\old00001',
+        'ordo/exec/old00001',
         { force: true },
       );
       expect(prismaMock.execution.update).toHaveBeenCalledWith(

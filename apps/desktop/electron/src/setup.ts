@@ -21,7 +21,7 @@ export function initializeDirs(config: AppConfig): void {
 }
 
 /**
- * 首装校验：~/.apm 已有密钥或数据库 = 非首次安装（升级/重装，数据全保留）。
+ * 首装校验：~/.ordo 已有密钥或数据库 = 非首次安装（升级/重装，数据全保留）。
  * 必须在 ensureSecrets（会生成 secrets.json）之前调用，否则永远是 false。
  */
 export function detectFirstInstall(config: AppConfig): boolean {
@@ -33,7 +33,7 @@ export function detectFirstInstall(config: AppConfig): boolean {
 
 /**
  * v0.6.1 旧版数据迁移：旧壳数据根在 %APPDATA%/agent-project-manager（Electron 默认
- * userData，Chromium 缓存混在其中）。按白名单搬迁项目数据到 ~/.apm（apm-config.json
+ * userData，Chromium 缓存混在其中）。按白名单搬迁项目数据到 ~/.ordo（ordo-config.json
  * 特判挪到 desktop/ 子目录，即新版守护进程配置与锁位置），旧目录改名 .migrated.bak
  * 留档防重复迁移。目标已有密钥（已初始化/已迁移过）则不动；失败仅告警不阻断启动。
  */
@@ -48,7 +48,7 @@ export function migrateLegacyUserData(config: AppConfig, legacyDir: string): voi
     'secrets.json',
     'desktop-state.json',
     'workspaces.json',
-    'apm-config.json',
+    'ordo-config.json',
   ];
   try {
     fs.mkdirSync(config.userDataDir, { recursive: true });
@@ -60,10 +60,10 @@ export function migrateLegacyUserData(config: AppConfig, legacyDir: string): voi
       fs.rmSync(path.join(config.userDataDir, entry), { force: true, recursive: true });
       fs.renameSync(from, path.join(config.userDataDir, entry));
     }
-    if (fs.existsSync(path.join(config.userDataDir, 'apm-config.json'))) {
+    if (fs.existsSync(path.join(config.userDataDir, 'ordo-config.json'))) {
       fs.mkdirSync(path.dirname(config.apmConfigPath), { recursive: true });
       fs.renameSync(
-        path.join(config.userDataDir, 'apm-config.json'),
+        path.join(config.userDataDir, 'ordo-config.json'),
         config.apmConfigPath,
       );
     }

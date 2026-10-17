@@ -18,7 +18,7 @@ function buildService(
     gitVersion?: string;
   } = {},
 ) {
-  const WORKTREE_PATH = 'E:\\repo\\.apm\\worktrees\\abcd1234';
+  const WORKTREE_PATH = 'E:\\repo\\.ordo\\worktrees\\abcd1234';
 
   const prisma = {
     issue: {
@@ -101,7 +101,7 @@ function buildService(
           }
         : async () => ({
             worktreePath: WORKTREE_PATH,
-            branch: 'apm/exec/abcd1234',
+            branch: 'ordo/exec/abcd1234',
             baseRef: 'base123sha',
           }),
     ),
@@ -165,7 +165,7 @@ describe('CliDispatchService 派发隔离注入（G5-b）', () => {
             isolation: expect.objectContaining({
               mode: 'worktree',
               worktreePath: WORKTREE_PATH,
-              branch: 'apm/exec/abcd1234',
+              branch: 'ordo/exec/abcd1234',
               baseRef: 'base123sha',
               projectRoot: 'E:\\repo',
             }),

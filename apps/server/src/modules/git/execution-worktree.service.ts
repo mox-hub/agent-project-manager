@@ -13,7 +13,7 @@
  * - collectChanges    执行完成后成果收集（未提交变更补快照 commit + diff 统计）
  * - detectConflicts   merge-tree --write-tree 无副作用冲突预检（git ≥ 2.38）
  * - integrate         主工作区 merge --no-ff 真合入
- * - cleanup           worktree remove + 分支删除（**硬编码只删 apm/exec/ 前缀**）
+ * - cleanup           worktree remove + 分支删除（**硬编码只删 ordo/exec/ 前缀**）
  * - inspect           巡检：worktree list --porcelain + prune（reconcile 挂钩）
  *
  * Windows 兼容：路径一律 path.join；execFile 不经 shell，无引号转义问题
@@ -35,10 +35,10 @@ import * as path from 'path';
 const execFileP = promisify(execFile);
 
 /** 隔离分支命名空间——cleanup 的删除硬约束：此前缀之外的分支一律拒删 */
-export const WORKTREE_BRANCH_PREFIX = 'apm/exec/';
+export const WORKTREE_BRANCH_PREFIX = 'ordo/exec/';
 
 /** worktree 落点（项目根相对路径）：同盘符、用户可见可清理、删项目即全清 */
-export const WORKTREE_DIR_RELATIVE = path.join('.apm', 'worktrees');
+export const WORKTREE_DIR_RELATIVE = path.join('.ordo', 'worktrees');
 
 /** merge-tree --write-tree 需要的最低 git 版本（设计稿 §七 风险表） */
 export const MIN_GIT_VERSION = '2.38.0';
@@ -53,7 +53,7 @@ const GIT_MAX_BUFFER = 16 * 1024 * 1024;
 export const INTEGRATION_FILES_TOP = 20;
 
 /** 快照 commit 的 author 兜底（设计稿 §七 开放问题裁决口径） */
-export const EXECUTION_AUTHOR_EMAIL = 'execution@apm.local';
+export const EXECUTION_AUTHOR_EMAIL = 'execution@ordo.local';
 export const EXECUTION_AUTHOR_NAME = 'APM Execution';
 
 export interface CommitAuthor {
@@ -262,9 +262,9 @@ export class ExecutionWorktreeService {
   // ------------------------------------------------------------------ 六方法
 
   /**
-   * 派发前隔离准备：worktree add -b apm/exec/<shortId> <path> HEAD。
+   * 派发前隔离准备：worktree add -b ordo/exec/<shortId> <path> HEAD。
    * - shortId = executionId 后 8 位；baseRef = 准备时刻的主仓 HEAD；
-   * - 幂等补 .gitignore（.apm/ 条目不存在才追加；文件只读锁定时静默跳过，
+   * - 幂等补 .gitignore（.ordo/ 条目不存在才追加；文件只读锁定时静默跳过，
    *   worktree 目录变 untracked 可接受——设计稿 §七 开放问题裁决）；
    * - **重派语义**：同 executionId 重派时旧分支/worktree 仍在（失败现场保留），
    *   此处先清旧场再建新场，保证派发永不因陈旧现场降级共享根。
@@ -312,7 +312,7 @@ export class ExecutionWorktreeService {
 
   /**
    * 成果收集（在 worktree 内执行）：
-   * - 未提交变更非空 → add -A + 受控快照 commit（author 缺省 execution@apm.local）；
+   * - 未提交变更非空 → add -A + 受控快照 commit（author 缺省 execution@ordo.local）；
    * - diff --stat / --name-only <baseRef>..HEAD + rev-list --count；
    * - 无任何提交 → hasChanges=false（调用方直接清理 + no-changes 记账）。
    */
@@ -429,7 +429,7 @@ export class ExecutionWorktreeService {
 
   /**
    * 清理：worktree remove [--force] + branch -D。
-   * **硬约束**：分支名必须以 apm/exec/ 开头（前缀校验硬编码），其余一律拒删。
+   * **硬约束**：分支名必须以 ordo/exec/ 开头（前缀校验硬编码），其余一律拒删。
    * 幂等容错：worktree 目录已不存在时跳过 remove；分支已不存在时跳过删除
    * （reject / reconcile TTL / 外部手删三类入口都要求重复清理不报错）。
    */
@@ -547,7 +547,7 @@ export class ExecutionWorktreeService {
     }
   }
 
-  /** 幂等补 .gitignore：.apm/ 条目不存在才追加；只读锁定静默跳过 */
+  /** 幂等补 .gitignore：.ordo/ 条目不存在才追加；只读锁定静默跳过 */
   private async ensureGitignoreEntry(projectRoot: string): Promise<void> {
     try {
       const gitignorePath = path.join(projectRoot, '.gitignore');
@@ -559,9 +559,9 @@ export class ExecutionWorktreeService {
       }
       const hasEntry = content
         .split(/\r?\n/)
-        .some((line) => line.trim() === '.apm' || line.trim() === '.apm/');
+        .some((line) => line.trim() === '.ordo' || line.trim() === '.ordo/');
       if (hasEntry) return;
-      const next = `${content}${content && !content.endsWith('\n') ? '\n' : ''}.apm/\n`;
+      const next = `${content}${content && !content.endsWith('\n') ? '\n' : ''}.ordo/\n`;
       await fs.promises.writeFile(gitignorePath, next, 'utf8');
     } catch (err) {
       this.logger.warn(`.gitignore append skipped: ${(err as Error).message}`);

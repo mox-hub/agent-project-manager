@@ -3,14 +3,14 @@
  *
  * 此前 pinnedIds 挂在 useIssueRowMenu 的局部 useState 上：刷新即丢，
  * 同页 list 与看板两个 hook 实例也互不同步。这里收编为模块级单一 store：
- * - 写穿 localStorage（键 `apm.pinned-issues`，JSON id 数组，存取失败静默退化为内存态）；
+ * - 写穿 localStorage（键 `ordo.pinned-issues`，JSON id 数组，存取失败静默退化为内存态）；
  * - 所有 hook 实例经 useSyncExternalStore 订阅同一快照（不可变 Set，引用稳定），
  *   list / 看板 / 刷新后固定态一致。
  */
 
 import { useSyncExternalStore } from 'react';
 
-const STORAGE_KEY = 'apm.pinned-issues';
+const STORAGE_KEY = 'ordo.pinned-issues';
 
 function load(): ReadonlySet<string> {
   try {

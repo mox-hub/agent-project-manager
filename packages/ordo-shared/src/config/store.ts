@@ -1,5 +1,5 @@
 /**
- * ~/.apm/config.json 读写
+ * ~/.ordo/config.json 读写
  *
  * 结构：
  * {
@@ -55,8 +55,8 @@ const DEFAULT_PROFILE = 'default';
 
 export function getConfigPath(): string {
   return (
-    process.env.APM_CONFIG_PATH ||
-    path.join(os.homedir(), '.apm', 'config.json')
+    process.env.ORDO_CONFIG_PATH ||
+    path.join(os.homedir(), '.ordo', 'config.json')
   );
 }
 

@@ -41,8 +41,8 @@ export function RunIsolationBadge({
   const { t } = useTranslation();
 
   if (isolation.mode === 'worktree') {
-    // 分支展示取 apm/exec/ 后的 shortId（全分支名进 tooltip）
-    const shortBranch = (isolation.branch ?? '').replace('apm/exec/', '');
+    // 分支展示取 ordo/exec/ 后的 shortId（全分支名进 tooltip）
+    const shortBranch = (isolation.branch ?? '').replace('ordo/exec/', '');
     return (
       <span
         className="inline-flex max-w-48 items-center gap-1 rounded-full bg-muted/60 px-2 py-0.5 text-2xs"

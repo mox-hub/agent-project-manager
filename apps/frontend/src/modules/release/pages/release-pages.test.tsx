@@ -569,7 +569,7 @@ describe('ReleaseDetailPage', () => {
         items: [
           {
             name: '桌面安装包 v1.2.0',
-            location: 'github.com/mox-hub/apm/releases/tag/v1.2.0',
+            location: 'github.com/mox-hub/ordo/releases/tag/v1.2.0',
             howToVerify: '安装后登录成功，验收单全绿',
             limitations: '仅支持 x64',
             receiver: '运维值班',
@@ -583,7 +583,7 @@ describe('ReleaseDetailPage', () => {
     expect(screen.getByText('交付成果清单')).toBeTruthy();
     expect(screen.getByText('桌面安装包 v1.2.0')).toBeTruthy();
     expect(
-      screen.getByText(/github\.com\/mox-hub\/apm\/releases\/tag\/v1\.2\.0/),
+      screen.getByText(/github\.com\/mox-hub\/ordo\/releases\/tag\/v1\.2\.0/),
     ).toBeTruthy();
     expect(screen.getByText(/安装后登录成功/)).toBeTruthy();
     expect(screen.getByText(/仅支持 x64/)).toBeTruthy();
@@ -757,7 +757,7 @@ describe('ReleaseDetailPage', () => {
         items: [
           {
             name: '桌面安装包',
-            location: 'github.com/mox-hub/apm/releases',
+            location: 'github.com/mox-hub/ordo/releases',
             howToVerify: '安装后登录成功',
             platform: 'windows',
           },

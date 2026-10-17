@@ -39,7 +39,7 @@ export function registerWorkspaceCommands(program: Command): void {
   workspace
     .command('create <name>')
     .description('创建工作区（admin）')
-    .option('--path <dir>', '工作区目录（含 data/apm.db 模板）')
+    .option('--path <dir>', '工作区目录（含 data/ordo.db 模板）')
     .action(async (name: string, opts: { path?: string }, cmd: Command) => {
       const ctx = buildContext(cmd);
       const body: Record<string, unknown> = { name };

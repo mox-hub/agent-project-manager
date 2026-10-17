@@ -30,8 +30,8 @@ interface MdxRendererProps {
   onBadgeClick?: (detail: BadgeClickDetail) => void;
 }
 
-export const SECTION_TASK_PANEL_EVENT = 'apm:open-section-task-panel';
-export const OPEN_PICKER_FOR_ANCHOR_EVENT = 'apm:open-picker-for-anchor';
+export const SECTION_TASK_PANEL_EVENT = 'ordo:open-section-task-panel';
+export const OPEN_PICKER_FOR_ANCHOR_EVENT = 'ordo:open-picker-for-anchor';
 
 export interface BadgeClickDetail {
   anchor: string;

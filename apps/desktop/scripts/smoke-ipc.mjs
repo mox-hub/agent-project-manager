@@ -37,11 +37,11 @@ function send(method, params = {}) {
 
 await send('Runtime.enable');
 const expression = `(async () => {
-  const hasDesktop = !!window.__APM_DESKTOP__;
+  const hasDesktop = !!window.__ORDO_DESKTOP__;
   if (!hasDesktop) return { hasDesktop };
-  const appInfo = await window.__APM_DESKTOP__.invoke('get_app_info');
-  const backend = await window.__APM_DESKTOP__.invoke('get_backend_status');
-  const init = await window.__APM_DESKTOP__.invoke('get_init_status');
+  const appInfo = await window.__ORDO_DESKTOP__.invoke('get_app_info');
+  const backend = await window.__ORDO_DESKTOP__.invoke('get_backend_status');
+  const init = await window.__ORDO_DESKTOP__.invoke('get_init_status');
   return { hasDesktop, appInfo, backend, init };
 })()`;
 

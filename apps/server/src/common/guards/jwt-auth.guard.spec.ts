@@ -55,13 +55,13 @@ describe('JwtAuthGuard · ws 上下文短路（心跳 TypeError 回归）', () =
     const principal = { id: 'pat-1', kind: 'access_token' };
     accessTokenService.validate.mockResolvedValue(principal);
     const request = {
-      headers: { authorization: `Bearer apm_pat_abc123` },
+      headers: { authorization: `Bearer ordo_pat_abc123` },
     };
 
     const result = await guard.canActivate(ctx('http', request));
 
     expect(result).toBe(true);
-    expect(accessTokenService.validate).toHaveBeenCalledWith('apm_pat_abc123');
+    expect(accessTokenService.validate).toHaveBeenCalledWith('ordo_pat_abc123');
     expect(request.user).toEqual(principal);
     expect(superCanActivate).not.toHaveBeenCalled();
   });

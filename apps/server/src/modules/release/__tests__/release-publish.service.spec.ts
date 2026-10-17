@@ -16,7 +16,7 @@ vi.mock('simple-git', () => ({
     tags: async () => ({ all: [] }),
     addTag: async () => {},
     pushTags: async () => {},
-    remote: async () => 'https://github.com/mox-hub/apm.git',
+    remote: async () => 'https://github.com/mox-hub/ordo.git',
   }),
 }));
 
@@ -186,7 +186,7 @@ describe('ReleasePublishService（发布执行状态机）', () => {
       prisma.seed({ id: 'rg', status: 'approved', version });
       const createReleaseSpy = vi.fn(async () => ({
         id: 1,
-        htmlUrl: 'https://github.com/mox-hub/apm/releases/tag/x',
+        htmlUrl: 'https://github.com/mox-hub/ordo/releases/tag/x',
       }));
       const service = new ReleasePublishService(
         {

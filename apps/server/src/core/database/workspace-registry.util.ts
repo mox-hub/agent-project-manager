@@ -1,7 +1,7 @@
 /**
  * 工作区注册表（纯 fs 工具，供数据层与 workspace 模块共用，避免 Nest 循环依赖）。
  *
- * 工作区 = 用户指定目录（内含 data/apm.db、uploads、logs 与 workspace.json），
+ * 工作区 = 用户指定目录（内含 data/ordo.db、uploads、logs 与 workspace.json），
  * 注册表文件记录全部工作区。id 为 'default' 的条目指向 DATABASE_URL 本身。
  */
 import * as fs from 'fs';
@@ -81,7 +81,7 @@ export function resolveWorkspaceDbUrl(id: string): string | null {
   }
   const ws = findWorkspace(id);
   if (!ws?.path) return null;
-  const db = path.join(ws.path, 'data', 'apm.db');
+  const db = path.join(ws.path, 'data', 'ordo.db');
   return fs.existsSync(db) ? toFileUrl(db) : null;
 }
 
@@ -125,7 +125,7 @@ export function createWorkspace(input: {
   fs.mkdirSync(path.join(dir, 'uploads'), { recursive: true });
   fs.mkdirSync(path.join(dir, 'logs'), { recursive: true });
 
-  const targetDb = path.join(dir, 'data', 'apm.db');
+  const targetDb = path.join(dir, 'data', 'ordo.db');
   if (!fs.existsSync(targetDb)) {
     fs.copyFileSync(template, targetDb);
   }

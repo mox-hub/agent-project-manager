@@ -168,9 +168,9 @@ export class CliExecutorService {
       env: {
         ...env,
         // Pass execution context via environment
-        APM_EXECUTION_ID: executionRunId,
-        APM_CONVERSATION_ID: conversationId || '',
-        APM_PROJECT_ID: context.projectId,
+        ORDO_EXECUTION_ID: executionRunId,
+        ORDO_CONVERSATION_ID: conversationId || '',
+        ORDO_PROJECT_ID: context.projectId,
       },
       // adapter 显式 shell:false 时直启（zcode node 直启免 Windows cmd.exe 8K 上限）
       shell: built.shell !== false,

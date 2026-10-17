@@ -82,13 +82,13 @@ describe('restoreDesktopSession', () => {
     const store = installMemoryStorage();
     mockShell({
       appInfo: () => ({ apiBaseUrl: 'http://127.0.0.1:4302' }),
-      desktopState: () => ({ access_token: 'jwt-abc', 'apm-workspace-id': 'ws-1' }),
+      desktopState: () => ({ access_token: 'jwt-abc', 'ordo-workspace-id': 'ws-1' }),
     });
 
     await restoreDesktopSession();
 
     expect(store.get('access_token')).toBe('jwt-abc');
-    expect(store.get('apm-workspace-id')).toBe('ws-1');
+    expect(store.get('ordo-workspace-id')).toBe('ws-1');
   });
 
   it('壳侧无 token 时不覆盖 localStorage 现值，并回写镜像以防后续窗口丢失登录态', async () => {

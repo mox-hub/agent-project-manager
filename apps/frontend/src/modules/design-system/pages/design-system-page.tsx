@@ -4155,7 +4155,7 @@ export function DesignSystemPage() {
                             <span className="flex items-center gap-1">
                               <Clock className="size-3 text-muted-foreground" /> 远程 · UTC+8 (5m 前活跃)
                             </span>
-                            <span className="ml-auto font-mono text-3xs">alex@apm.dev</span>
+                            <span className="ml-auto font-mono text-3xs">alex@ordo.dev</span>
                           </PreviewFooterMeta>
                         </div>
                       </HoverCardContent>
@@ -4300,7 +4300,7 @@ export function DesignSystemPage() {
                         <span className="flex items-center gap-1">
                           <Clock className="size-3 text-muted-foreground" /> 远程 · UTC+8 (5m 前活跃)
                         </span>
-                        <span className="ml-auto font-mono text-3xs">alex@apm.dev</span>
+                        <span className="ml-auto font-mono text-3xs">alex@ordo.dev</span>
                       </PreviewFooterMeta>
                     </div>
 

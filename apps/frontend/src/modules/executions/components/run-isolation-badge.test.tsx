@@ -9,8 +9,8 @@ vi.mock('react-i18next', () => ({
 
 const worktreeMeta = {
   mode: 'worktree' as const,
-  worktreePath: 'E:\\repo\\.apm\\worktrees\\abcd1234',
-  branch: 'apm/exec/abcd1234',
+  worktreePath: 'E:\\repo\\.ordo\\worktrees\\abcd1234',
+  branch: 'ordo/exec/abcd1234',
   baseRef: 'basesha123456',
   projectRoot: 'E:\\repo',
   preparedAt: '2026-10-01T00:00:00.000Z',

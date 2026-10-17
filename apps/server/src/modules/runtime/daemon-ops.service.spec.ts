@@ -2,7 +2,7 @@
  * DaemonOpsService（本机 daemon 运维，standalone 限定）单测
  * 覆盖：非 standalone 一律 403、状态判定（锁优先/config 兜底/进程死亡）、
  * start 的已在运行分支与秒退防假成功（宽限观察）、stop 的进程树强杀调用。
- * 文件系统用临时目录（APM_CONFIG_PATH stub），child_process 全 mock 防真拉进程。
+ * 文件系统用临时目录（ORDO_CONFIG_PATH stub），child_process 全 mock 防真拉进程。
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
@@ -49,8 +49,8 @@ describe('DaemonOpsService（本机 daemon 运维）', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     dir = tmpDir();
-    process.env.APM_CONFIG_PATH = path.join(dir, 'config.json');
-    delete process.env.APM_CLI_ENTRY;
+    process.env.ORDO_CONFIG_PATH = path.join(dir, 'config.json');
+    delete process.env.ORDO_CLI_ENTRY;
     return () => {
       fs.rmSync(dir, { recursive: true, force: true });
     };
@@ -107,11 +107,11 @@ describe('DaemonOpsService（本机 daemon 运维）', () => {
   });
 
   it('start：spawn 后 daemon 秒退（锁未建立）→ 400 防假成功', async () => {
-    // APM_CLI_ENTRY 指向一个存在的占位文件 → 探测命中 → spawn（mock）→ 1.5s 宽限观察
+    // ORDO_CLI_ENTRY 指向一个存在的占位文件 → 探测命中 → spawn（mock）→ 1.5s 宽限观察
     // 发现锁不存在（spawn 被 mock，无真进程）→ BadRequest 而非假成功
     const placeholder = path.join(dir, 'entry.js');
     fs.writeFileSync(placeholder, '// stub entry');
-    process.env.APM_CLI_ENTRY = placeholder;
+    process.env.ORDO_CLI_ENTRY = placeholder;
     const service = makeService('standalone');
     await expect(service.start()).rejects.toThrow(BadRequestException);
     expect(spawnMock).toHaveBeenCalledTimes(1);
@@ -123,7 +123,7 @@ describe('DaemonOpsService（本机 daemon 运维）', () => {
     expect(cmd).toBe(process.execPath);
     expect(args).toEqual([placeholder]);
     expect(opts.detached).toBe(true);
-    expect(opts.env.APM_BACKEND).toBe('http://127.0.0.1:4300');
+    expect(opts.env.ORDO_BACKEND).toBe('http://127.0.0.1:4300');
   });
 
   it('stop：未运行 → 400；运行中（锁 pid 存活）→ 平台强杀（win32 taskkill /T /F，Unix SIGTERM）', () => {

@@ -20,7 +20,7 @@ import {
 
 export type SurfaceMode = 'human' | 'ai';
 
-const SURFACE_STORAGE_KEY = 'apm_auth_surface_mode';
+const SURFACE_STORAGE_KEY = 'ordo_auth_surface_mode';
 
 function useSafeTheme(): { resolvedMode: ResolvedTheme; toggleTheme: () => void } {
   try {

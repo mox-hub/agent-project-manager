@@ -49,9 +49,9 @@ export class DaemonOpsService {
   }
 
   private configDir(): string {
-    const configured = process.env.APM_CONFIG_PATH;
+    const configured = process.env.ORDO_CONFIG_PATH;
     if (configured) return path.dirname(configured);
-    return path.join(os.homedir(), '.apm');
+    return path.join(os.homedir(), '.ordo');
   }
 
   private lockPath(): string {
@@ -64,8 +64,8 @@ export class DaemonOpsService {
 
   private daemonEntryCandidates(): string[] {
     const candidates: string[] = [];
-    if (process.env.APM_CLI_ENTRY) {
-      candidates.push(process.env.APM_CLI_ENTRY);
+    if (process.env.ORDO_CLI_ENTRY) {
+      candidates.push(process.env.ORDO_CLI_ENTRY);
     }
     // dev/standalone 布局：apps/server → ../cli/dist/runtime/index.js
     for (const base of [process.cwd(), __dirname]) {
@@ -151,7 +151,7 @@ export class DaemonOpsService {
     });
     if (!entry) {
       throw new NotFoundException(
-        '未找到守护进程入口（apps/cli/dist/runtime/index.js），请先构建 @ordo/cli 或设置 APM_CLI_ENTRY',
+        '未找到守护进程入口（apps/cli/dist/runtime/index.js），请先构建 @ordo/cli 或设置 ORDO_CLI_ENTRY',
       );
     }
 
@@ -163,8 +163,8 @@ export class DaemonOpsService {
       stdio: ['ignore', logFd, logFd],
       env: {
         ...process.env,
-        APM_BACKEND: `http://127.0.0.1:${port}`,
-        APM_CONFIG_PATH: path.join(this.configDir(), 'config.json'),
+        ORDO_BACKEND: `http://127.0.0.1:${port}`,
+        ORDO_CONFIG_PATH: path.join(this.configDir(), 'config.json'),
       },
     });
     child.unref();
@@ -175,7 +175,7 @@ export class DaemonOpsService {
     const status = this.status();
     if (!status.running) {
       throw new BadRequestException(
-        '守护进程启动后立即退出（单实例锁冲突或入口损坏），请查看 ~/.apm/runtime.log',
+        '守护进程启动后立即退出（单实例锁冲突或入口损坏），请查看 ~/.ordo/runtime.log',
       );
     }
     return status;

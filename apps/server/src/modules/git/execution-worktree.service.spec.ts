@@ -50,7 +50,7 @@ async function initRepo(dir: string): Promise<string> {
   await fs.promises.mkdir(dir, { recursive: true });
   await git(dir, ['init']);
   await git(dir, ['config', 'user.name', 'fixture']);
-  await git(dir, ['config', 'user.email', 'fixture@apm.test']);
+  await git(dir, ['config', 'user.email', 'fixture@ordo.test']);
   await fs.promises.writeFile(path.join(dir, 'a.txt'), 'line1\nline2\nline3\n');
   await git(dir, ['add', '-A']);
   await git(dir, ['commit', '-m', 'init']);
@@ -88,7 +88,7 @@ describe('ExecutionWorktreeService', () => {
 
     expect(prep.branch).toBe(`${WORKTREE_BRANCH_PREFIX}abcd1234`);
     expect(prep.worktreePath).toContain(
-      path.join('.apm', 'worktrees', 'abcd1234'),
+      path.join('.ordo', 'worktrees', 'abcd1234'),
     );
     expect(fs.existsSync(prep.worktreePath)).toBe(true);
     // baseRef = 主仓 HEAD
@@ -101,12 +101,12 @@ describe('ExecutionWorktreeService', () => {
         `refs/heads/${prep.branch}`,
       ]),
     ).toBeTruthy();
-    // .gitignore 幂等补了 .apm/
+    // .gitignore 幂等补了 .ordo/
     const gitignore = await fs.promises.readFile(
       path.join(repoRoot, '.gitignore'),
       'utf8',
     );
-    expect(gitignore.split(/\r?\n/)).toContain('.apm/');
+    expect(gitignore.split(/\r?\n/)).toContain('.ordo/');
 
     // 再次 prepare（另一执行）不重复追加条目
     await service.prepareWorktree(repoRoot, 'exec_effe5678');
@@ -115,7 +115,7 @@ describe('ExecutionWorktreeService', () => {
       'utf8',
     );
     expect(
-      gitignore2.split(/\r?\n/).filter((l) => l.trim() === '.apm/'),
+      gitignore2.split(/\r?\n/).filter((l) => l.trim() === '.ordo/'),
     ).toHaveLength(1);
   });
 
@@ -178,7 +178,7 @@ describe('ExecutionWorktreeService', () => {
       prep.baseRef,
       {
         message: 'chore(apm): execution uncomm001 snapshot',
-        author: { name: 'APM Execution', email: 'execution@apm.local' },
+        author: { name: 'APM Execution', email: 'execution@ordo.local' },
       },
     );
     expect(changes.hasChanges).toBe(true);
@@ -191,7 +191,7 @@ describe('ExecutionWorktreeService', () => {
       '-1',
       '--pretty=%ae',
     ]);
-    expect(authorLine.trim()).toBe('execution@apm.local');
+    expect(authorLine.trim()).toBe('execution@ordo.local');
     // 快照后工作树干净
     const status = await git(prep.worktreePath, ['status', '--porcelain']);
     expect(status.trim()).toBe('');
@@ -268,7 +268,7 @@ describe('ExecutionWorktreeService', () => {
     expect(parents.trim().split(/\s+/)).toHaveLength(3);
   });
 
-  it('cleanup：删除 worktree 与分支；非 apm/exec/ 前缀分支拒删；幂等可重入', async () => {
+  it('cleanup：删除 worktree 与分支；非 ordo/exec/ 前缀分支拒删；幂等可重入', async () => {
     const prep = await service.prepareWorktree(repoRoot, 'exec_cln00001');
     await expect(
       service.cleanup(repoRoot, prep.worktreePath, 'main', { force: true }),

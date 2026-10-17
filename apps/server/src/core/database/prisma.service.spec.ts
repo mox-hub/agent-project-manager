@@ -84,7 +84,7 @@ describe('PrismaService', () => {
       tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-prisma-ws-'));
       fs.mkdirSync(path.join(tmpDir, 'data'), { recursive: true });
       // 空 db 文件即可：客户端仅构造、不连接
-      fs.writeFileSync(path.join(tmpDir, 'data', 'apm.db'), '');
+      fs.writeFileSync(path.join(tmpDir, 'data', 'ordo.db'), '');
       const registryFile = path.join(tmpDir, 'workspaces.json');
       fs.writeFileSync(
         registryFile,

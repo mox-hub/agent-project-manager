@@ -1104,7 +1104,7 @@ export class ProposalService {
           `AI 执行完成：${input.files.length} 个文件` +
           ` +${input.insertions} −${input.deletions}，建议合入`,
         detail:
-          `分支 apm/exec/${shortBranch}（基于 ${input.baseRef.slice(0, 8)}）` +
+          `分支 ordo/exec/${shortBranch}（基于 ${input.baseRef.slice(0, 8)}）` +
           `共 ${input.commitCount} 个提交。合入将对主工作区执行 git merge --no-ff，` +
           '冲突与脏工作区会在你确认时复核；驳回则清理分支与执行现场。',
         payload: payload as unknown as Prisma.InputJsonValue,

@@ -19,11 +19,11 @@ export function AuthVisual({ className }: { className?: string }) {
       {/* 点阵纹理：currentColor 走 border token，深浅模式自动跟随 */}
       <svg className="absolute inset-0 h-full w-full text-border" role="presentation">
         <defs>
-          <pattern id="apm-auth-dots" width="28" height="28" patternUnits="userSpaceOnUse">
+          <pattern id="ordo-auth-dots" width="28" height="28" patternUnits="userSpaceOnUse">
             <circle cx="1.5" cy="1.5" r="1.5" fill="currentColor" />
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#apm-auth-dots)" className="opacity-40" />
+        <rect width="100%" height="100%" fill="url(#ordo-auth-dots)" className="opacity-40" />
       </svg>
 
       {/* 品牌水印 */}

@@ -7,7 +7,7 @@ import {
   usePinnedIssueIds,
 } from './pinned-issues-store';
 
-const STORAGE_KEY = 'apm.pinned-issues';
+const STORAGE_KEY = 'ordo.pinned-issues';
 
 // setup.ts 将 localStorage mock 为无实现的 vi.fn()，这里接上内存实现（toolbar-row.test 同款）
 const memoryStorage = new Map<string, string>();

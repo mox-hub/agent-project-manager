@@ -13,8 +13,8 @@ import { logger } from './logger';
 export interface DesktopPersistentState {
   /** 登录成功后的 JWT（前端 localStorage['access_token'] 的镜像） */
   access_token?: string;
-  /** 当前工作区（前端 localStorage['apm-workspace-id'] 的镜像） */
-  'apm-workspace-id'?: string;
+  /** 当前工作区（前端 localStorage['ordo-workspace-id'] 的镜像） */
+  'ordo-workspace-id'?: string;
   /** 初始化向导是否已完成 */
   onboarding_completed?: boolean;
   /** 关窗行为（ADR-015）：true（默认）= 最小化到托盘服务保活；false = 关窗即退出 */

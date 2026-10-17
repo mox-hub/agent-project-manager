@@ -1,5 +1,5 @@
 /**
- * config：本地 ~/.apm/config.json 管理
+ * config：本地 ~/.ordo/config.json 管理
  */
 import { Command } from 'commander';
 import { getProfile, readConfig, writeConfig } from '@ordo/shared';
@@ -7,7 +7,7 @@ import { getProfile, readConfig, writeConfig } from '@ordo/shared';
 export function registerConfigCommands(program: Command): void {
   const config = program
     .command('config')
-    .description('本地配置管理（~/.apm/config.json）');
+    .description('本地配置管理（~/.ordo/config.json）');
 
   config
     .command('get <key>')

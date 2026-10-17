@@ -74,9 +74,9 @@ describe('McpServerController - PAT 鉴权（P0-6）', () => {
   it('无效 token 的 SSE 握手 → 401', async () => {
     accessTokenService.validate.mockResolvedValue(null);
     const res = mockRes();
-    await controller.handleSse(res, mockReq(), undefined, 'apm_pat_bad');
+    await controller.handleSse(res, mockReq(), undefined, 'ordo_pat_bad');
 
-    expect(accessTokenService.validate).toHaveBeenCalledWith('apm_pat_bad');
+    expect(accessTokenService.validate).toHaveBeenCalledWith('ordo_pat_bad');
     expect(res.status).toHaveBeenCalledWith(HttpStatus.UNAUTHORIZED);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ error: 'invalid or expired token' }),
@@ -89,12 +89,12 @@ describe('McpServerController - PAT 鉴权（P0-6）', () => {
       accessTokenId: 'pat-1',
     });
     const res = mockRes();
-    await controller.handleSse(res, mockReq(), undefined, 'apm_pat_good');
+    await controller.handleSse(res, mockReq(), undefined, 'ordo_pat_good');
 
     expect(res.status).not.toHaveBeenCalledWith(HttpStatus.UNAUTHORIZED);
     expect(mcpServer.createSession).toHaveBeenCalledWith(
       'user-1',
-      hashMcpToken('apm_pat_good'),
+      hashMcpToken('ordo_pat_good'),
     );
     expect(res.setHeader).toHaveBeenCalledWith(
       'Content-Type',
@@ -111,13 +111,13 @@ describe('McpServerController - PAT 鉴权（P0-6）', () => {
       res,
       mockReq(),
       'mcp_existing',
-      'apm_pat_rotate',
+      'ordo_pat_rotate',
     );
 
     expect(mcpServer.bindSession).toHaveBeenCalledWith(
       'mcp_existing',
       'user-2',
-      hashMcpToken('apm_pat_rotate'),
+      hashMcpToken('ordo_pat_rotate'),
     );
   });
 
@@ -137,9 +137,9 @@ describe('McpServerController - PAT 鉴权（P0-6）', () => {
 
   it('消息上行 token 与会话摘要不匹配 → 401', async () => {
     const res = mockRes();
-    registerLiveSession('sdk-s1', hashMcpToken('apm_pat_a'));
+    registerLiveSession('sdk-s1', hashMcpToken('ordo_pat_a'));
 
-    await controller.handleMessages(res, mockReq(), 'sdk-s1', 'apm_pat_b');
+    await controller.handleMessages(res, mockReq(), 'sdk-s1', 'ordo_pat_b');
 
     expect(res.status).toHaveBeenCalledWith(HttpStatus.UNAUTHORIZED);
     expect(res.json).toHaveBeenCalledWith(
@@ -149,9 +149,9 @@ describe('McpServerController - PAT 鉴权（P0-6）', () => {
 
   it('消息上行 token 匹配 → 交给 transport 处理并刷新会话 TTL', async () => {
     const res = mockRes();
-    registerLiveSession('sdk-s2', hashMcpToken('apm_pat_a'));
+    registerLiveSession('sdk-s2', hashMcpToken('ordo_pat_a'));
 
-    await controller.handleMessages(res, mockReq(), 'sdk-s2', 'apm_pat_a');
+    await controller.handleMessages(res, mockReq(), 'sdk-s2', 'ordo_pat_a');
 
     expect(mcpServer.validateSession).toHaveBeenCalledWith('mcp_entry_1');
     expect(res.status).not.toHaveBeenCalled();
@@ -159,7 +159,12 @@ describe('McpServerController - PAT 鉴权（P0-6）', () => {
 
   it('未知会话保持 404 语义（先于 token 校验）', async () => {
     const res = mockRes();
-    await controller.handleMessages(res, mockReq(), 'mcp_missing', 'apm_pat_x');
+    await controller.handleMessages(
+      res,
+      mockReq(),
+      'mcp_missing',
+      'ordo_pat_x',
+    );
 
     expect(res.status).toHaveBeenCalledWith(HttpStatus.NOT_FOUND);
     expect(accessTokenService.validate).not.toHaveBeenCalled();
@@ -167,7 +172,7 @@ describe('McpServerController - PAT 鉴权（P0-6）', () => {
 
   it('无 token 的消息上行 → 401', async () => {
     const res = mockRes();
-    registerLiveSession('sdk-s3', hashMcpToken('apm_pat_a'));
+    registerLiveSession('sdk-s3', hashMcpToken('ordo_pat_a'));
 
     await controller.handleMessages(res, mockReq(), 'sdk-s3', undefined);
 

@@ -6,10 +6,10 @@ const GRACEFUL_DAEMON_SHUTDOWN_TIMEOUT_MS = 3_000;
  *
  * AI 执行面（守护进程）此前不随包、也不被壳拉起——设置页「机器列表」永远为空，
  * 用户也无控件可启动。现随包分发 apps/cli 产物，由壳在 server 健康后自动拉起：
- *   utilityProcess.fork(cliEntry) + env(APM_BACKEND, APM_CONFIG_PATH)
- * 配置文件重定向到 ~/.apm/desktop/apm-config.json：数据根与手动 CLI 同为 ~/.apm，
+ *   utilityProcess.fork(cliEntry) + env(ORDO_BACKEND, ORDO_CONFIG_PATH)
+ * 配置文件重定向到 ~/.ordo/desktop/ordo-config.json：数据根与手动 CLI 同为 ~/.ordo，
  * 但配置与单实例锁收敛在 desktop/ 子目录——手动 CLI 的锁在配置文件同目录
- * （~/.apm/runtime.lock，见 apps/cli/src/runtime/lock.ts），子目录隔离后互不干扰。
+ * （~/.ordo/runtime.lock，见 apps/cli/src/runtime/lock.ts），子目录隔离后互不干扰。
  * 注册端点为 Public（无需用户凭证），守护进程上线即出现在设置页机器列表。
  */
 import fs from 'node:fs';
@@ -64,8 +64,8 @@ function assertCliEntry(config: AppConfig): void {
  * 接管上一代壳残留的孤儿守护进程。
  *
  * 壳崩溃/被强杀时 before-quit 清理不执行——utilityProcess 守护进程是独立 OS 进程，
- * 会孤儿化存活并持有 ~/.apm/desktop/ 的 runtime.lock，导致下次启动锁冲突必失败。
- * 该锁在 desktop/ 子目录（手动 CLI 的锁在 ~/.apm 根），持有者只可能是壳拉起的
+ * 会孤儿化存活并持有 ~/.ordo/desktop/ 的 runtime.lock，导致下次启动锁冲突必失败。
+ * 该锁在 desktop/ 子目录（手动 CLI 的锁在 ~/.ordo 根），持有者只可能是壳拉起的
  * 守护进程，因此活着即可判定孤儿、安全终止。持锁方已死（陈旧
  * 锁）则仅清锁——这一分支守护进程自身的 stale 锁接管也能处理，这里提前做省一次
  * 失败重启。
@@ -179,11 +179,11 @@ export async function startRuntimeDaemon(backendPort: number): Promise<{ pid: nu
 
   const env = {
     ...process.env,
-    APM_BACKEND: `http://127.0.0.1:${backendPort}`,
-    APM_CONFIG_PATH: config.apmConfigPath,
+    ORDO_BACKEND: `http://127.0.0.1:${backendPort}`,
+    ORDO_CONFIG_PATH: config.apmConfigPath,
     NODE_ENV: 'production',
   };
-  logger.info(`启动守护进程: entry=${config.cliEntry} backend=${env.APM_BACKEND}`);
+  logger.info(`启动守护进程: entry=${config.cliEntry} backend=${env.ORDO_BACKEND}`);
 
   const proc: UtilityProcess = utilityProcess.fork(config.cliEntry, [], {
     cwd: path.dirname(config.cliEntry),

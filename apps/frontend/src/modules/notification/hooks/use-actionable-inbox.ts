@@ -10,8 +10,8 @@ import type { ActionableInboxItem, InboxTab } from '../types/inbox';
 import type { Decision } from '@/shared/decision-card/types';
 import type { Notification } from '../api/notification-api';
 
-const STORAGE_KEY_CLEARED = 'apm:inbox:cleared_v1';
-const STORAGE_KEY_SNOOZED = 'apm:inbox:snoozed_v1';
+const STORAGE_KEY_CLEARED = 'ordo:inbox:cleared_v1';
+const STORAGE_KEY_SNOOZED = 'ordo:inbox:snoozed_v1';
 
 function readStoredSet(key: string): Set<string> {
   try {

@@ -4,7 +4,7 @@
  * 自动拉起 server → 健康检查通过 → 自动拉起 apm-runtime 守护进程 → 切换到正式页面。
  * 窗口加载源：dev 优先 vite（5173，HMR）；否则 server 静态托管的前端（同源免 CORS，
  * server 侧自带 SPA history fallback）。
- * 生命周期强化（ADR-015）：单实例锁防双开抢 ~/.apm；关窗最小化到托盘（服务保活）；
+ * 生命周期强化（ADR-015）：单实例锁防双开抢 ~/.ordo；关窗最小化到托盘（服务保活）；
  * server/daemon 意外退出自动重启（指数退避+熔断）；渲染进程崩溃白屏自动重载。
  */
 import { app, BrowserWindow, ipcMain, powerMonitor } from 'electron';
@@ -37,7 +37,7 @@ import {
 const DEEP_LINK_SCHEME = 'apm';
 
 const config = resolveAppConfig();
-// Chromium 自身 profile（缓存/LocalStorage）收敛到 ~/.apm/electron 子目录，
+// Chromium 自身 profile（缓存/LocalStorage）收敛到 ~/.ordo/electron 子目录，
 // 避免缓存文件污染项目数据根；官方要求在 ready 前设置，故放模块顶层
 app.setPath('userData', path.join(config.userDataDir, 'electron'));
 
@@ -127,12 +127,12 @@ function showBootError(message: string, detail = ''): void {
   }
 }
 
-/** 调试模式：dev 自动开；打包版经 --devtools 参数或 APM_DESKTOP_DEBUG=1 打开（v0.6.1 体验切片）。 */
+/** 调试模式：dev 自动开；打包版经 --devtools 参数或 ORDO_DESKTOP_DEBUG=1 打开（v0.6.1 体验切片）。 */
 function shouldAutoOpenDevTools(): boolean {
   return (
     isDevMode() ||
     process.argv.includes('--devtools') ||
-    process.env.APM_DESKTOP_DEBUG === '1'
+    process.env.ORDO_DESKTOP_DEBUG === '1'
   );
 }
 
@@ -343,11 +343,11 @@ function bootstrap(): void {
   initLogger(config.logsDir);
   logger.info(
     `desktop 壳启动: mode=${isDevMode() ? 'development' : 'production'} transport=${
-      process.env.APM_SERVER_TRANSPORT ?? 'utility'
+      process.env.ORDO_SERVER_TRANSPORT ?? 'utility'
     } devtools=${shouldAutoOpenDevTools() ? 'on' : 'off'} dataDir=${config.userDataDir}`,
   );
 
-  // 旧版数据迁移（v0.6.1 %APPDATA% → ~/.apm）先行，之后首装校验才准确
+  // 旧版数据迁移（v0.6.1 %APPDATA% → ~/.ordo）先行，之后首装校验才准确
   migrateLegacyUserData(config, path.join(app.getPath('appData'), 'agent-project-manager'));
   // 目录与密钥同步就绪（毫秒级）——服务启动与 db push 都依赖它们，不与后台初始化竞态
   initializeDirs(config);
@@ -390,7 +390,7 @@ function bootstrap(): void {
   void bootstrapServer();
 }
 
-// 单实例锁（ADR-015）：双开会各自拉起 server 抢同一 ~/.apm（SQLite 锁/守护进程锁/
+// 单实例锁（ADR-015）：双开会各自拉起 server 抢同一 ~/.ordo（SQLite 锁/守护进程锁/
 // 端口漂移第二套服务），必须拒绝——第二实例直接退出，并唤起已有实例窗口
 if (!app.requestSingleInstanceLock()) {
   app.quit();

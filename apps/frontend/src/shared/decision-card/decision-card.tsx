@@ -1183,7 +1183,7 @@ function IntegrationBody({ decision }: { decision: Decision }) {
   const filesTotal = p.filesTotal ?? files.length;
   const overflow = filesTotal - files.length;
   const mainDirty = p.mainDirty ?? [];
-  const shortBranch = (p.branch ?? '').replace('apm/exec/', '');
+  const shortBranch = (p.branch ?? '').replace('ordo/exec/', '');
 
   return (
     <div className="space-y-2" data-ai="decision-integration-body">
@@ -1194,7 +1194,7 @@ function IntegrationBody({ decision }: { decision: Decision }) {
           {p.taskTitle ?? decision.taskTitle ?? p.executionId ?? '—'}
         </span>
         <span className="shrink-0 font-mono text-2xs text-content-text-muted">
-          apm/exec/{shortBranch}
+          ordo/exec/{shortBranch}
         </span>
       </div>
       {/* 推荐语：把「合入会发生什么」用一句话说清 */}

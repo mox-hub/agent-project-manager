@@ -50,7 +50,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const authorization = request?.headers?.authorization as string | undefined;
     const hasToken = Boolean(authorization);
 
-    // 访问 token（PAT）：apm_pat_ 前缀走 AccessTokenService 校验，
+    // 访问 token（PAT）：ordo_pat_ 前缀走 AccessTokenService 校验，
     // principal 形态与 validateJwtPayload 一致（sessionId: null）
     if (authorization?.startsWith(`Bearer ${ACCESS_TOKEN_PREFIX}`)) {
       return this.validateAccessToken(

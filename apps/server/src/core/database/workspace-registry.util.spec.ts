@@ -49,13 +49,13 @@ describe('workspace-registry.util', () => {
     const dir = path.join(tmpRoot, 'ws-a');
     const record = createWorkspace({ name: '测试工作区', path: dir });
     expect(record.id).not.toBe(DEFAULT_WORKSPACE_ID);
-    expect(fs.existsSync(path.join(dir, 'data', 'apm.db'))).toBe(true);
+    expect(fs.existsSync(path.join(dir, 'data', 'ordo.db'))).toBe(true);
     expect(fs.existsSync(path.join(dir, 'uploads'))).toBe(true);
     expect(fs.existsSync(path.join(dir, 'logs'))).toBe(true);
     expect(findWorkspace(record.id)?.name).toBe('测试工作区');
 
     const url = resolveWorkspaceDbUrl(record.id);
-    expect(url).toMatch(/ws-a\/data\/apm\.db$|ws-a\\data\\apm\.db$/);
+    expect(url).toMatch(/ws-a\/data\/ordo\.db$|ws-a\\data\\ordo\.db$/);
   });
 
   it('相对路径与非空目录拒绝创建', () => {

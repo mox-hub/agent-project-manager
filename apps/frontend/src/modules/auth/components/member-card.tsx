@@ -43,7 +43,7 @@ export function MemberCard({ displayName, memberNo, joinedAt, className }: Membe
       <svg aria-hidden="true" className="absolute inset-0 h-full w-full text-border opacity-40">
         <defs>
           <pattern
-            id="apm-member-card-stripes"
+            id="ordo-member-card-stripes"
             width="14"
             height="14"
             patternUnits="userSpaceOnUse"
@@ -52,7 +52,7 @@ export function MemberCard({ displayName, memberNo, joinedAt, className }: Membe
             <line x1="0" y1="0" x2="0" y2="14" stroke="currentColor" strokeWidth="1" />
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#apm-member-card-stripes)" className="opacity-30" />
+        <rect width="100%" height="100%" fill="url(#ordo-member-card-stripes)" className="opacity-30" />
       </svg>
 
       <div className="relative flex flex-col px-8 pb-7 pt-9">
@@ -61,12 +61,12 @@ export function MemberCard({ displayName, memberNo, joinedAt, className }: Membe
           <svg viewBox="0 0 160 160" className="fill-current h-full w-full text-muted-foreground">
             <defs>
               <path
-                id="apm-member-card-circle"
+                id="ordo-member-card-circle"
                 d="M 80,80 m -60,0 a 60,60 0 1,1 120,0 a 60,60 0 1,1 -120,0"
               />
             </defs>
             <text fontSize="10.5" letterSpacing="1" fontFamily="var(--font-mono)">
-              <textPath href="#apm-member-card-circle" textLength="376" lengthAdjust="spacingAndGlyphs">
+              <textPath href="#ordo-member-card-circle" textLength="376" lengthAdjust="spacingAndGlyphs">
                 AGENT PROJECT MANAGER · PEOPLE + AI COLLEAGUES ·
               </textPath>
             </text>

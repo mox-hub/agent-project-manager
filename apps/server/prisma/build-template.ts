@@ -1,7 +1,7 @@
 /**
  * 构建工作区模板库（prisma/template.db）：
  * schema 全量建表 + 最小可登录种子（admin/password123 + 全局 admin 角色）。
- * 创建工作区时复制该文件为 data/apm.db。
+ * 创建工作区时复制该文件为 data/ordo.db。
  *
  * 用法: pnpm build:template-db
  */
@@ -43,7 +43,7 @@ async function seed() {
     create: {
       username: 'admin',
       displayName: '管理员',
-      email: 'admin@apm.local',
+      email: 'admin@ordo.local',
       passwordHash,
       authProvider: 'local',
     },

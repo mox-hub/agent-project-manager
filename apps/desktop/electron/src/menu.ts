@@ -18,7 +18,7 @@ function showAbout(): void {
     type: 'info',
     title: '关于 Agent Project Manager',
     message: `Agent Project Manager ${app.getVersion()}`,
-    detail: `AI 驱动的项目管理工具（人类控制面桌面壳）\n数据目录：${process.env.APM_DATA_DIR ?? '~/.apm'}\n日志：${getLogFilePath()}`,
+    detail: `AI 驱动的项目管理工具（人类控制面桌面壳）\n数据目录：${process.env.ORDO_DATA_DIR ?? '~/.ordo'}\n日志：${getLogFilePath()}`,
     buttons: ['确定'],
   });
 }

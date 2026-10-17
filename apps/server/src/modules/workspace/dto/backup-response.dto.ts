@@ -23,7 +23,7 @@ export class WorkspaceBackupFileDto {
 
 /** 单份备份（列表项 / 创建结果） */
 export class WorkspaceBackupDto {
-  @ApiProperty({ description: '备份 ID（即 .apm-backups 下的目录名）' })
+  @ApiProperty({ description: '备份 ID（即 .ordo-backups 下的目录名）' })
   id: string;
 
   @ApiProperty({ description: '备份创建时间（ISO）' })

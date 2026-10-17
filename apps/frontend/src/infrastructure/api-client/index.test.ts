@@ -107,7 +107,7 @@ describe('api-client 工作区作用域自愈', () => {
     calls.length = 0;
     store = installMemoryStorage();
     store.set('access_token', 'jwt-valid');
-    store.set('apm-workspace-id', 'ws-foreign');
+    store.set('ordo-workspace-id', 'ws-foreign');
     consumeWorkspaceReset();
   });
 
@@ -126,7 +126,7 @@ describe('api-client 工作区作用域自愈', () => {
     expect(calls[0]).toMatchObject({ url: '/auth/me', workspaceId: 'ws-foreign' });
     expect(calls[1]).toMatchObject({ url: '/auth/me', workspaceId: null });
     // 选择被丢弃（含 localStorage），且登录态**未**被清
-    expect(store.has('apm-workspace-id')).toBe(false);
+    expect(store.has('ordo-workspace-id')).toBe(false);
     expect(store.get('access_token')).toBe('jwt-valid');
     expect(consumeWorkspaceReset()).toEqual({ workspaceId: 'ws-foreign' });
     expect(consumeWorkspaceReset()).toBeNull();
@@ -139,7 +139,7 @@ describe('api-client 工作区作用域自愈', () => {
 
     expect(login.status).toBe(200);
     expect(calls.map((c) => c.workspaceId)).toEqual(['ws-foreign', null]);
-    expect(store.has('apm-workspace-id')).toBe(false);
+    expect(store.has('ordo-workspace-id')).toBe(false);
     expect(consumeWorkspaceReset()).toEqual({ workspaceId: 'ws-foreign' });
   });
 
@@ -150,7 +150,7 @@ describe('api-client 工作区作用域自愈', () => {
 
     expect(issues.status).toBe(200);
     expect(calls).toHaveLength(2);
-    expect(store.has('apm-workspace-id')).toBe(false);
+    expect(store.has('ordo-workspace-id')).toBe(false);
   });
 
   it('会话真失效（去掉作用域仍 401）：保留选择、清登录态、不误报工作区重置', async () => {
@@ -167,7 +167,7 @@ describe('api-client 工作区作用域自愈', () => {
     await expect(apiClient.get('/issues')).rejects.toMatchObject({ status: 401 });
 
     expect(calls).toHaveLength(2); // 重放一次即止，无递归
-    expect(store.get('apm-workspace-id')).toBe('ws-foreign'); // 选择不被误丢
+    expect(store.get('ordo-workspace-id')).toBe('ws-foreign'); // 选择不被误丢
     expect(store.has('access_token')).toBe(false); // 真失效才清
     expect(consumeWorkspaceReset()).toBeNull(); // 不发「已重置」提示
   });
@@ -187,12 +187,12 @@ describe('api-client 工作区作用域自愈', () => {
       status: 404,
     });
 
-    expect(store.has('apm-workspace-id')).toBe(false);
+    expect(store.has('ordo-workspace-id')).toBe(false);
     expect(store.get('access_token')).toBe('jwt-valid'); // 404 与登录态无关，不清
   });
 
   it('无工作区选择时不重放（不产生多余往返）', async () => {
-    store.delete('apm-workspace-id');
+    store.delete('ordo-workspace-id');
     apiClient.defaults.adapter = async (config) => {
       calls.push({
         method: (config.method ?? 'get').toUpperCase(),
@@ -221,7 +221,7 @@ describe('api-client 工作区作用域自愈', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]).toMatchObject({ url: '/invites/tok', workspaceId: null });
     // 未触发自愈：工作区选择与登录态都不该被动
-    expect(store.get('apm-workspace-id')).toBe('ws-foreign');
+    expect(store.get('ordo-workspace-id')).toBe('ws-foreign');
     expect(consumeWorkspaceReset()).toBeNull();
 
     // 对照：普通业务请求照旧带 id（证明上例是前缀特例，不是全局失效）

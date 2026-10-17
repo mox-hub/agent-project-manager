@@ -299,7 +299,7 @@ export class WorkspaceBackupService {
   // ---------------------------------------------------------------- 内部：路径与目录
 
   private backupRoot(): string {
-    return path.resolve(process.env.WORKSPACE_BACKUP_DIR ?? '.apm-backups');
+    return path.resolve(process.env.WORKSPACE_BACKUP_DIR ?? '.ordo-backups');
   }
 
   /** 备份目录名：backup-<ISO 时间戳（冒号/毫秒点转连字符，Windows 文件名非法字符）>-all|<workspaceId> */
@@ -359,7 +359,7 @@ export class WorkspaceBackupService {
       return this.fileUrlToDbPath(url);
     }
     if (!record.path) return null;
-    const db = path.join(record.path, 'data', 'apm.db');
+    const db = path.join(record.path, 'data', 'ordo.db');
     return fs.existsSync(db) ? db : null;
   }
 
@@ -436,7 +436,7 @@ export class WorkspaceBackupService {
         ws.id === DEFAULT_WORKSPACE_ID
           ? this.resolveDbPath(ws)
           : ws.path
-            ? path.join(ws.path, 'data', 'apm.db')
+            ? path.join(ws.path, 'data', 'ordo.db')
             : null;
       if (!targetPath) {
         throw new BadRequestException(
@@ -475,7 +475,7 @@ export class WorkspaceBackupService {
             ? this.fileUrlToDbPath(process.env.DATABASE_URL)
             : null
           : record?.path
-            ? path.join(record.path, 'data', 'apm.db')
+            ? path.join(record.path, 'data', 'ordo.db')
             : null;
       if (!targetPath) {
         throw new BadRequestException(

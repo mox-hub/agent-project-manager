@@ -64,7 +64,7 @@ export function resolveRoutePreview(path: string): RoutePreviewMatch {
 }
 
 /** apm:// kind → 预览卡类型（v2 纪要 §13：引用与路由两入口汇入同一 Match） */
-const APM_REF_PREVIEW_TYPE: Record<string, RoutePreviewType> = {
+const ORDO_REF_PREVIEW_TYPE: Record<string, RoutePreviewType> = {
   doc: 'document',
   issue: 'task',
   bug: 'bug',
@@ -83,7 +83,7 @@ const APM_REF_PREVIEW_TYPE: Record<string, RoutePreviewType> = {
 export function resolveApmRefMatch(href: string): RoutePreviewMatch | null {
   const ref = parseApmRef(href);
   if (!ref) return null;
-  const type = APM_REF_PREVIEW_TYPE[ref.kind];
+  const type = ORDO_REF_PREVIEW_TYPE[ref.kind];
   if (!type) return null;
   return { type, id: ref.shortId };
 }

@@ -29,8 +29,8 @@ export function registerAuthCommands(program: Command): void {
     .command('login')
     .description('登录后端并保存凭据到当前 profile')
     .option('--backend <url>', '后端地址（同时写入配置）')
-    .option('--username <name>', '用户名（默认读 APM_USERNAME）')
-    .option('--password <pass>', '密码（默认读 APM_PASSWORD，否则交互输入）')
+    .option('--username <name>', '用户名（默认读 ORDO_USERNAME）')
+    .option('--password <pass>', '密码（默认读 ORDO_PASSWORD，否则交互输入）')
     .option('--token <jwt>', '直接注入 token 而不走登录接口')
     .action(async (opts, cmd) => {
       // --backend 定义在全局（同名时 commander 归到全局），统一走 optsWithGlobals
@@ -63,14 +63,14 @@ export function registerAuthCommands(program: Command): void {
         return;
       }
 
-      const username = opts.username || process.env.APM_USERNAME;
+      const username = opts.username || process.env.ORDO_USERNAME;
       if (!username) {
         throw new ApmError(
-          '需要用户名：--username <name> 或环境变量 APM_USERNAME',
+          '需要用户名：--username <name> 或环境变量 ORDO_USERNAME',
           ExitCode.GENERAL,
         );
       }
-      let password = opts.password || process.env.APM_PASSWORD;
+      let password = opts.password || process.env.ORDO_PASSWORD;
       if (!password) {
         const rl = readline.createInterface({ input: stdin, output: stdout });
         password = await rl.question('密码：');

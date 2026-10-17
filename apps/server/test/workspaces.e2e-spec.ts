@@ -82,7 +82,7 @@ describe('Workspaces (e2e)', () => {
           expect(res.body.data).toHaveProperty('id');
           createdWsId = res.body.data.id;
           expect(
-            fs.existsSync(path.join(createdWsPath, 'data', 'apm.db')),
+            fs.existsSync(path.join(createdWsPath, 'data', 'ordo.db')),
           ).toBe(true);
         });
     });

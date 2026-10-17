@@ -17,7 +17,7 @@ interface ServerConfigDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const CUSTOM_API_STORAGE_KEY = 'apm_custom_api_base_url';
+export const CUSTOM_API_STORAGE_KEY = 'ordo_custom_api_base_url';
 
 export function getEffectiveApiBaseUrl(): string {
   if (typeof window !== 'undefined') {

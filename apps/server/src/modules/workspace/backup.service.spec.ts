@@ -48,7 +48,7 @@ describe('WorkspaceBackupService', () => {
 
   beforeAll(async () => {
     tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apm-backup-unit-'));
-    backupDir = path.join(tmpRoot, '.apm-backups');
+    backupDir = path.join(tmpRoot, '.ordo-backups');
     defaultDbPath = path.join(tmpRoot, 'default-dev.db');
     fs.copyFileSync(
       path.resolve(process.cwd(), 'prisma', 'template.db'),
@@ -191,7 +191,7 @@ describe('WorkspaceBackupService', () => {
 
   it('恢复强确认：confirm 不匹配返回 400 且无任何副作用', async () => {
     const marker = `UNIT-MARKER-${Date.now()}`;
-    const wsADbPath = path.join(tmpRoot, 'ws-a', 'data', 'apm.db');
+    const wsADbPath = path.join(tmpRoot, 'ws-a', 'data', 'ordo.db');
     const writer = await openDb(wsADbPath);
     try {
       await writer.aIModelConfig.create({
@@ -237,7 +237,7 @@ describe('WorkspaceBackupService', () => {
 
   it('恢复单区：正确 confirm 还原数据，产生 pre-restore 自动备份并断言连接失效', async () => {
     const marker = `UNIT-MARKER-RESTORE-${Date.now()}`;
-    const wsADbPath = path.join(tmpRoot, 'ws-a', 'data', 'apm.db');
+    const wsADbPath = path.join(tmpRoot, 'ws-a', 'data', 'ordo.db');
     const writer = await openDb(wsADbPath);
     try {
       await writer.aIModelConfig.create({

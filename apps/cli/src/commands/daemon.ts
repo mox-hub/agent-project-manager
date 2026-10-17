@@ -42,7 +42,7 @@ export function registerDaemonCommands(program: Command): void {
 
   daemon
     .command('start')
-    .description('启动守护进程（后台运行，日志写入 ~/.apm/runtime.log）')
+    .description('启动守护进程（后台运行，日志写入 ~/.ordo/runtime.log）')
     .option('--backend <url>', '后端地址（同时写入配置）')
     .option('--foreground', '前台运行（调试用）')
     .action((opts: { backend?: string; foreground?: boolean }, cmd: Command) => {
@@ -71,7 +71,7 @@ export function registerDaemonCommands(program: Command): void {
       if (opts.foreground) {
         const child = spawn(process.execPath, [bin], {
           stdio: 'inherit',
-          env: { ...process.env, APM_CONFIG_PATH: getConfigPath() },
+          env: { ...process.env, ORDO_CONFIG_PATH: getConfigPath() },
         });
         console.log(`守护进程前台运行中（pid=${child.pid}，Ctrl+C 退出）`);
         return;
@@ -83,7 +83,7 @@ export function registerDaemonCommands(program: Command): void {
       const child = spawn(process.execPath, [bin], {
         detached: true,
         stdio: ['ignore', logFd, logFd],
-        env: { ...process.env, APM_CONFIG_PATH: getConfigPath() },
+        env: { ...process.env, ORDO_CONFIG_PATH: getConfigPath() },
       });
       child.unref();
       config.daemon = config.daemon ?? {};

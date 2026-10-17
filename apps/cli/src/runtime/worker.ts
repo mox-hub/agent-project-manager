@@ -269,8 +269,8 @@ export function startWorker(
         },
         {
           env: {
-            APM_EXECUTION_ID: executionRunId,
-            APM_PROJECT_ID: dispatch.projectId ?? '',
+            ORDO_EXECUTION_ID: executionRunId,
+            ORDO_PROJECT_ID: dispatch.projectId ?? '',
           },
           onToken: (t) => {
             tokenBuffer += t;

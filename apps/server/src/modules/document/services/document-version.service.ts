@@ -238,12 +238,12 @@ export class DocumentVersionService {
       if (user) {
         return {
           name: user.displayName || user.username || 'APM User',
-          email: user.email || `${userId}@apm.local`,
+          email: user.email || `${userId}@ordo.local`,
         };
       }
     } catch {
       // ignore
     }
-    return { name: 'APM User', email: `${userId}@apm.local` };
+    return { name: 'APM User', email: `${userId}@ordo.local` };
   }
 }

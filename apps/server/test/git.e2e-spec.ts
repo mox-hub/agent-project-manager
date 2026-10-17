@@ -52,7 +52,7 @@ describe('Git (e2e)', () => {
     fs.mkdirSync(localRepoPath, { recursive: true });
     execSync('git init -b main', { cwd: localRepoPath, stdio: 'ignore' });
     execSync(
-      'git config user.email e2e@apm.local && git config user.name e2e',
+      'git config user.email e2e@ordo.local && git config user.name e2e',
       {
         cwd: localRepoPath,
         stdio: 'ignore',

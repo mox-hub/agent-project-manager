@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  APM_REF_KINDS,
+  ORDO_REF_KINDS,
   formatApmRef,
   expandApmRefToPath,
   isApmRef,
@@ -51,7 +51,7 @@ describe('parseApmRef', () => {
   });
 
   it('全部 kind 均可往返：format(parse(x)) === x', () => {
-    for (const kind of APM_REF_KINDS) {
+    for (const kind of ORDO_REF_KINDS) {
       const href = `apm://proj/${kind}/ID1`;
       expect(formatApmRef(parseApmRef(href)!)).toBe(href);
     }

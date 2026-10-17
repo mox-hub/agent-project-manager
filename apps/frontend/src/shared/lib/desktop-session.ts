@@ -88,7 +88,7 @@ async function pinDesktopApiBase(): Promise<string | null> {
 /**
  * 应用入口早期调用：钉底后端地址 + 把壳侧镜像恢复进 localStorage。
  * - API base：壳侧真实后端地址（**必须先于一切请求**，见 pinDesktopApiBase）
- * - access_token / apm-workspace-id：直接按同名键写入（localStorage 无值或与壳侧不一致时以壳为准）
+ * - access_token / ordo-workspace-id：直接按同名键写入（localStorage 无值或与壳侧不一致时以壳为准）
  * - onboarding_completed：播种进 zustand store（persist 中间件同步回写 localStorage）
  *
  * 返回 `ready=false` 时调用方**不得**照常渲染：那会让请求打到未知后端并被误判未登录。
@@ -110,8 +110,8 @@ export async function restoreDesktopSession(): Promise<DesktopSessionRestore> {
       persistTokenToShell(localToken);
     }
   }
-  if (state['apm-workspace-id']) {
-    localStorage.setItem('apm-workspace-id', state['apm-workspace-id']);
+  if (state['ordo-workspace-id']) {
+    localStorage.setItem('ordo-workspace-id', state['ordo-workspace-id']);
   }
   if (state.onboarding_completed) {
     // 用 store setState 播种，不能只 merge 既有 persist JSON：端口漂移换 origin 后
@@ -138,7 +138,7 @@ export function persistWorkspaceToShell(workspaceId: string | null): void {
   if (!isDesktopShellAvailable()) {
     return;
   }
-  void writeShellState({ 'apm-workspace-id': workspaceId ?? undefined });
+  void writeShellState({ 'ordo-workspace-id': workspaceId ?? undefined });
 }
 
 export function persistOnboardingToShell(completed: boolean): void {

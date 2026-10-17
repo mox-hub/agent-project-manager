@@ -6,16 +6,16 @@
  * 不可用，故本文件直接消费 process.env、失败直接 process.exit。
  *
  * 范围（多库口径）：default 库（DATABASE_URL）+ 注册表内全部非 default 工作
- * 区库（<path>/data/apm.db，已存在者）。启动期一次性补齐，避免数据层 Proxy
+ * 区库（<path>/data/ordo.db，已存在者）。启动期一次性补齐，避免数据层 Proxy
  * 工厂（同步 getClient）无法阻塞等待迁移的竞态；运行期新建工作区源自当版
  * 模板（schema 与代码同版），天然无需迁移，下次启动纳入本编排即可。
  *
- * 判定：APM_PACKAGED=1（desktop 壳 buildServerEnv 仅打包模式注入）。dev 链路
+ * 判定：ORDO_PACKAGED=1（desktop 壳 buildServerEnv 仅打包模式注入）。dev 链路
  * schema 对齐维持壳侧 db push（setup.ts alignDevDatabaseSchema），本编排零参与。
  *
  * 失败处置（需求裁决「迁移失败拒绝启动 + 指引恢复」）：
  * - 结构化错误写 stderr（壳侧 pipeLog 落日志）+ 失败标记文件
- *   migration-failure.json（APM_DATA_DIR 下，壳侧弹窗消费后删除）；
+ *   migration-failure.json（ORDO_DATA_DIR 下，壳侧弹窗消费后删除）；
  * - 以专用退出码 42 主动退出（区别一般崩溃，壳据此弹「升级迁移失败」指引，
  *   且不做自愈重启——迁移失败是确定性的，重启只会 crash loop）。
  */
@@ -35,7 +35,7 @@ import {
 /** server 迁移失败专用退出码（壳侧 commands.ts 同值约定，勿混用其他语义） */
 export const MIGRATION_FAILURE_EXIT_CODE = 42;
 
-/** 壳侧弹窗消费的失败标记文件名（落 APM_DATA_DIR） */
+/** 壳侧弹窗消费的失败标记文件名（落 ORDO_DATA_DIR） */
 export const MIGRATION_FAILURE_MARKER_FILE = 'migration-failure.json';
 
 export interface MigrationFailureMarker {
@@ -55,14 +55,14 @@ export interface MigrationFailureMarker {
 export function isPackagedServer(
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {
-  return env.APM_PACKAGED === '1';
+  return env.ORDO_PACKAGED === '1';
 }
 
 export function migrationFailureMarkerPath(
   env: NodeJS.ProcessEnv = process.env,
 ): string | null {
-  return env.APM_DATA_DIR
-    ? path.join(env.APM_DATA_DIR, MIGRATION_FAILURE_MARKER_FILE)
+  return env.ORDO_DATA_DIR
+    ? path.join(env.ORDO_DATA_DIR, MIGRATION_FAILURE_MARKER_FILE)
     : null;
 }
 
@@ -74,7 +74,7 @@ export async function runPackagedStartupMigrations(
     return;
   }
   const migrationsDir =
-    env.APM_MIGRATIONS_DIR ??
+    env.ORDO_MIGRATIONS_DIR ??
     path.resolve(process.cwd(), 'prisma', 'migrations');
 
   const targets: Array<{ dbLabel: string; dbUrl: string }> = [];
@@ -83,7 +83,7 @@ export async function runPackagedStartupMigrations(
       database: 'default',
       migrationName: null,
       backupDir: null,
-      error: 'APM_PACKAGED=1 但未配置 DATABASE_URL，无法执行升级迁移',
+      error: 'ORDO_PACKAGED=1 但未配置 DATABASE_URL，无法执行升级迁移',
     });
     return; // 不可达（failStartup 必 exit），类型收窄用
   }
@@ -94,7 +94,7 @@ export async function runPackagedStartupMigrations(
     if (ws.id === DEFAULT_WORKSPACE_ID || !ws.path) {
       continue;
     }
-    const dbPath = path.join(ws.path, 'data', 'apm.db');
+    const dbPath = path.join(ws.path, 'data', 'ordo.db');
     if (fs.existsSync(dbPath)) {
       targets.push({ dbLabel: ws.id, dbUrl: dbFileUrl(dbPath) });
     }
@@ -177,7 +177,7 @@ function failStartup(init: {
         : '迁移前备份：无（本次未修改数据库）',
       `错误：${marker.error}`,
       `出路：${marker.guidance}`,
-      `失败标记：${markerPath ?? '未写入（APM_DATA_DIR 未配置）'}`,
+      `失败标记：${markerPath ?? '未写入（ORDO_DATA_DIR 未配置）'}`,
       '==============================================',
     ]
       .filter((line): line is string => line !== null)
