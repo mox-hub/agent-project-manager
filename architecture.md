@@ -4,9 +4,9 @@ description: 主架构文档（V4）——双表面架构、Monorepo 结构、�
 id: ROOT-002
 category: architecture
 status: active
-version: 4.0.0
+version: 4.1.0
 created: 2026-05-29
-modified: 2026-09-07
+modified: 2026-10-11
 scope: 系统架构设计
 ai-session-types: all
 ai-priority: high
@@ -17,7 +17,7 @@ tags: architecture, backend, frontend, cli, runtime
 
 # 架构总览
 
-> 本文档是系统**主架构文档**（AI 会话第二步阅读）。v4.0.0（2026-09-07）对齐仓库实况：pnpm/turbo/catalog 工具链、四应用 + @apm/shared、后端 36 模块目录（38 Module 类）/ 前端 36 模块目录、工作区多库路由、Runtime 守护进程执行链、openapi 契约三件套。
+> 本文档是系统**主架构文档**（AI 会话第二步阅读）。v4.0.0（2026-09-07）对齐仓库实况：pnpm/turbo/catalog 工具链、四应用 + @apm/shared、后端 36 模块目录（38 Module 类）/ 前端 36 模块目录、工作区多库路由、Runtime 守护进程执行链、openapi 契约三件套。v4.1.0（2026-10-11）订正模块口径：后端 43 模块目录（modules/ 下 49 个 Module 类，app.module 直接挂载 45 个业务 Module）/ 前端 42 模块目录，删除不存在的 `context` 模块，补入 environment / search / workflow / ai-surface / release / tour。
 > **术语口径（2026-09 核心模型重构）**：`Task` 族 → `Issue` 族、`ExecutionRun` → `Execution`；模块目录与 API 面均为新口径（`/issues` + `issueId`）。
 > 治理入口见 [[AGENTS.md|AGENTS.md]]；精简直览与完整模块结构见 `docs/02-架构设计/architecture/技术架构总览.md`。
 
@@ -67,7 +67,7 @@ agent-project-manager/
 └─────────────────────────────────────────────────────────────┘
             ↓ 共享后端（REST /_api + WebSocket）↓
 ┌─────────────────────────────────────────────────────────────┐
-│  Execution Core  NestJS + 36 业务模块目录 + 事件总线            │
+│  Execution Core  NestJS + 43 业务模块目录 + 事件总线            │
 └─────────────────────────────────────────────────────────────┘
             ↓ 派发执行（cli-dispatch，按角色/provider 组装）↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -88,10 +88,10 @@ apps/server/src/
 ├── common/         # decorators, dto, filters, guards, interceptors, pipes, security, throttler, utils
 ├── gateways/       # events.gateway（socket.io 实时事件推送）
 ├── i18n/           # nestjs-i18n（en / zh-CN）+ generated/
-└── modules/        # 36 个业务模块目录（38 个业务 Module 类，全量挂载于 app.module）
+└── modules/        # 43 个业务模块目录（modules/ 下 49 个 Module 类，其中 45 个由 app.module 直接挂载）
 ```
 
-`modules/` 域分组（**36 目录 / 38 Module 类**——`auth` 拆 `access-token`、`document` 拆 `document-enhance`）：
+`modules/` 域分组（**43 目录 / 49 Module 类**——`auth` 拆 `access-token`、`document` 拆 `document-enhance`）：
 
 | 域 | 模块 | 说明 |
 |---|---|---|
@@ -99,11 +99,13 @@ apps/server/src/
 | 用户/团队/角色 | `user`·`team`·`role` | Member 体系、ProjectRoleDefinition（executionRole/promptHint）|
 | 项目与工作区 | `project`·`workspace`·`metadata`·`config` | 项目 CRUD+里程碑、多库工作区、标签/状态定义、AppConfig |
 | 工单域（Task/Bug 统一）| `issue`·`issue-type`·`issue-template`·`iteration` | Issue 统一模型、IssueType 适配引擎(customFields)、模板、迭代 |
-| 文档与知识 | `document`(+`document-enhance`)·`activity`·`subscription` | 富文档(section/version/approval/task-link)、动态追踪、订阅 |
-| AI 执行编排 | `ai-hub`·`execution`·`runtime`·`cli-dispatch`·`cli-provider`·`skills`·`context` | ContextPack 策展、Execution 状态机、Runtime 注册、CLI 派发、技能 |
+| 文档与知识 | `document`(+`document-enhance`)·`activity`·`subscription` | 富文档(section/version/approval/task-link)、ContextPack 策展（`document-context.service`）、动态追踪、订阅 |
+| AI 执行编排 | `ai-hub`·`execution`·`runtime`·`cli-dispatch`·`cli-provider`·`skills`·`prompt`·`workflow` | Execution 状态机、Runtime 注册、CLI 派发、技能、提示词治理（CAP-A-24）、工作流执行引擎基座（CAP-A-11）|
 | 治理与验收 | `acceptance`·`trust`·`decision` | ★ 验收契约、信任评分、DecisionProposal |
-| 协作与记忆 | `collaboration`·`memory`·`office`·`dashboard` | 接口协作卡、MemoryAtom、办公聚合、仪表盘 |
+| 协作与记忆 | `collaboration`·`memory`·`office`·`dashboard`·`profile`·`playbook` | 接口协作卡、MemoryAtom、办公聚合、仪表盘、项目档案与考古、剧本 |
+| 契约知识 | `contract`·`release` | 契约文件绑定（三态）、发版与 CHANGELOG 再生 |
 | 集成与能力 | `integration`·`git`·`mail`·`mcp-server`·`notification`·`plugins`·`admin` | GitHub/Linear/Jira、Git、MailOutbox、MCP、通知、插件、运维 |
+| 系统/辅助 | `environment`·`search` | 本地基础环境检测（node/git/AI CLI 装机态）、全局搜索 |
 
 > 原 `terminal` 已废弃并入 `runtime`。模块注册顺序与真实目录见 `docs/02-架构设计/architecture/backend/modules.md`。
 
@@ -116,7 +118,7 @@ apps/frontend/src/
 ├── main.tsx                 # 唯一 web 入口 → Provider 栈 → RouterProvider
 ├── App.tsx                  # 桌面端启动逻辑（壳桥感知）
 ├── app/router.tsx           # 路由真相源（createBrowserRouter + lazy）
-├── modules/                 # 36 个业务模块目录（Feature-based）+ modules/AGENTS.md 规范
+├── modules/                 # 42 个业务模块目录（Feature-based）+ modules/AGENTS.md 规范
 ├── shared/                  # 23 个子目录跨模块共享层（components/hooks/layout/theme/mdx…）
 ├── infrastructure/          # api-client(generated/api-types.gen.ts) · event-client · store(zustand) · hooks
 ├── components/              # ui/(base-ui/shadcn) · brand/ · icons/
@@ -145,7 +147,7 @@ apps/frontend/src/
 | `Project` / `Iteration` | project / iteration | 聚合顶层 / 迭代 |
 | `Execution`（原 ExecutionRun）/ `ApprovalRequest` | execution | 执行尝试 / 审批治理 |
 | `Runtime` / `RuntimeSession` | runtime | 本地执行节点 |
-| `ContextPack` / `ContextPackSnapshot` | context | 上下文策展与快照 |
+| `ContextPack` / `ContextPackSnapshot` | document / execution | ContextPack 知识层策展（`document-context.service`）；Snapshot 为 Prisma 模型、关联 Execution（归属模块未逐一核实）|
 | `Member` / `MemberToolGrant` | team | 统一身份（human / platform_ai_member / external_agent）|
 | `Repository` / `CliSession` | git / cli-dispatch | 代码 / CLI 会话绑定 |
 | `Document` 族 / `MemoryAtom` / `DecisionProposal` | document / memory / decision | 知识 / 记忆 / 决策 |
